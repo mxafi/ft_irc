@@ -30,7 +30,7 @@ This project is a part of the 42 curriculum at Hive Helsinki.
 ```bash
 git clone https://github.com/mxafi/ft_irc
 cd ft_irc && make
-./ircserver <port> <password>
+./ircserv <port> <password>
 ```
 
 ## Contributing:
