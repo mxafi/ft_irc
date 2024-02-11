@@ -43,6 +43,11 @@ fclean: clean
 .PHONY: re
 re: fclean all
 
+.PHONY: nuke
+nuke:
+	git clean -dxf
+	git reset --hard
+
 .PHONY: makefile-debug
 makefile-debug:
 	$(info NAME=$(NAME))
