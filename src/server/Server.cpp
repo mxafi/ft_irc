@@ -1,4 +1,5 @@
 #include "Server.h"
+#include <cmath>
 
 irc::Server::~Server() {
   close(server_socket_fd_);
@@ -18,6 +19,7 @@ int irc::Server::start() {
                                                << gai_strerror(gai_ret));
     return FAILURE;
   }
+  LOG_DEBUG("server getaddrinfo success");
 
   server_socket_fd_ = socket(server_socket_domain_, server_socket_type_,
                              server_socket_protocol_);
@@ -25,6 +27,7 @@ int irc::Server::start() {
     PRINT_ERROR("server socket creation failed");
     return FAILURE;
   }
+  LOG_DEBUG("server socket creation success");
 
   int fcntl_flags = fcntl(server_socket_fd_, F_GETFL);
   if (fcntl_flags == FCNTL_FAILURE) {
@@ -36,17 +39,20 @@ int irc::Server::start() {
     PRINT_ERROR("server socket fcntl set nonblock failed");
     return FAILURE;
   }
+  LOG_DEBUG("server socket fcntl nonblock success");
 
   if (bind(server_socket_fd_, srvinfo_->ai_addr, srvinfo_->ai_addrlen) ==
       BIND_FAILURE) {
     PRINT_ERROR("server bind failed");
     return FAILURE;
   }
+  LOG_DEBUG("server bind success");
 
   if (listen(server_socket_fd_, SOMAXCONN) == LISTEN_FAILURE) {
     PRINT_ERROR("server listen failed");
     return FAILURE;
   }
+  LOG_DEBUG("server listen success");
 
   return SUCCESS;
 }
@@ -58,6 +64,7 @@ void irc::Server::loop() {
   server_pollfd.events = POLLIN;
   pollfds.push_back(server_pollfd);
 
+  LOG_DEBUG("server loop start")
   while (isServerRunning_g) {
     if (poll(pollfds.data(), static_cast<unsigned int>(pollfds.size()), -1) == POLL_FAILURE) {
       throw std::runtime_error("server poll failed");
@@ -75,4 +82,5 @@ void irc::Server::loop() {
       it++;
     }
   }
+  LOG_DEBUG("server loop end")
 }
