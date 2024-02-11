@@ -1,5 +1,7 @@
 #include "main.h"  // IWYU pragma: keep // due to convention
 
+bool isServerRunning_g = true;
+
 int main(int argc, char** argv) {
   if (argc != 3) {
     PRINT_ERROR_WITH_USAGE("wrong number of arguments");

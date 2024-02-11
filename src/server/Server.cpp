@@ -14,7 +14,8 @@ int irc::Server::start() {
   hints_.ai_socktype = SOCK_STREAM;
   hints_.ai_flags = AI_PASSIVE;
   if (int gai_ret = getaddrinfo(NULL, port_, &hints_, &srvinfo_) != SUCCESS) {
-    PRINT_ERROR("server getaddrinfo failed: (" << gai_ret << ") " << gai_strerror(gai_ret));
+    PRINT_ERROR("server getaddrinfo failed: (" << gai_ret << ") "
+                                               << gai_strerror(gai_ret));
     return FAILURE;
   }
 
@@ -30,7 +31,8 @@ int irc::Server::start() {
     PRINT_ERROR("server socket fcntl get flags failed");
     return FAILURE;
   }
-  if (fcntl(server_socket_fd_, F_SETFL, fcntl_flags | O_NONBLOCK) == FCNTL_FAILURE) {
+  if (fcntl(server_socket_fd_, F_SETFL, fcntl_flags | O_NONBLOCK) ==
+      FCNTL_FAILURE) {
     PRINT_ERROR("server socket fcntl set nonblock failed");
     return FAILURE;
   }
@@ -49,4 +51,28 @@ int irc::Server::start() {
   return SUCCESS;
 }
 
-void irc::Server::loop() {}
+void irc::Server::loop() {
+  std::vector<pollfd> pollfds;
+  pollfd server_pollfd;
+  server_pollfd.fd = server_socket_fd_;
+  server_pollfd.events = POLLIN;
+  pollfds.push_back(server_pollfd);
+
+  while (isServerRunning_g) {
+    if (poll(pollfds.data(), static_cast<unsigned int>(pollfds.size()), -1) == POLL_FAILURE) {
+      throw std::runtime_error("server poll failed");
+    }
+
+    std::vector<pollfd>::iterator it = pollfds.begin();
+    while (it != pollfds.end()) {
+      if (it->revents & POLLIN) {  // ready to recv()
+        // handle new client connection
+      } else if (it->revents & POLLOUT) {  // ready to send()
+        // handle response to existing client connection
+      } else if (it->revents & POLLERR) {  // error
+        // handle error
+      }
+      it++;
+    }
+  }
+}

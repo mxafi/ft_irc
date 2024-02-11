@@ -3,14 +3,19 @@
 
 #include <fcntl.h>
 #include <netdb.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <cstring>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "../common/error.h"
 #include "../common/magicNumber.h"
+
+extern bool isServerRunning_g;
 
 namespace irc {
 

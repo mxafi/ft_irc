@@ -10,5 +10,6 @@
 #define BIND_FAILURE -1
 #define LISTEN_FAILURE -1
 #define DEFAULT_SOCKET_PROTOCOL 0
+#define POLL_FAILURE -1
 
 #endif
