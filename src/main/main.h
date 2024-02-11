@@ -1,6 +1,11 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+// disable asserts
+#ifndef DEBUG
+#define NDEBUG
+#endif
+
 // system definitions
 #include <stdexcept>
 
