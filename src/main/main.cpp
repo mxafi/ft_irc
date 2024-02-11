@@ -21,14 +21,16 @@ void signalHandler(int signum) {
 
 int main(int argc, char** argv) {
   if (argc != 3) {
-    PRINT_ERROR_WITH_USAGE("wrong number of arguments");
+    LOG_ERROR("wrong number of arguments");
+    PRINT_USAGE;
     return EXIT_FAILURE;
   }
 
   try {
     std::stoi(argv[1]);
   } catch (std::exception& e) {
-    PRINT_ERROR_WITH_USAGE("invalid port");
+    LOG_ERROR("invalid port");
+    PRINT_USAGE;
     return EXIT_FAILURE;
   }
   LOG_INFO("server starting on port " << argv[1]);
@@ -45,7 +47,7 @@ int main(int argc, char** argv) {
   try {
     server.loop();
   } catch (std::exception& e) {
-    PRINT_ERROR("Exception: " << e.what());
+    LOG_ERROR("Exception: " << e.what());
     return EXIT_FAILURE;
   }
 

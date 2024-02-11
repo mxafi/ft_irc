@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 
-#include "../common/error.h"
 #include "../common/log.h"
 #include "../common/magicNumber.h"
 

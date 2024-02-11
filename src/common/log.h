@@ -17,4 +17,10 @@
 #define LOG_WARNING(string) \
   { std::cout << YELLOW << "Info: " << string << RESET << std::endl; }
 
+#define LOG_ERROR(string) \
+  { std::cerr << RED << "Error: " << string << RESET << std::endl; }
+
+#define PRINT_USAGE \
+  { std::cout << "Usage: ./ircserv <port> <password>" << std::endl; }
+
 #endif
