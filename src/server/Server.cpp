@@ -67,7 +67,8 @@ void irc::Server::loop() {
 
   LOG_DEBUG("server loop start")
   while (isServerRunning_g) {
-    if (poll(pollfds.data(), static_cast<unsigned int>(pollfds.size()), -1) == POLL_FAILURE) {
+    if (poll(pollfds.data(), static_cast<unsigned int>(pollfds.size()), -1) ==
+        POLL_FAILURE) {
       if (errno == EINTR) {
         continue;
       }
@@ -77,11 +78,15 @@ void irc::Server::loop() {
     std::vector<pollfd>::iterator it = pollfds.begin();
     while (it != pollfds.end()) {
       if (it->revents & POLLIN) {  // ready to recv()
-        // handle new client connection
+        if (it->fd == server_socket_fd_) {
+          // handle incoming new client connection
+        } else {
+          // handle incoming request from existing client connection
+        }
       } else if (it->revents & POLLOUT) {  // ready to send()
-        // handle response to existing client connection
-      } else if (it->revents & POLLERR) {  // error
-        // handle error
+        // handle outgoing response to existing client connection
+      } else if (it->revents & POLLERR) {  // socket disconnect or error
+        // handle client socket disconnect or server socket error
       }
       it++;
     }
