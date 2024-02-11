@@ -7,10 +7,13 @@
 #endif
 
 // system definitions
+#include <csignal>
 #include <stdexcept>
+#include <string>
 
 // user common definitions
 #include "../common/error.h"
+#include "../common/log.h"
 #include "../common/magicNumber.h"
 
 // user module definitions

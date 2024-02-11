@@ -1,4 +1,5 @@
 #include "Server.h"
+#include <cerrno>
 #include <cmath>
 
 irc::Server::~Server() {
@@ -67,6 +68,9 @@ void irc::Server::loop() {
   LOG_DEBUG("server loop start")
   while (isServerRunning_g) {
     if (poll(pollfds.data(), static_cast<unsigned int>(pollfds.size()), -1) == POLL_FAILURE) {
+      if (errno == EINTR) {
+        break;
+      }
       throw std::runtime_error("server poll failed");
     }
 
@@ -77,6 +81,9 @@ void irc::Server::loop() {
       } else if (it->revents & POLLOUT) {  // ready to send()
         // handle response to existing client connection
       } else if (it->revents & POLLERR) {  // error
+        if (errno == EINTR) {
+          continue;
+        }
         // handle error
       }
       it++;
