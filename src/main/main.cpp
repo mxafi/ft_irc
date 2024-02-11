@@ -6,20 +6,21 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  int port;
   try {
-    port = std::stoi(argv[1]);
+    std::stoi(argv[1]);
   } catch (std::exception& e) {
     PRINT_ERROR_WITH_USAGE("invalid port");
     return EXIT_FAILURE;
   }
 
-  irc::Server server(port, argv[2]);
-  server.start();
+  irc::Server server(argv[1], argv[2]);
+  if (server.start() != SUCCESS)
+    return EXIT_FAILURE;
   try {
     server.loop();
   } catch (std::exception& e) {
     PRINT_ERROR("Exception: " << e.what());
+    return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;
