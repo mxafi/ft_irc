@@ -1,14 +1,22 @@
 #include "main.h"  // IWYU pragma: keep // due to convention
 #include <sys/signal.h>
-#include <cmath>
 
 bool isServerRunning_g = true;
 
 void signalHandler(int signum) {
   if (signum == SIGINT) {
-    LOG_INFO("server received SIGINT");
-    isServerRunning_g = false;
+    LOG_INFO("server received SIGINT (Ctrl+C)");
   }
+  if (signum == SIGTERM) {
+    LOG_INFO("server received SIGTERM (kill)");
+  }
+  if (signum == SIGQUIT) {
+    LOG_INFO("server received SIGQUIT (Ctrl+Backslash)");
+  }
+  if (signum == SIGHUP) {
+    LOG_INFO("server received SIGHUP (parent died)");
+  }
+  isServerRunning_g = false;
 }
 
 int main(int argc, char** argv) {
@@ -26,7 +34,11 @@ int main(int argc, char** argv) {
   LOG_INFO("server starting on port " << argv[1]);
   LOG_DEBUG(R"(with password ")" << argv[2] << R"(")");
 
-  signal(SIGINT, signalHandler);
+  signal(SIGINT, signalHandler);   // Ctrl+C
+  signal(SIGTERM, signalHandler);  // kill
+  signal(SIGQUIT, signalHandler);  // Ctrl+Backslash
+  signal(SIGHUP, signalHandler);   // parent dead
+
   irc::Server server(argv[1], argv[2]);
   if (server.start() != SUCCESS)
     return EXIT_FAILURE;
