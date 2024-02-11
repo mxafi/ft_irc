@@ -9,6 +9,15 @@ irc::Server::Server(char* port, std::string password)
     : port_(port), password_(password) {}
 
 int irc::Server::start() {
+  memset(&hints_, 0, sizeof hints_);
+  hints_.ai_family = AF_INET;
+  hints_.ai_socktype = SOCK_STREAM;
+  hints_.ai_flags = AI_PASSIVE;
+  if (int gai_ret = getaddrinfo(NULL, port_, &hints_, &srvinfo_) != SUCCESS) {
+    PRINT_ERROR("server getaddrinfo failed: (" << gai_ret << ") " << gai_strerror(gai_ret));
+    return FAILURE;
+  }
+
   server_socket_fd_ = socket(server_socket_domain_, server_socket_type_,
                              server_socket_protocol_);
   if (server_socket_fd_ == SOCKET_FAILURE) {
@@ -21,16 +30,8 @@ int irc::Server::start() {
     PRINT_ERROR("server socket fcntl get flags failed");
     return FAILURE;
   }
-  if (fcntl(server_socket_fd_, F_SETFL, O_NONBLOCK) == FCNTL_FAILURE) {
+  if (fcntl(server_socket_fd_, F_SETFL, fcntl_flags | O_NONBLOCK) == FCNTL_FAILURE) {
     PRINT_ERROR("server socket fcntl set nonblock failed");
-    return FAILURE;
-  }
-
-  hints_.ai_family = server_socket_domain_;
-  hints_.ai_socktype = server_socket_type_;
-  hints_.ai_flags = AI_PASSIVE;
-  if (getaddrinfo(NULL, port_, &hints_, &srvinfo_) != SUCCESS) {
-    PRINT_ERROR("server getaddrinfo failed");
     return FAILURE;
   }
 
