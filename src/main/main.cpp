@@ -1,4 +1,4 @@
-#include "main.h" // IWYU pragma: keep // due to convention
+#include "main.h"  // IWYU pragma: keep // due to convention
 
 int main(int argc, char** argv) {
   if (argc != 3) {
