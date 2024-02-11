@@ -14,4 +14,7 @@
 #define LOG_INFO(string) \
   { std::cout << WHITE << "Info: " << string << RESET << std::endl; }
 
+#define LOG_WARNING(string) \
+  { std::cout << YELLOW << "Info: " << string << RESET << std::endl; }
+
 #endif
