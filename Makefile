@@ -9,8 +9,10 @@ CFLAGS				:=	-Wall -Wextra -Werror \
 DFLAGS				:=	-DDEBUG \
 									-g3 \
 									-Wconversion \
-									-Wdouble-promotion \
-									-fsanitize=address,undefined,unreachable,null
+									-Wdouble-promotion
+
+# Flags used with DFLAGS, except with "make lldb"
+SFLAGS				:=	-fsanitize=address,undefined,unreachable,null
 
 # Flags used only with "make release"
 RFLAGS				:=	-O3
@@ -22,6 +24,7 @@ OBJS					:=	$(strip $(patsubst src/%, obj/%, $(SRCS:.cpp=.o)))
 
 .PHONY: all
 all: CFLAGS += $(DFLAGS)
+all: CFLAGS += $(SFLAGS)
 all: $(NAME)
 
 $(NAME): $(OBJS)
@@ -57,10 +60,13 @@ makefile-debug:
 	$(info OBJS=$(OBJS))
 
 .PHONY: run
-run: CFLAGS += $(DFLAGS)
 run: re
 	./$(NAME) 6667 horse
 
 .PHONY: release
 release: CFLAGS += $(RFLAGS)
 release: fclean $(NAME)
+
+.PHONY: lldb
+lldb: CFLAGS += $(DFLAGS)
+lldb: fclean $(NAME)
