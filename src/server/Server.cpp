@@ -12,8 +12,8 @@ irc::Server::Server(char* port, std::string password)
 
 int irc::Server::start() {
   memset(&hints_, 0, sizeof hints_);
-  hints_.ai_family = AF_INET;
-  hints_.ai_socktype = SOCK_STREAM;
+  hints_.ai_family = server_socket_domain_;
+  hints_.ai_socktype = server_socket_type_;
   hints_.ai_flags = AI_PASSIVE;
   if (int gai_ret = getaddrinfo(NULL, port_, &hints_, &srvinfo_) != SUCCESS) {
     LOG_ERROR("server getaddrinfo failed: (" << gai_ret << ") "
@@ -22,7 +22,7 @@ int irc::Server::start() {
   }
   LOG_DEBUG("server getaddrinfo success");
 
-  server_socket_fd_ = socket(server_socket_domain_, server_socket_type_,
+  server_socket_fd_ = socket(srvinfo_->ai_family, srvinfo_->ai_socktype,
                              server_socket_protocol_);
   if (server_socket_fd_ == SOCKET_FAILURE) {
     LOG_ERROR("server socket creation failed");
