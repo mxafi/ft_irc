@@ -1,5 +1,4 @@
 #include "main.h"  // IWYU pragma: keep // due to convention
-#include <sys/signal.h>
 
 bool isServerRunning_g = true;
 
