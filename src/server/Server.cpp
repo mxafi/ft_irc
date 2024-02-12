@@ -69,7 +69,7 @@ void irc::Server::loop() {
   while (isServerRunning_g) {
     if (poll(pollfds.data(), static_cast<unsigned int>(pollfds.size()), -1) ==
         POLL_FAILURE) {
-      if (errno == EINTR) {
+      if (errno == EINTR && isServerRunning_g == false) {
         continue;
       }
       throw std::runtime_error("server poll failed");
