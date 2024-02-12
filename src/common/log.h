@@ -15,7 +15,7 @@
   { std::cout << WHITE << "Info: " << string << RESET << std::endl; }
 
 #define LOG_WARNING(string) \
-  { std::cout << YELLOW << "Info: " << string << RESET << std::endl; }
+  { std::cout << YELLOW << "Warning: " << string << RESET << std::endl; }
 
 #define LOG_ERROR(string) \
   { std::cerr << RED << "Error: " << string << RESET << std::endl; }
