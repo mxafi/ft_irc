@@ -83,9 +83,9 @@ void irc::Server::loop() {
         } else {
           // handle incoming request from existing client connection
         }
-      } else if (it->revents & POLLOUT) {  // ready to send()
+      } if (it->revents & POLLOUT) {  // ready to send()
         // handle outgoing response to existing client connection
-      } else if (it->revents & POLLERR) {  // socket disconnect or error
+      } if (it->revents & POLLERR) {  // socket disconnect or error
         // handle client socket disconnect or server socket error
       }
       it++;
