@@ -1,6 +1,4 @@
 #include "Server.h"
-#include <cerrno>
-#include <cmath>
 
 irc::Server::~Server() {
   close(server_socket_fd_);
