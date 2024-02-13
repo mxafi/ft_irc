@@ -47,3 +47,4 @@ Icon
 # --- Project specific ignores ---
 ircserv
 *.log
+obj
