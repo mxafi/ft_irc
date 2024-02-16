@@ -1,6 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <sys/poll.h>
@@ -17,11 +18,13 @@
 #include "../common/magicNumber.h"
 
 extern bool isServerRunning_g;
+extern std::string serverHostname_g;
 
 namespace irc {
 
 class Server {
  private:
+  int setServerHostname_();
   char* port_;
   std::string password_;
   int server_socket_fd_;
