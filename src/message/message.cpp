@@ -1,63 +1,46 @@
 #include "Message.h"
 
+/****
+    * According to: rfc2812 / 2.3. Messages
+    * Each IRC message may consist of up to three main parts: the prefix
+    * (OPTIONAL), the command, and the command parameters (maximum of
+    * fifteen (15)).  The prefix, command, and all parameters are separated
+    * by one ASCII space character (0x20) each. 
+    */
 namespace irc {
-Message::Message(const std::string& sender, const std::string& receiver,
-                 const std::string& command)
-    : sender_(sender), receiver_(receiver), command_(command){};
 
-Message::Message(const std::string& sender, const std::string& receiver,
-                 const std::string& command,
-                 const std::string& parameters)
-    : sender_(sender),
-      receiver_(receiver),
-      command_(command),
-      parameters_(parameters) {}
+Message::Message(const std::string& prefix, const std::string command,
+                 const std::vector<std::string> parameters)
+    : prefix_(prefix), command_(command), parameters_(parameters){};
 
 Message::~Message(){};
 
-std::string Message::getSender() const {
-  return sender_;
-}
-
-std::string Message::getReceiver() const {
-  return receiver_;
+std::string Message::getPrefix() const {
+  return prefix_;
 }
 
 std::string Message::getCommand() const {
   return command_;
 }
 
-std::string Message::getParameters() const {
+std::vector<std::string> Message::getParameters() const {
   return parameters_;
 }
 
-std::string Message::serialize() const {
-  std::string serializedMessage = sender_ + " " + receiver_ + " " + command_;
-  if (!parameters_.empty()) {
-    serializedMessage += " " + parameters_;
-  }
-  return serializedMessage;
-}
+// std::string Message::serialize() const { }
 
 Message Message::deserialize(const std::string& serializedMessage) {
   std::istringstream iss(serializedMessage);
-  std::string sender, receiver, command, parametersStr;
+  std::string prefix, command;
+  std::vector<std::string> parameters;
 
-  iss >> sender >> receiver >> command;
+  iss >> prefix >> command;
 
-  std::getline(iss, parametersStr);
-
-  std::string parameters;
-
-  if (!parametersStr.empty() && parametersStr[0] == ':') {
-    parameters = parametersStr.substr(1);
-  } else {
-    if (!parametersStr.empty()) {
-      parameters += ' ';
-    }
-    parameters += parametersStr;
+  std::string parameter;
+  while (iss >> parameter) {
+    parameters.push_back(parameter);
   }
-  return Message(sender, receiver, command, parameters);
+  return Message(prefix, command, parameters);
 }
 
 }  // namespace irc
