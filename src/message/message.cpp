@@ -1,4 +1,4 @@
-#include "message.h"
+#include "Message.h"
 
 namespace irc {
 Message::Message(const std::string& sender, const std::string& receiver,
