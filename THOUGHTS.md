@@ -8,6 +8,11 @@
 4. PING, OPER, KILL, ... (server commands, modular stuff)
 5. JOIN, PART, ... (channel operation commands)
 
+## Word definitions
+
+- Message : A string that starts with a prefix or a command (defined in IRC RFC's), and ends with ```\r\n```
+- Packet : A string received or sent using a single call to ```recv()``` or ```send()```, it can contain a part of a message, multiple full messages, or anything in between
+
 ## Important notes
 
 - Keep checking stuff with nc and irssi (our chosen reference client, has RAWLOG)
