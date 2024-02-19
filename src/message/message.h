@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "../common/magicNumber.h"
+#include "../common/log.h"
 
 namespace irc {
 
@@ -13,6 +14,8 @@ class Message {
   std::string prefix_;
   std::string command_;
   std::vector<std::string> parameters_;
+  int numeric_;
+  Message deserialize_(const std::string& IncomingMessage);
 
  public:
   Message(const std::string& prefix, const std::string command,
@@ -25,7 +28,6 @@ class Message {
   std::vector<std::string> getParameters() const;
 
   // std::string serialize() const;
-  static Message deserialize(const std::string& IncomingMessage);
 
   void execute(const Message &message);
 };

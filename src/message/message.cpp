@@ -53,27 +53,39 @@ void Message::execute(const Message& message){
     * for the command and its parameters.  There is no provision for
     * continuation of message lines.  See section 6 for more details about
     * current implementations. 
+    *
+    * message =  [ ":" prefix SPACE ] command [ params ] crlf
     */
-Message Message::deserialize(const std::string& serializedMessage) {
+Message Message::deserialize_(const std::string& serializedMessage) {
   std::istringstream iss(serializedMessage);
   std::string prefix, command;
   std::vector<std::string> parameters;
 
+  if (serializedMessage.length() > MAX_MSG_LENGTH) {
+    LOG_WARNING("Message exceeds maximum length of 512 characters, ");
+    numeric_ = ERR_INPUTTOOLONG;
+    return *this;
+
+    } 
   // Sneak peek into the first char of stream for a semicolon ":"
   if (iss.peek() == ':') {
     iss.get();      // Skip the semicolon to get to the prefix itself
     iss >> prefix;  // get the prefix
+    LOG_DEBUG("Got prefix: " + prefix);
   }
   iss >> command;
+    LOG_DEBUG("Got command: " + command);
 
   std::string parameter;
   while (iss >> parameter) {
     if (parameters.size() > MESSAGE_MAX_AMOUNT_PARAMETERS)
-      throw std::runtime_error("Too many parameters in the message");
+      break;
     parameters.push_back(parameter);
+    LOG_DEBUG("Got Parameter: " + parameter);
   }
-  if (parameters.size() > MESSAGE_MAX_AMOUNT_PARAMETERS)
-    throw std::runtime_error("Too many parameters in the message");
+  if (parameters.size() > MESSAGE_MAX_AMOUNT_PARAMETERS){
+    LOG_WARNING("Too many parameters in message");
+    }
   return Message(prefix, command, parameters);
 }
 
