@@ -1,17 +1,18 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include <vector>
 #include <sstream>
 #include <string>
+#include <vector>
+#include "../common/magicNumber.h"
 
 namespace irc {
 
 class Message {
  private:
-  const std::string prefix_;
-  const std::string command_;
-  const std::vector<std::string> parameters_;
+  std::string prefix_;
+  std::string command_;
+  std::vector<std::string> parameters_;
 
  public:
   Message(const std::string& prefix, const std::string command,
@@ -25,6 +26,8 @@ class Message {
 
   // std::string serialize() const;
   static Message deserialize(const std::string& IncomingMessage);
+
+  void execute(const Message &message);
 };
 
 }  // namespace irc
