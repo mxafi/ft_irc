@@ -22,6 +22,9 @@ rwildcard			=		$(strip $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(fil
 SRCS					:=	$(strip $(call rwildcard,src/,*.cpp))
 OBJS					:=	$(strip $(patsubst src/%, obj/%, $(SRCS:.cpp=.o)))
 
+TEST_SRCS			:=	$(strip $(call rwildcard,test/,*.cpp))
+NOMAIN_SRCS		:=	$(filter-out src/main/main.cpp, $(SRCS))
+
 .PHONY: all
 all: CFLAGS += $(DFLAGS)
 all: CFLAGS += $(SFLAGS)
@@ -38,6 +41,7 @@ obj/%.o: src/%.cpp
 clean:
 	rm -rf obj/
 	rm -rf $(NAME).dSYM
+	rm -f test.out
 
 .PHONY: fclean
 fclean: clean
@@ -58,6 +62,8 @@ makefile-debug:
 	$(info CFLAGS=$(CFLAGS))
 	$(info SRCS=$(SRCS))
 	$(info OBJS=$(OBJS))
+	$(info TEST_SRCS=$(TEST_SRCS))
+	$(info NOMAIN_SRCS=$(NOMAIN_SRCS))
 
 .PHONY: run
 run: re
@@ -70,3 +76,8 @@ release: fclean $(NAME)
 .PHONY: lldb
 lldb: CFLAGS += $(DFLAGS)
 lldb: fclean $(NAME)
+
+.PHONY: test
+test: $(TEST_SRCS) $(NOMAIN_SRCS)
+	$(CC) $(CFLAGS) -o test.out $(TEST_SRCS) $(NOMAIN_SRCS)
+	./test.out $(ARGS)
