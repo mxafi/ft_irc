@@ -1,14 +1,16 @@
 #include "Server.h"
 
-irc::Server::~Server() {
+namespace irc {
+
+Server::~Server() {
   close(server_socket_fd_);
   freeaddrinfo(srvinfo_);
 }
 
-irc::Server::Server(char* port, std::string password)
+Server::Server(char* port, std::string password)
     : port_(port), password_(password) {}
 
-int irc::Server::setServerHostname_() {
+int Server::setServerHostname_() {
   int hostnameLength;
   char hostname[HOSTNAME_MAX_LENGTH];
   hostnameLength = gethostname(hostname, HOSTNAME_MAX_LENGTH);
@@ -34,7 +36,7 @@ int irc::Server::setServerHostname_() {
   return SUCCESS;
 }
 
-int irc::Server::start() {
+int Server::start() {
   memset(&hints_, 0, sizeof hints_);
   hints_.ai_family = server_socket_domain_;
   hints_.ai_socktype = server_socket_type_;
@@ -124,3 +126,35 @@ void irc::Server::loop() {
   }
   LOG_DEBUG("server loop end")
 }
+
+// Getter functions
+
+char* Server::getPort() {
+  return port_;
+}
+
+std::string Server::getPassword() {
+  return password_;
+}
+
+int Server::getServerSocketFd() {
+  return server_socket_fd_;
+}
+
+int Server::getServerSocketDomain() {
+  return server_socket_domain_;
+}
+
+int Server::getServerSocketType() {
+  return server_socket_type_;
+}
+
+int Server::getServerSocketProtocol() {
+  return server_socket_protocol_;
+}
+
+struct addrinfo& Server::getServerInfo() {
+  return *srvinfo_;
+}
+
+}  // namespace irc
