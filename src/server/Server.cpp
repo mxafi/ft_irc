@@ -8,6 +8,32 @@ irc::Server::~Server() {
 irc::Server::Server(char* port, std::string password)
     : port_(port), password_(password) {}
 
+int irc::Server::setServerHostname_() {
+  int hostnameLength;
+  char hostname[HOSTNAME_MAX_LENGTH];
+  hostnameLength = gethostname(hostname, HOSTNAME_MAX_LENGTH);
+
+  if (hostnameLength == GETHOSTNAME_FAILURE) {
+    return FAILURE;
+  }
+
+  if (hostnameLength >= HOSTNAME_MAX_LENGTH) {
+    LOG_WARNING(
+        "server failed to get hostname: hostname too long, using hostaddress "
+        "instead");
+    if (inet_ntop(server_socket_domain_,
+                  &((struct sockaddr_in*)srvinfo_->ai_addr)->sin_addr, hostname,
+                  HOSTNAME_MAX_LENGTH) == NULL) {
+      LOG_ERROR("server inet_ntop failed: " << strerror(errno));
+      return FAILURE;
+    }
+  }
+
+  serverHostname_g = std::string(hostname);
+  LOG_INFO("with hostname " << serverHostname_g);
+  return SUCCESS;
+}
+
 int irc::Server::start() {
   memset(&hints_, 0, sizeof hints_);
   hints_.ai_family = server_socket_domain_;
@@ -15,10 +41,15 @@ int irc::Server::start() {
   hints_.ai_flags = AI_PASSIVE;
   if (int gai_ret = getaddrinfo(NULL, port_, &hints_, &srvinfo_) != SUCCESS) {
     LOG_ERROR("server getaddrinfo failed: (" << gai_ret << ") "
-                                               << gai_strerror(gai_ret));
+                                             << gai_strerror(gai_ret));
     return FAILURE;
   }
   LOG_DEBUG("server getaddrinfo success");
+
+  if (setServerHostname_() == FAILURE) {
+    LOG_ERROR("server hostname fetching failed");
+    return FAILURE;
+  }
 
   server_socket_fd_ = socket(srvinfo_->ai_family, srvinfo_->ai_socktype,
                              server_socket_protocol_);
@@ -81,9 +112,11 @@ void irc::Server::loop() {
         } else {
           // handle incoming request from existing client connection
         }
-      } if (it->revents & POLLOUT) {  // ready to send()
+      }
+      if (it->revents & POLLOUT) {  // ready to send()
         // handle outgoing response to existing client connection
-      } if (it->revents & POLLERR) {  // socket disconnect or error
+      }
+      if (it->revents & POLLERR) {  // socket disconnect or error
         // handle client socket disconnect or server socket error
       }
       it++;

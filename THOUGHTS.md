@@ -8,6 +8,11 @@
 4. PING, OPER, KILL, ... (server commands, modular stuff)
 5. JOIN, PART, ... (channel operation commands)
 
+## Word definitions
+
+- Message : A string that starts with a prefix or a command (defined in IRC RFC's), and ends with ```\r\n```
+- Packet : A string received or sent using a single call to ```recv()``` or ```send()```, it can contain a part of a message, multiple full messages, or anything in between
+
 ## Important notes
 
 - Keep checking stuff with nc and irssi (our chosen reference client, has RAWLOG)
@@ -29,7 +34,6 @@
 - Header files should be suffixed with **.h** (if they do not contain code implementation)
 - Use as much **private** stuff as possible, add a ```_``` (underscore) as a suffix (at the end)
 - Make sure not to have cross-dependancies, **modularize** as much as possible
-- Each module should have a pure abstract class as an interface, **use interfaces**!
 - Each module should be in it's own **subfolder in the repository**, under the ```src``` folder (including the header files for the module)
 - Seperate control functions (function that call functions with some order and logic), seperate logic implementation functions (functions that contain code that does stuff)
 - Seperate every "single" task into a single function, **one function only does one thing**!
