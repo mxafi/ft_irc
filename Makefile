@@ -81,3 +81,9 @@ lldb: fclean $(NAME)
 test: $(TEST_SRCS) $(NOMAIN_SRCS)
 	$(CC) $(CFLAGS) -o test.out $(TEST_SRCS) $(NOMAIN_SRCS)
 	./test.out $(ARGS)
+
+.PHONY: git-clean-branches
+git-clean-branches:
+	git checkout main
+	git fetch -p
+	git branch --merged | grep -v "\*" | xargs -n 1 git branch -d
