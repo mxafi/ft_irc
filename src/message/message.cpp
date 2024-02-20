@@ -31,9 +31,9 @@ std::vector<std::string> Message::getParameters() const {
   return parameters_;
 }
 
-void Message::execute(const Message& message){
-
-};
+int Message::getNumeric() const {
+  return numeric_;
+}
 
 /****
     * The NUL (%x00) character is not special in message framing, and
@@ -41,12 +41,11 @@ void Message::execute(const Message& message){
     * extra complexities in normal C string handling. Therefore, NUL
     * is not allowed within messages.
     */
-void Message::checkNulChar(const std::string &serializedMessage) {
-    if (serializedMessage.find('\0') != std::string::npos)
-        LOG_WARNING("Message contains illegal NUL Character");
-        numeric_ = ERR_CUSTOM_ILLEGALNUL;
+void Message::checkNulChar(const std::string& serializedMessage) {
+  if (serializedMessage.find('\0') != std::string::npos)
+    LOG_WARNING("Message contains illegal NUL Character");
+  numeric_ = ERR_CUSTOM_ILLEGALNUL;
 }
-
 
 /****
     * IRC messages are always lines of characters terminated with a CR-LF
@@ -58,7 +57,8 @@ void Message::checkNulChar(const std::string &serializedMessage) {
     */
 void Message::checkMessageLength(const std::string& serializedMessage) {
   if (serializedMessage.length() > MAX_MSG_LENGTH) {
-    LOG_WARNING("Input line was too long, " << serializedMessage.length() << "instead of 512");
+    LOG_WARNING("Input line was too long, " << serializedMessage.length()
+                                            << " instead of 512");
     numeric_ = ERR_INPUTTOOLONG;
   }
 }
@@ -79,7 +79,6 @@ void Message::checkMessageLength(const std::string& serializedMessage) {
 void Message::setPrefix_(std::istringstream& serializedStream) {
   // Sneak peek into the first char of stream for a semicolon ":"
   if (serializedStream.peek() == ':') {
-    serializedStream.get();  // Skip the semicolon to get to the prefix_ itself
     serializedStream >> prefix_;  // get the prefix_
     LOG_DEBUG("Got prefix_: " + prefix_);
   }
@@ -105,11 +104,20 @@ void Message::setCommand_(std::istringstream& serializedMessage) {
     */
 void Message::setParameters_(std::istringstream& serializedMessage) {
   std::string parameter;
+  int i = 0;
   while (serializedMessage >> parameter) {
-    if (parameters_.size() > MESSAGE_MAX_AMOUNT_PARAMETERS)
-      break;
+    if (serializedMessage.peek() == ':' ||
+        parameters_.size() > MESSAGE_MAX_AMOUNT_PARAMETERS) {
+      if (serializedMessage.peek() == ':') {
+        std::string trailingParameter;
+        std::getline(serializedMessage, trailingParameter);
+        parameters_.push_back(trailingParameter);
+      }
+    }
+    break;
     parameters_.push_back(parameter);
     LOG_DEBUG("Got Parameter: " + parameter);
+    std::cout << "Parameter " << i++ << " " << parameter << std::endl;
   }
   if (parameters_.size() > MESSAGE_MAX_AMOUNT_PARAMETERS) {
     LOG_WARNING("Too many parameters in message");

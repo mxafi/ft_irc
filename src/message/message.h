@@ -19,8 +19,6 @@ class Message {
   void setPrefix_(std::istringstream& serializedStream);
   void setCommand_(std::istringstream& serializedMessage);
   void setParameters_(std::istringstream& serializedStream);
-  Message(const Message& original) {};
-  Message operator=(const Message& original) {};
 
   void checkNulChar(const std::string& serializedMessage);
   void checkMessageLength(const std::string& serializedMessage);
@@ -32,11 +30,10 @@ class Message {
 
   std::string getPrefix() const;
   std::string getCommand() const;
+  int getNumeric() const;
   std::vector<std::string> getParameters() const;
 
   // std::string serialize() const;
-
-  void execute(const Message& message);
 };
 
 }  // namespace irc
