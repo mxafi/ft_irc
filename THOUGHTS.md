@@ -34,7 +34,6 @@
 - Header files should be suffixed with **.h** (if they do not contain code implementation)
 - Use as much **private** stuff as possible, add a ```_``` (underscore) as a suffix (at the end)
 - Make sure not to have cross-dependancies, **modularize** as much as possible
-- Each module should have a pure abstract class as an interface, **use interfaces**!
 - Each module should be in it's own **subfolder in the repository**, under the ```src``` folder (including the header files for the module)
 - Seperate control functions (function that call functions with some order and logic), seperate logic implementation functions (functions that contain code that does stuff)
 - Seperate every "single" task into a single function, **one function only does one thing**!
