@@ -13,5 +13,6 @@
 #define LISTEN_FAILURE -1
 #define DEFAULT_SOCKET_PROTOCOL 0
 #define POLL_FAILURE -1
+#define NICK_MAX_LENGTH_RFC2812 9
 
 #endif
