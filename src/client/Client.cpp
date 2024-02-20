@@ -6,11 +6,13 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/20 10:44:08 by djames            #+#    #+#             */
-/*   Updated: 2024/02/20 16:10:28 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/20 16:36:30 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.h"
+
+namespace irc {
 
 Client::Client(int clientSocket) : socket_(clientSocket) {
   status_.gotUser = false;
@@ -26,20 +28,26 @@ Client::~Client() {
 }
 
 bool Client::getAuthenticated() {
-  if (status_.gotNick && status_.gotUser) {
+  if (status_.gotNick && status_.gotUser && status_.gotPassword) {
     return true;
   }
   return false;
 }
 
-void Client::setNickname(const std::string& newNickname) {
+void Client::setNickname(const std::string& newNickname) {  // fix
   if (!status_.gotNick) {
+    nickname_ = (newNickname.size() > NICK_MAX_LENGTH_RFC2812)
+                    ? newNickname.substr(0, NICK_MAX_LENGTH_RFC2812)
+                    : newNickname;
+    setOldNickname(nickname_);
+    status_.gotNick = true;
+  } else {
     setOldNickname(nickname_);
     nickname_ = (newNickname.size() > NICK_MAX_LENGTH_RFC2812)
                     ? newNickname.substr(0, NICK_MAX_LENGTH_RFC2812)
                     : newNickname;
-    status_.gotNick = true;
   }
+  LOG_DEBUG("nickname is set to: " << nickname_);
 }
 
 void Client::setOldNickname(const std::string& oldNickname) {
@@ -49,6 +57,13 @@ void Client::setOldNickname(const std::string& oldNickname) {
 void Client::setUserName(const std::string& userName) {
   userName_ = userName;
   status_.gotUser = true;
+  LOG_DEBUG("user is set to: " << userName_);
+}
+
+void Client::setPassword(const std::string& password) {
+  password_ = password;
+  status_.gotPassword = true;
+  LOG_DEBUG("password is set to: " << password_);
 }
 
 std::string Client::getNickname() const {
@@ -106,6 +121,9 @@ void Client::appendToRecvdBuffer(const std::string& message) {
 void Client::clearSendBuffer() {
   sendBuffer_.clear();
 }
+
 void Client::clearRecvdBuffer() {
   sendBuffer_.clear();
 }
+
+}  // namespace irc
