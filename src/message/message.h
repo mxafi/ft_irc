@@ -4,8 +4,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "../common/magicNumber.h"
 #include "../common/log.h"
+#include "../common/magicNumber.h"
 
 namespace irc {
 
@@ -15,11 +15,18 @@ class Message {
   std::string command_;
   std::vector<std::string> parameters_;
   int numeric_;
-  Message deserialize_(const std::string& IncomingMessage);
+  void deserialize_(const std::string& serializedMessage);
+  void setPrefix_(std::istringstream& serializedStream);
+  void setCommand_(std::istringstream& serializedMessage);
+  void setParameters_(std::istringstream& serializedStream);
+  Message(const Message& original) {};
+  Message operator=(const Message& original) {};
+
+  void checkNulChar(const std::string& serializedMessage);
+  void checkMessageLength(const std::string& serializedMessage);
 
  public:
-  Message(const std::string& prefix, const std::string command,
-          const std::vector<std::string> parameters);
+  Message(std::string serializedMessage);
 
   ~Message();
 
@@ -29,7 +36,7 @@ class Message {
 
   // std::string serialize() const;
 
-  void execute(const Message &message);
+  void execute(const Message& message);
 };
 
 }  // namespace irc
