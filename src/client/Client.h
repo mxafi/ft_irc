@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
+/*   By: malaakso <malaakso@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:12:46 by djames            #+#    #+#             */
-/*   Updated: 2024/02/20 16:34:28 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/21 07:35:33 by malaakso         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,11 @@
 
 #include <sys/poll.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #include <string>
 #include <vector>
-#include "../common/magicNumber.h"
 #include "../common/log.h"
+#include "../common/magicNumber.h"
 
 namespace irc {
 
@@ -27,7 +28,7 @@ class Client {
   Client(int clientSocket);
 
   ~Client();
-  int getSocket() const;
+  int getFd() const;
 
   void setSendBuffer(const std::string& sendBuffer);
   std::string getSendBuffer() const;
@@ -51,9 +52,8 @@ class Client {
 
  private:
   void setOldNickname(const std::string& oldNickname);
-  int socket_;
+  int fd_;
   std::string nickname_;
-  int clientFd_;
   std::string oldNickname_;
   std::string userName_;
   std::string sendBuffer_;
