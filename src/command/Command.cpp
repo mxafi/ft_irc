@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:51 by djames            #+#    #+#             */
-/*   Updated: 2024/02/21 14:17:27 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/21 15:30:02 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,15 +15,15 @@
 extern std::string serverHostname_g;
 
 namespace irc {
-
+// I was thinking here we can put it in a map and acording to the comand we create the response for example ping and pong
 std::map<std::string, std::function<void(Command*)>> Command::commands = {
-    {"PING", [](Command* cmd) {
+    {"PING",
+     [](Command* cmd) {
        cmd->actionPing();
      }},
     {"Channel", [](Command* cmd) {
        cmd->actionChannel();
-     }}
-};
+     }}};
 
 Command::Command(const std::string& commandString, Client& client)
     : client_(client) {
@@ -59,14 +59,11 @@ void Command::actionPing() {
                          " :" + client_.getNickname();
   LOG_DEBUG(response);
 }
+
 void Command::actionChannel() {
-  std::string response = ":" + serverHostname_g + " #newchannel " + serverHostname_g +
-                         " :" + client_.getNickname();
+  std::string response = ":" + serverHostname_g + " #newchannel " +
+                         serverHostname_g + " :" + client_.getNickname();
   LOG_DEBUG(response);
 }
-
-// I was thinking here we can put it in a map and acording to the comand we create the response for example ping and pong
-// std::map<std::string, std::function<void()>> commands = {
-//     {"PING", &Command::actionPing}};
 
 }  // namespace irc
