@@ -1,17 +1,11 @@
-#include "Message.h"
+#include "message.h"
 
 namespace irc {
 /****
-    * Servers and clients send each other messages, which may or may not
-    * generate a reply.  If the message contains a valid command, the 
-    * client should expect a reply as specified but it is not advised to wait
-    * forever for the reply; client to server and server to server 
-    * communication is essentially asynchronous by nature.
-    *
     * The message object constructor is parsing the IRC received messages
     * and initializes its prefix (OPTIONAL), command and parameters.
     */
-Message::Message(const std::string serializedMessage) {
+Message::Message(const std::string serializedMessage) : numeric_(0) {
   checkNulChar(serializedMessage);
   checkMessageLength(serializedMessage);
   deserialize_(serializedMessage);
@@ -42,9 +36,10 @@ int Message::getNumeric() const {
     * is not allowed within messages.
     */
 void Message::checkNulChar(const std::string& serializedMessage) {
-  if (serializedMessage.find('\0') != std::string::npos)
+  if (serializedMessage.find('\0') != std::string::npos) {
     LOG_WARNING("Message contains illegal NUL Character");
-  numeric_ = ERR_CUSTOM_ILLEGALNUL;
+    numeric_ = ERR_CUSTOM_ILLEGALNUL;
+  }
 }
 
 /****
@@ -79,7 +74,7 @@ void Message::checkMessageLength(const std::string& serializedMessage) {
 void Message::setPrefix_(std::istringstream& serializedStream) {
   // Sneak peek into the first char of stream for a semicolon ":"
   if (serializedStream.peek() == ':') {
-    serializedStream >> prefix_;  // get the prefix_
+    serializedStream >> prefix_;
     LOG_DEBUG("Got prefix_: " + prefix_);
   }
 }
@@ -104,20 +99,22 @@ void Message::setCommand_(std::istringstream& serializedMessage) {
     */
 void Message::setParameters_(std::istringstream& serializedMessage) {
   std::string parameter;
-  int i = 0;
-  while (serializedMessage >> parameter) {
-    if (serializedMessage.peek() == ':' ||
-        parameters_.size() > MESSAGE_MAX_AMOUNT_PARAMETERS) {
-      if (serializedMessage.peek() == ':') {
-        std::string trailingParameter;
-        std::getline(serializedMessage, trailingParameter);
-        parameters_.push_back(trailingParameter);
+  serializedMessage >> std::ws;  // Discards leading whitespaces
+  while (std::getline(serializedMessage, parameter, ' ')) {
+    // If the parameter starts with a colon, it's a trailing parameter
+    if (parameter[0] == ':') {
+      // Add the rest of the line as a single trailing parameter
+      std::string trailingParameter;
+      std::getline(serializedMessage, trailingParameter);
+      if (!trailingParameter.empty()) {
+        parameters_.push_back(parameter + " " + trailingParameter);
+      } else {
+        parameters_.push_back(parameter);
       }
+      break;  // No more parameters after a trailing parameter
     }
-    break;
+    // If the parameter does not start with a colon, it's a regular parameter
     parameters_.push_back(parameter);
-    LOG_DEBUG("Got Parameter: " + parameter);
-    std::cout << "Parameter " << i++ << " " << parameter << std::endl;
   }
   if (parameters_.size() > MESSAGE_MAX_AMOUNT_PARAMETERS) {
     LOG_WARNING("Too many parameters in message");
