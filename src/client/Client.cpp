@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
+/*   By: malaakso <malaakso@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/20 10:44:08 by djames            #+#    #+#             */
-/*   Updated: 2024/02/20 16:36:30 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/21 07:34:48 by malaakso         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,17 @@
 
 namespace irc {
 
-Client::Client(int clientSocket) : socket_(clientSocket) {
+Client::Client(int clientSocket) : fd_(clientSocket) {
   status_.gotUser = false;
   status_.gotNick = false;
   status_.gotPassword = false;
   status_.authenticated = false;
+  fd_ = 0; 
 }
 
 Client::~Client() {
-  if (socket_ != SOCKET_FAILURE) {
-    close(socket_);
+  if (fd_ != SOCKET_FAILURE) {
+    close(fd_);
   }
 }
 
@@ -78,8 +79,8 @@ std::string Client::getUserName() const {
   return userName_;
 }
 
-int Client::getSocket() const {
-  return socket_;
+int Client::getFd() const {
+  return fd_;
 }
 
 void Client::setSendBuffer(const std::string& sendBuffer) {
