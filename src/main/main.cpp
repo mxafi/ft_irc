@@ -1,6 +1,6 @@
 #include "main.h"  // IWYU pragma: keep // due to convention
 
-bool isServerRunning_g = true;
+bool isServerRunning_g = false;
 std::string serverHostname_g;
 
 void signalHandler(int signum) {
