@@ -86,6 +86,7 @@ int Server::start() {
   }
   LOG_DEBUG("server listen success");
 
+  isServerRunning_g = true;
   return SUCCESS;
 }
 
