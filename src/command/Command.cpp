@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:51 by djames            #+#    #+#             */
-/*   Updated: 2024/02/21 17:28:15 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/21 18:43:41 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,9 @@ std::map<std::string, std::function<void(Command*)>> Command::commands = {
      }},
     {"Channel", [](Command* cmd) {
        cmd->actionChannel();
+     }},
+     {"Part", [](Command* cmd) {
+       cmd->actionPart();
      }}};
 
 Command::Command(const std::string& commandString, Client& client)
@@ -45,7 +48,7 @@ void Command::execute() {
 
 void Command::parseCommand(
     const std::string&
-        commandString) {  // tthis parssing is whatever but maybe we can talk with the messague waht twill come here
+        commandString) {  // tthis parssing is whatever but maybe we can talk with the messague waht twill come here message what to do 
   std::size_t pos = commandString.find(' ');
   if (pos != std::string::npos) {
     commandName_ = commandString.substr(0, pos);

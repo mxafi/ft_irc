@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:29 by djames            #+#    #+#             */
-/*   Updated: 2024/02/21 17:12:50 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/21 18:42:59 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,9 @@ class Command {
   void execute();
   void actionPing();
   void actionChannel();
+  void actionkick();
+  void actionMode();
+  void actionPart();
   ~Command();
 
  private:
