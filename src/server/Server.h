@@ -17,6 +17,8 @@
 #include "../common/log.h"
 #include "../common/magicNumber.h"
 
+#include "../client/Client.h"
+
 extern bool isServerRunning_g;
 extern std::string serverHostname_g;
 
@@ -33,6 +35,7 @@ class Server {
   int server_socket_protocol_ = DEFAULT_SOCKET_PROTOCOL;
   struct addrinfo hints_;
   struct addrinfo* srvinfo_;
+  std::vector<Client> clients_;
 
  public:
   ~Server();

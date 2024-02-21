@@ -93,6 +93,7 @@ int Server::start() {
 void irc::Server::loop() {
   std::vector<pollfd> pollfds;
   pollfd server_pollfd;
+  pollfd new_client_pollfd;
   server_pollfd.fd = server_socket_fd_;
   server_pollfd.events = POLLIN;
   pollfds.push_back(server_pollfd);
@@ -111,7 +112,13 @@ void irc::Server::loop() {
     while (it != pollfds.end()) {
       if (it->revents & POLLIN) {  // ready to recv()
         if (it->fd == server_socket_fd_) {
-          // handle incoming new client connection
+          // handle new client connection
+          new_client_pollfd.fd = accept(server_socket_fd_, NULL, NULL);
+          new_client_pollfd.events = POLLIN | POLLOUT | POLLERR;
+          clients_.push_back(Client(new_client_pollfd.fd));
+          pollfds.push_back(new_client_pollfd);
+          LOG_DEBUG("server accepted new client connection on fd "
+                    << new_client_pollfd.fd);
         } else {
           // handle incoming request from existing client connection
         }
