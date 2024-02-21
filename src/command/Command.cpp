@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:51 by djames            #+#    #+#             */
-/*   Updated: 2024/02/21 15:30:02 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/21 17:28:15 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,13 +57,53 @@ void Command::parseCommand(
 void Command::actionPing() {
   std::string response = ":" + serverHostname_g + " PONG " + serverHostname_g +
                          " :" + client_.getNickname();
+  sendRawMessage(client_.getFd(), response);
   LOG_DEBUG(response);
 }
 
 void Command::actionChannel() {
   std::string response = ":" + serverHostname_g + " #newchannel " +
                          serverHostname_g + " :" + client_.getNickname();
+  sendRawMessage(client_.getFd(), response);
   LOG_DEBUG(response);
+}
+
+void Command::actionPart() {
+  std::string response = ":" + serverHostname_g + " #newchannel " +
+                         serverHostname_g + " :" + client_.getNickname();
+  sendRawMessage(client_.getFd(), response);
+  LOG_DEBUG(response);
+}
+
+void Command::actionMode() {
+  std::string response = ":" + serverHostname_g + " #newchannel " +
+                         serverHostname_g + " :" + client_.getNickname();
+  sendRawMessage(client_.getFd(), response);
+  // here we need to put the four parts 
+  LOG_DEBUG(response);
+  
+}
+
+void Command::actionkick() {
+  std::string response = ":" + serverHostname_g + " #newchannel " +
+                         serverHostname_g + " :" + client_.getNickname();
+  LOG_DEBUG(response);
+}
+
+void Command::sendRawMessage(int clientSocket, const std::string& message) {
+  const char* msgPtr = message.c_str();
+  size_t msgLen = message.length();
+  ssize_t bytesSent = 0;
+
+  while (msgLen > 0) {
+    bytesSent = send(clientSocket, msgPtr, msgLen, 0);
+    if (bytesSent == -1) {
+      LOG_DEBUG("Error sending message to client.");
+      return;
+    }
+    msgPtr += bytesSent;
+    msgLen -= bytesSent;
+  }
 }
 
 }  // namespace irc

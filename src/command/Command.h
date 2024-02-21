@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:29 by djames            #+#    #+#             */
-/*   Updated: 2024/02/21 14:12:57 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/21 17:12:50 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ class Command {
   std::string commandName_;
   static std::map<std::string, std::function<void(Command*)>> commands;
   void parseCommand(const std::string& commandString);
+  void sendRawMessage(int clientSocket, const std::string& message);
   Client client_;
 };
 }  // namespace irc
