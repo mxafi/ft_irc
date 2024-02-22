@@ -87,19 +87,21 @@ int Server::start() {
   LOG_DEBUG("server listen success");
 
   isServerRunning_g = true;
+  start_time_ = time(nullptr);
   return SUCCESS;
 }
 
 void irc::Server::loop() {
   std::vector<pollfd> pollfds;
   pollfd server_pollfd;
-  pollfd new_client_pollfd;
   server_pollfd.fd = server_socket_fd_;
-  server_pollfd.events = POLLIN;
+  server_pollfd.events = POLLIN | POLLERR;
   pollfds.push_back(server_pollfd);
 
   LOG_DEBUG("server loop start")
   while (isServerRunning_g) {
+    std::vector<pollfd> tmp_pollfds;
+
     if (poll(pollfds.data(), static_cast<unsigned int>(pollfds.size()), -1) ==
         POLL_FAILURE) {
       if (errno == EINTR && isServerRunning_g == false) {
@@ -112,27 +114,87 @@ void irc::Server::loop() {
     while (it != pollfds.end()) {
       if (it->revents & POLLIN) {  // ready to recv()
         if (it->fd == server_socket_fd_) {
-          // handle new client connection
-          new_client_pollfd.fd = accept(server_socket_fd_, NULL, NULL);
-          new_client_pollfd.events = POLLIN | POLLOUT | POLLERR;
-          clients_.push_back(Client(new_client_pollfd.fd));
-          pollfds.push_back(new_client_pollfd);
-          LOG_DEBUG("server accepted new client connection on fd "
-                    << new_client_pollfd.fd);
+          acceptClient_(tmp_pollfds);
         } else {
           // handle incoming request from existing client connection
         }
       }
-      if (it->revents & POLLOUT) {  // ready to send()
-        // handle outgoing response to existing client connection
+      if (it->revents & POLLOUT) {
+        try {
+          Client& client = clients_.at(it->fd);
+          sendFromBuffer_(client);
+          if (client.getWantDisconnect() == true) {
+            disconnectClient_(pollfds, it);
+            break;
+          }
+        } catch (std::out_of_range& e) {
+          LOG_ERROR("server client not found at fd " << it->fd << ": " << e.what());
+          disconnectClient_(pollfds, it);
+        }
       }
-      if (it->revents & POLLERR) {  // socket disconnect or error
-        // handle client socket disconnect or server socket error
+      if (it->revents & POLLERR) {
+        if (it->fd == server_socket_fd_) {
+          throw std::runtime_error("server socket pollerr");
+        } else {
+          disconnectClient_(pollfds, it);
+          break;
+        }
       }
       it++;
     }
+
+    pollfds.insert(pollfds.end(), tmp_pollfds.begin(), tmp_pollfds.end());
   }
   LOG_DEBUG("server loop end")
+}
+
+int Server::acceptClient_(std::vector<pollfd>& pollfds) {
+  pollfd client_pollfd;
+  struct sockaddr client_info;
+  unsigned int client_info_length = sizeof client_info;
+  int new_client_fd =
+      accept(server_socket_fd_, &client_info, &client_info_length);
+  if (new_client_fd == ACCEPT_FAILURE) {
+    LOG_ERROR(
+        "server failed to accept new client connection: " << strerror(errno));
+    return ACCEPT_FAILURE;
+  }
+  clients_.insert(
+      std::make_pair(new_client_fd, Client(new_client_fd, client_info)));
+  client_pollfd.fd = new_client_fd;
+  client_pollfd.events = POLLIN | POLLOUT | POLLERR;
+  pollfds.push_back(client_pollfd);
+  LOG_DEBUG("server accepted new client connection on fd " << new_client_fd);
+  return new_client_fd;
+}
+
+int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
+                              std::vector<pollfd>::iterator& it) {
+  int client_fd = it->fd;
+  LOG_DEBUG("server disconnecting client on fd " << client_fd);
+  close(client_fd);
+  unsigned long clients_erased = clients_.erase(client_fd);
+  if (clients_erased == 0) {
+    LOG_WARNING("server client not found at fd "
+                << client_fd << " to erase from clients_ map");
+  }
+  poll_fds.erase(it);
+  return SUCCESS;
+}
+
+long long Server::sendFromBuffer_(Client& client) {
+  std::string& buffer = client.getSendBuffer();
+  if (buffer.empty()) {
+    return SUCCESS;
+  }
+  long long send_ret = send(client.getFd(), buffer.c_str(), buffer.size(), 0); // remember to set flags
+  if (send_ret == SEND_FAILURE) {
+    LOG_ERROR("server send failed: " << strerror(errno));
+    return SEND_FAILURE;
+  }
+  LOG_DEBUG("server sent " << send_ret << " bytes to client on fd " << client.getFd());
+  buffer.erase(0, static_cast<unsigned long>(send_ret));
+  return send_ret;
 }
 
 // Getter functions
@@ -163,6 +225,10 @@ int Server::getServerSocketProtocol() {
 
 struct addrinfo& Server::getServerInfo() {
   return *srvinfo_;
+}
+
+std::string Server::getStartTimeString() {
+  return std::string(ctime(&start_time_));
 }
 
 }  // namespace irc

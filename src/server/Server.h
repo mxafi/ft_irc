@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <cerrno>
 #include <cstring>
+#include <ctime>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -27,6 +29,10 @@ namespace irc {
 class Server {
  private:
   int setServerHostname_();
+  int acceptClient_(std::vector<pollfd>& pollfds);
+  int disconnectClient_(std::vector<pollfd>& poll_fds,
+                        std::vector<pollfd>::iterator& it);
+  long long sendFromBuffer_(Client& client);
   char* port_;
   std::string password_;
   int server_socket_fd_;
@@ -35,7 +41,8 @@ class Server {
   int server_socket_protocol_ = DEFAULT_SOCKET_PROTOCOL;
   struct addrinfo hints_;
   struct addrinfo* srvinfo_;
-  std::vector<Client> clients_;
+  std::map<int, Client> clients_;
+  time_t start_time_;
 
  public:
   ~Server();
@@ -49,6 +56,7 @@ class Server {
   int getServerSocketType();
   int getServerSocketProtocol();
   struct addrinfo& getServerInfo();
+  std::string getStartTimeString();
 };
 
 }  // namespace irc
