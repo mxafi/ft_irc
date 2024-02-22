@@ -39,6 +39,13 @@ class Server {
   Server(char* port, std::string password);
   int start();
   void loop();
+  char* getPort();
+  std::string getPassword();
+  int getServerSocketFd();
+  int getServerSocketDomain();
+  int getServerSocketType();
+  int getServerSocketProtocol();
+  struct addrinfo& getServerInfo();
 };
 
 }  // namespace irc

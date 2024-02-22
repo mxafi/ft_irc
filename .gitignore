@@ -48,3 +48,7 @@ Icon
 ircserv
 *.log
 obj
+
+# --- Random ignores ---
+*temp*
+
