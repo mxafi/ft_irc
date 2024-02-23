@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Client.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: malaakso <malaakso@student.hive.fi>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/20 10:44:08 by djames            #+#    #+#             */
-/*   Updated: 2024/02/22 18:23:09 by malaakso         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "Client.h"
 
 namespace irc {
@@ -126,7 +114,7 @@ void Client::appendToSendBuffer(const std::string& message) {
   sendBuffer_ += message;
 }
 
-void Client::appendToRecvdBuffer(const std::string& message) {
+void Client::appendToRecvBuffer(const std::string& message) {
   sendBuffer_ += message;
 }
 

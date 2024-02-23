@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Client.h                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: malaakso <malaakso@student.hive.fi>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/12 16:12:46 by djames            #+#    #+#             */
-/*   Updated: 2024/02/22 18:22:51 by malaakso         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef CLIENT_H
 #define CLIENT_H
 
@@ -42,7 +30,7 @@ class Client {
   void setUserName(const std::string& userName);
   void setPassword(const std::string& password);
   void appendToSendBuffer(const std::string& message);
-  void appendToRecvdBuffer(const std::string& message);
+  void appendToRecvBuffer(const std::string& message);
   void clearSendBuffer();
   void clearRecvdBuffer();
   std::string getUserName() const;
