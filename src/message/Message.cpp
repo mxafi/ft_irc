@@ -37,7 +37,7 @@ int Message::getNumeric() const {
     */
 void Message::checkNulChar(const std::string& serializedMessage) {
   if (serializedMessage.find('\0') != std::string::npos) {
-    LOG_WARNING("Message contains illegal NUL Character");
+    LOG_DEBUG("Message::checkNulChar: message contains illegal NUL Character");
     numeric_ = ERR_CUSTOM_ILLEGALNUL;
   }
 }
@@ -52,8 +52,8 @@ void Message::checkNulChar(const std::string& serializedMessage) {
     */
 void Message::checkMessageLength(const std::string& serializedMessage) {
   if (serializedMessage.length() > MAX_MSG_LENGTH) {
-    LOG_WARNING("Input line was too long, " << serializedMessage.length()
-                                            << " instead of 512");
+    LOG_DEBUG("Message::checkMessageLength: message was too long, "
+              << serializedMessage.length() << " instead of 512");
     numeric_ = ERR_INPUTTOOLONG;
   }
 }
@@ -75,7 +75,7 @@ void Message::setPrefix_(std::istringstream& serializedStream) {
   // Sneak peek into the first char of stream for a semicolon ":"
   if (serializedStream.peek() == ':') {
     serializedStream >> prefix_;
-    LOG_DEBUG("Got prefix_: " + prefix_);
+    LOG_DEBUG("Message::setPrefix_: got prefix_: " + prefix_);
   }
 }
 
@@ -87,7 +87,7 @@ void Message::setPrefix_(std::istringstream& serializedStream) {
     */
 void Message::setCommand_(std::istringstream& serializedMessage) {
   serializedMessage >> command_;
-  LOG_DEBUG("Got command_: " + command_);
+  LOG_DEBUG("Message::setCommand_: got command_: " + command_);
 }
 
 /****
@@ -117,7 +117,7 @@ void Message::setParameters_(std::istringstream& serializedMessage) {
     parameters_.push_back(parameter);
   }
   if (parameters_.size() > MESSAGE_MAX_AMOUNT_PARAMETERS) {
-    LOG_WARNING("Too many parameters in message");
+    LOG_DEBUG("Message::setParameters_: too many parameters in message");
     numeric_ = ERR_CUSTOM_TOOMANYPARAMS;
   }
 }

@@ -138,11 +138,19 @@ void irc::Server::loop() {
               disconnectClient_(pollfds, it);
               break;
             }
-            //TRIM THE FRONT OF THE RECVBUFFER TO GET THE MESSAGE
-            //PROCESS MESSAGE IF EXISTS, PASS TO COMMAND
-            client.appendToSendBuffer("RPLMSG=");                   //test
-            client.appendToSendBuffer(client.getRecvBuffer());      //test
-            LOG_DEBUG("Appended the test message to send buffer");  //test
+            std::string messageString;
+            while (extractMessageString_(messageString, client) != FAILURE) {
+              Message message(messageString);
+              if (message.getNumeric() != SUCCESS) {
+                LOG_DEBUG("server got malformed message from client on fd "
+                          << client.getFd() << ": " << messageString);
+                handleMalformedMessage_(client, message);
+                continue;
+              }
+              LOG_DEBUG("server received message from client on fd "
+                        << client.getFd() << ": " << messageString);
+              // call CommandHandler here with parameters: clients_, client, message
+            }
           } catch (std::out_of_range& e) {
             LOG_ERROR("server client object not found for POLLIN at fd "
                       << it->fd << ": " << e.what());
@@ -256,6 +264,47 @@ long long Server::recvToBuffer_(Client& client) {
             << recv_ret << " bytes from client on fd " << client.getFd());
   buf.append(tmpRecvBuffer, static_cast<unsigned long>(recv_ret));
   return recv_ret;
+}
+
+/**
+ * @brief Extracts a message string from the client's recv buffer
+ * 
+ * @param message The message string to be extracted
+ * @param client The client whose recv buffer is to be used
+ * @return int SUCCESS if message was extracted, FAILURE if not
+ */
+int Server::extractMessageString_(std::string& message, Client& client) {
+  std::string& buf = client.getRecvBuffer();
+  std::string pattern = "\r\n";
+  std::string::size_type pos = buf.find(pattern);
+  if (pos == std::string::npos) {
+    return FAILURE;
+  }
+  message.clear();
+  message = buf.substr(0, pos + pattern.length());
+  buf.erase(0, pos + pattern.length());
+  LOG_DEBUG("server extracted message::" << message << ":: from client on fd "
+                                         << client.getFd());
+
+  return SUCCESS;
+}
+
+void Server::handleMalformedMessage_(Client& client, Message& message) {
+  int numeric = message.getNumeric();
+  if (numeric == ERR_CUSTOM_ILLEGALNUL) {
+    LOG_WARNING(
+        "Client on fd "
+        << client.getFd()
+        << " sent a message that contained a null character: ignoring it");
+  } else if (numeric == ERR_INPUTTOOLONG) {
+    LOG_WARNING("Client on fd "
+                << client.getFd()
+                << " sent a message that was too long: ignoring it");
+  } else if (numeric == ERR_CUSTOM_TOOMANYPARAMS) {
+    LOG_WARNING("Client on fd "
+                << client.getFd()
+                << " sent a message with too many parameters: ignoring it");
+  }
 }
 
 // Getter functions

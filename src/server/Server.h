@@ -29,6 +29,7 @@
 #include "../common/magicNumber.h"
 
 #include "../client/Client.h"
+#include "../message/Message.h"
 
 extern bool isServerRunning_g;
 extern std::string serverHostname_g;
@@ -43,6 +44,8 @@ class Server {
                         std::vector<pollfd>::iterator& it);
   long long sendFromBuffer_(Client& client);
   long long recvToBuffer_(Client& client);
+  int extractMessageString_(std::string& message, Client& client);
+  void handleMalformedMessage_(Client& client, Message& message);
   char* port_;
   std::string password_;
   int server_socket_fd_;
