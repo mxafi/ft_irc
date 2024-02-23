@@ -42,6 +42,7 @@ class Server {
   int disconnectClient_(std::vector<pollfd>& poll_fds,
                         std::vector<pollfd>::iterator& it);
   long long sendFromBuffer_(Client& client);
+  long long recvToBuffer_(Client& client);
   char* port_;
   std::string password_;
   int server_socket_fd_;

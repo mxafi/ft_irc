@@ -3,6 +3,11 @@
 namespace irc {
 
 Server::~Server() {
+  std::map<int, Client>::iterator it = clients_.begin();
+  while (it != clients_.end()) {
+    close(it->first);
+    it++;
+  }
   close(server_socket_fd_);
   freeaddrinfo(srvinfo_);
 }
@@ -59,7 +64,7 @@ int Server::start() {
     LOG_ERROR("server socket creation failed");
     return FAILURE;
   }
-  LOG_DEBUG("server socket creation success");
+  LOG_DEBUG("server socket creation success on fd: " << server_socket_fd_);
 
   int fcntl_flags = fcntl(server_socket_fd_, F_GETFL);
   if (fcntl_flags == FCNTL_FAILURE) {
@@ -120,24 +125,43 @@ void irc::Server::loop() {
 
     std::vector<pollfd>::iterator it = pollfds.begin();
     while (it != pollfds.end()) {
-      if (it->revents & POLLIN) {  // ready to recv()
+      if (it->revents & POLLIN) {
         if (it->fd == server_socket_fd_) {
-          acceptClient_(tmp_pollfds);
+          if (acceptClient_(tmp_pollfds) == ACCEPT_FAILURE) {
+            continue;
+          }
         } else {
-          // handle incoming request from existing client connection
+          try {
+            Client& client = clients_.at(it->fd);
+            recvToBuffer_(client);
+            if (client.getWantDisconnect() == true) {
+              disconnectClient_(pollfds, it);
+              break;
+            }
+            //TRIM THE FRONT OF THE RECVBUFFER TO GET THE MESSAGE
+            //PROCESS MESSAGE IF EXISTS, PASS TO COMMAND
+            client.appendToSendBuffer("RPLMSG=");                   //test
+            client.appendToSendBuffer(client.getRecvBuffer());      //test
+            LOG_DEBUG("Appended the test message to send buffer");  //test
+          } catch (std::out_of_range& e) {
+            LOG_ERROR("server client object not found for POLLIN at fd "
+                      << it->fd << ": " << e.what());
+            disconnectClient_(pollfds, it);
+            break;
+          }
         }
       }
       if (it->revents & POLLOUT) {
         try {
           Client& client = clients_.at(it->fd);
-          sendFromBuffer_(client);
+          sendFromBuffer_(client);  //logs nothing if sendbuffer is empty
           if (client.getWantDisconnect() == true) {
             disconnectClient_(pollfds, it);
             break;
           }
         } catch (std::out_of_range& e) {
-          LOG_ERROR("server client not found at fd " << it->fd << ": "
-                                                     << e.what());
+          LOG_ERROR("server client object not found for POLLOUT at fd "
+                    << it->fd << ": " << e.what());
           disconnectClient_(pollfds, it);
           break;
         }
@@ -174,7 +198,8 @@ int Server::acceptClient_(std::vector<pollfd>& pollfds) {
   client_pollfd.fd = new_client_fd;
   client_pollfd.events = POLLIN | POLLOUT | POLLERR;
   pollfds.push_back(client_pollfd);
-  LOG_DEBUG("server accepted new client connection on fd " << new_client_fd);
+  LOG_INFO("New client connection on fd " << new_client_fd);
+  LOG_INFO("Clients on server now: " << clients_.size());
   return new_client_fd;
 }
 
@@ -189,6 +214,7 @@ int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
                 << client_fd << " to erase from clients_ map");
   }
   poll_fds.erase(it);
+  LOG_INFO("Clients remaining on server: " << clients_.size());
   return SUCCESS;
 }
 
@@ -207,6 +233,29 @@ long long Server::sendFromBuffer_(Client& client) {
                            << client.getFd());
   buffer.erase(0, static_cast<unsigned long>(send_ret));
   return send_ret;
+}
+
+long long Server::recvToBuffer_(Client& client) {
+  char tmpRecvBuffer[SERVER_RECV_BUFFER_SIZE];
+  long long recv_ret = RECV_FAILURE;
+  std::string& buf = client.getRecvBuffer();
+
+  memset(tmpRecvBuffer, 0, SERVER_RECV_BUFFER_SIZE);
+  recv_ret = recv(client.getFd(), tmpRecvBuffer, SERVER_RECV_BUFFER_SIZE, 0);
+  if (recv_ret == RECV_FAILURE) {
+    LOG_ERROR("server recv failed on fd: " << client.getFd()
+                                           << " with: " << strerror(errno));
+    return RECV_FAILURE;
+  }
+  if (recv_ret == RECV_ORDERLY_SHUTDOWN) {
+    LOG_INFO("Client on fd " << client.getFd() << " disconnected gracefully");
+    client.setWantDisconnect();
+    return RECV_ORDERLY_SHUTDOWN;
+  }
+  LOG_DEBUG("server received a packet of "
+            << recv_ret << " bytes from client on fd " << client.getFd());
+  buf.append(tmpRecvBuffer, static_cast<unsigned long>(recv_ret));
+  return recv_ret;
 }
 
 // Getter functions
