@@ -9,15 +9,9 @@ Client::Client(int fd, const struct sockaddr& sockaddr)
   status_.gotPassword = false;
   status_.authenticated = false;
   status_.wantDisconnect = false;
-  fd_ = 0;
-  memset(&sockaddr_, 0, sizeof sockaddr_);
 }
 
-Client::~Client() {
-  if (fd_ != SOCKET_FAILURE) {
-    close(fd_);
-  }
-}
+Client::~Client() {}
 
 bool Client::getAuthenticated() {
   if (status_.gotNick && status_.gotUser && status_.gotPassword) {
@@ -110,12 +104,12 @@ bool Client::isGotPassword() const {
   return status_.gotPassword;
 }
 
-void Client::appendToSendBuffer(const std::string& message) {
-  sendBuffer_ += message;
+void Client::appendToSendBuffer(const std::string& packet) {
+  sendBuffer_ += packet;
 }
 
-void Client::appendToRecvBuffer(const std::string& message) {
-  sendBuffer_ += message;
+void Client::appendToRecvBuffer(const std::string& packet) {
+  sendBuffer_ += packet;
 }
 
 void Client::clearSendBuffer() {

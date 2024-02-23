@@ -29,8 +29,8 @@ class Client {
   void setNickname(const std::string& newNickname);
   void setUserName(const std::string& userName);
   void setPassword(const std::string& password);
-  void appendToSendBuffer(const std::string& message);
-  void appendToRecvBuffer(const std::string& message);
+  void appendToSendBuffer(const std::string& packet);
+  void appendToRecvBuffer(const std::string& packet);
   void clearSendBuffer();
   void clearRecvdBuffer();
   std::string getUserName() const;
