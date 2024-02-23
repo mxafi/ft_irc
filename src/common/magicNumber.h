@@ -5,10 +5,13 @@
 #define FAILURE 1
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
+#define TRUE 1
+#define FALSE 0
 #define GETHOSTNAME_FAILURE -1
 #define HOSTNAME_MAX_LENGTH 64
 #define SOCKET_FAILURE -1
 #define FCNTL_FAILURE -1
+#define SETSOCKOPT_FAILURE -1
 #define BIND_FAILURE -1
 #define LISTEN_FAILURE -1
 #define ACCEPT_FAILURE -1

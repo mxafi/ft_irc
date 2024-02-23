@@ -1,6 +1,15 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+// Flag to make socket not generate SIGPIPE on systems other than macOS
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+// Flag to make socket not generate SIGPIPE on macOS
+#ifndef SO_NOSIGPIPE
+#define SO_NOSIGPIPE 0
+#endif
+
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netdb.h>

@@ -73,6 +73,14 @@ int Server::start() {
   }
   LOG_DEBUG("server socket fcntl nonblock success");
 
+  int optval = TRUE;
+  if (setsockopt(server_socket_fd_, SOL_SOCKET, SO_NOSIGPIPE, &optval,
+                 sizeof(optval)) == SETSOCKOPT_FAILURE) {
+    LOG_ERROR("server socket setsockopt failed: " << strerror(errno));
+    return FAILURE;
+  }
+  LOG_DEBUG("server socket setsockopt success");
+
   if (bind(server_socket_fd_, srvinfo_->ai_addr, srvinfo_->ai_addrlen) ==
       BIND_FAILURE) {
     LOG_ERROR("server bind failed");
@@ -128,8 +136,10 @@ void irc::Server::loop() {
             break;
           }
         } catch (std::out_of_range& e) {
-          LOG_ERROR("server client not found at fd " << it->fd << ": " << e.what());
+          LOG_ERROR("server client not found at fd " << it->fd << ": "
+                                                     << e.what());
           disconnectClient_(pollfds, it);
+          break;
         }
       }
       if (it->revents & POLLERR) {
@@ -187,12 +197,14 @@ long long Server::sendFromBuffer_(Client& client) {
   if (buffer.empty()) {
     return SUCCESS;
   }
-  long long send_ret = send(client.getFd(), buffer.c_str(), buffer.size(), 0); // remember to set flags
+  long long send_ret =
+      send(client.getFd(), buffer.c_str(), buffer.size(), MSG_NOSIGNAL);
   if (send_ret == SEND_FAILURE) {
     LOG_ERROR("server send failed: " << strerror(errno));
     return SEND_FAILURE;
   }
-  LOG_DEBUG("server sent " << send_ret << " bytes to client on fd " << client.getFd());
+  LOG_DEBUG("server sent " << send_ret << " bytes to client on fd "
+                           << client.getFd());
   buffer.erase(0, static_cast<unsigned long>(send_ret));
   return send_ret;
 }
