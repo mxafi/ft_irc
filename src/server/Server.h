@@ -36,6 +36,14 @@ extern std::string serverHostname_g;
 
 namespace irc {
 
+/**
+ * @class Server
+ * @brief Represents an IRC server that handles client connections and messages.
+ * 
+ * The Server class provides functionality for starting an IRC server, accepting client connections,
+ * sending and receiving messages, and handling client disconnections. It also stores information
+ * about the server's hostname, port, password, and other configuration details.
+ */
 class Server {
  private:
   int setServerHostname_();
