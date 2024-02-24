@@ -1,13 +1,10 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-// Flag to make socket not generate SIGPIPE on systems other than macOS
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#endif
-// Flag to make socket not generate SIGPIPE on macOS
-#ifndef SO_NOSIGPIPE
-#define SO_NOSIGPIPE 0
+#ifdef __APPLE__
+#define ON_MACOS true
+#else
+#define ON_MACOS false
 #endif
 
 #include <arpa/inet.h>
@@ -24,6 +21,12 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+// These defines have to be checked after including sys/socket.h
+// Flag to make socket not generate SIGPIPE on systems other than macOS
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
 
 #include "../common/log.h"
 #include "../common/magicNumber.h"

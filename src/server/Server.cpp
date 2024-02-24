@@ -78,13 +78,15 @@ int Server::start() {
   }
   LOG_DEBUG("server socket fcntl nonblock success");
 
-  int optval = TRUE;
-  if (setsockopt(server_socket_fd_, SOL_SOCKET, SO_NOSIGPIPE, &optval,
-                 sizeof(optval)) == SETSOCKOPT_FAILURE) {
-    LOG_ERROR("server socket setsockopt failed: " << strerror(errno));
-    return FAILURE;
+  if (ON_MACOS) {
+    int optval = TRUE;
+    if (setsockopt(server_socket_fd_, SOL_SOCKET, SO_NOSIGPIPE, &optval,
+                   sizeof(optval)) == SETSOCKOPT_FAILURE) {
+      LOG_ERROR("server socket setsockopt failed: " << strerror(errno));
+      return FAILURE;
+    }
+    LOG_DEBUG("server socket setsockopt success");
   }
-  LOG_DEBUG("server socket setsockopt success");
 
   if (bind(server_socket_fd_, srvinfo_->ai_addr, srvinfo_->ai_addrlen) ==
       BIND_FAILURE) {
