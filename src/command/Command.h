@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:29 by djames            #+#    #+#             */
-/*   Updated: 2024/02/23 15:28:19 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/26 17:16:27 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 #include "../client/Client.h"
 #include "../common/log.h"
 #include "../common/magicNumber.h"
-#include "../message/message.h"
+#include "../message/Message.h"
 
 #define MAX_BUFFER_SIZE 1024  //maybe this we change
 
@@ -38,6 +38,9 @@ class Command {
   void actionMode(Client& client);
   void actionPart(Client& client);
   void actionNick(Client& client);
+  void actionUser(Client& client);
+  void actionQuit(Client& client);
+  void actionPrivmsg(Client& client);
   ~Command();
 
  private:

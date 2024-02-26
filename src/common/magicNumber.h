@@ -33,5 +33,9 @@
 // According to RFC2812 Error codes > 502 are free, and on IRCv3 > 525 and < 670
 #define ERR_CUSTOM_ILLEGALNUL 530
 #define ERR_CUSTOM_TOOMANYPARAMS 531
+#define ERR_NICKNAMEINUSE 433
+#define ERR_ERRONEUSNICKNAME 432
+#define ERR_NONICKNAMEGIVEN 431
+
 
 #endif
