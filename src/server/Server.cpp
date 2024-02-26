@@ -1,7 +1,29 @@
+/**
+ * @file Server.cpp
+ * @brief Implementation file for the Server class.
+ * 
+ * This file contains the implementation of the Server class, which represents an IRC server.
+ * It includes the definitions of the constructor, destructor, and member functions of the Server class.
+ * 
+ * The Server class provides functionality to start the server, accept client connections, handle client messages,
+ * send messages to clients, and handle client disconnections.
+ * 
+ * The Server class also includes private helper functions for setting the server hostname, accepting client connections,
+ * receiving messages from clients, sending messages to clients, and disconnecting clients.
+ * 
+ * @note This file should be included in the compilation of the IRC server application.
+ */
+
 #include "Server.h"
 
 namespace irc {
 
+/**
+ * @brief Destructor for the Server class.
+ * 
+ * This destructor closes all client sockets and the server socket,
+ * and frees the address information structure.
+ */
 Server::~Server() {
   std::map<int, Client>::iterator it = clients_.begin();
   while (it != clients_.end()) {
@@ -12,9 +34,23 @@ Server::~Server() {
   freeaddrinfo(srvinfo_);
 }
 
+/**
+ * @brief Constructs a Server object with the specified port and password.
+ * 
+ * @param port The port number to bind the server to.
+ * @param password The password required to connect to the server.
+ */
 Server::Server(char* port, std::string password)
     : port_(port), password_(password) {}
 
+/**
+ * @brief Sets the server hostname.
+ * 
+ * This function retrieves the hostname of the server and stores it in the `serverHostname_g` variable.
+ * If the hostname is too long, it falls back to using the host address instead.
+ * 
+ * @return Returns SUCCESS if the hostname is successfully set, otherwise returns FAILURE.
+ */
 int Server::setServerHostname_() {
   int hostnameLength;
   char hostname[HOSTNAME_MAX_LENGTH];
@@ -41,6 +77,22 @@ int Server::setServerHostname_() {
   return SUCCESS;
 }
 
+/**
+ * @brief Starts the server.
+ * 
+ * This function initializes and starts the server by performing the following steps:
+ * 1. Calls getaddrinfo() to retrieve address information for the server.
+ * 2. Sets the server hostname.
+ * 3. Creates a socket using socket().
+ * 4. Sets the socket to non-blocking mode using fcntl().
+ * 5. Sets the SO_NOSIGPIPE option on the socket using setsockopt() if compiling on MacOS.
+ * 6. Binds the socket to the server address using bind().
+ * 7. Starts listening for incoming connections using listen().
+ * 8. Sets the isServerRunning_g flag to true.
+ * 9. Records the start time of the server.
+ * 
+ * @return Returns SUCCESS if the server starts successfully, otherwise returns FAILURE.
+ */
 int Server::start() {
   memset(&hints_, 0, sizeof hints_);
   hints_.ai_family = server_socket_domain_;
@@ -104,6 +156,21 @@ int Server::start() {
   return SUCCESS;
 }
 
+/**
+ * @brief Executes the main loop of the IRC server.
+ * 
+ * This function continuously polls for events on the server socket and client sockets,
+ * and handles the corresponding actions based on the received events.
+ * 
+ * @details The loop runs until the server is stopped by setting the `isServerRunning_g` flag to false.
+ * 
+ * @throws std::runtime_error if the server poll fails.
+ * 
+ * @note This function is responsible for accepting new client connections, receiving and handling messages
+ * from clients, sending messages to clients, and handling disconnections.
+ * 
+ * @note The function also logs debug messages for various events during the server loop.
+ */
 void irc::Server::loop() {
   std::vector<pollfd> pollfds;
   pollfd server_pollfd;
@@ -190,6 +257,12 @@ void irc::Server::loop() {
   LOG_DEBUG("server loop end")
 }
 
+/**
+ * Accepts a new client connection and adds it to the server's list of clients.
+ * 
+ * @param pollfds A reference to the vector of pollfds used for polling events.
+ * @return The file descriptor of the newly accepted client, or ACCEPT_FAILURE if an error occurred.
+ */
 int Server::acceptClient_(std::vector<pollfd>& pollfds) {
   pollfd client_pollfd;
   struct sockaddr client_info;
@@ -211,6 +284,16 @@ int Server::acceptClient_(std::vector<pollfd>& pollfds) {
   return new_client_fd;
 }
 
+/**
+ * @brief Disconnects a client from the server.
+ * 
+ * This function disconnects a client from the server by closing its file descriptor,
+ * removing it from the clients_ map, and erasing it from the poll_fds vector.
+ * 
+ * @param poll_fds The vector of pollfd structures representing the active file descriptors.
+ * @param it An iterator pointing to the pollfd structure of the client to be disconnected.
+ * @return int Returns SUCCESS if the client was successfully disconnected.
+ */
 int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
                               std::vector<pollfd>::iterator& it) {
   int client_fd = it->fd;
@@ -226,6 +309,16 @@ int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
   return SUCCESS;
 }
 
+/**
+ * Sends data from the send buffer to the client.
+ * 
+ * This function sends the data stored in the send buffer of the specified client
+ * to the client's file descriptor using the send system call. It returns the number
+ * of bytes sent on success, or an error code on failure.
+ * 
+ * @param client The client object representing the connected client.
+ * @return The number of bytes sent on success, or an error code on failure.
+ */
 long long Server::sendFromBuffer_(Client& client) {
   std::string& buffer = client.getSendBuffer();
   if (buffer.empty()) {
@@ -243,6 +336,13 @@ long long Server::sendFromBuffer_(Client& client) {
   return send_ret;
 }
 
+/**
+ * Receives data from the client and appends it to the receive buffer of the specified client.
+ * 
+ * @param client The client to receive data from.
+ * @return The number of bytes received, or RECV_FAILURE if an error occurred,
+ * or RECV_ORDERLY_SHUTDOWN if the client disconnected gracefully.
+ */
 long long Server::recvToBuffer_(Client& client) {
   char tmpRecvBuffer[SERVER_RECV_BUFFER_SIZE];
   long long recv_ret = RECV_FAILURE;
@@ -267,11 +367,11 @@ long long Server::recvToBuffer_(Client& client) {
 }
 
 /**
- * @brief Extracts a message string from the client's recv buffer
+ * Extracts a complete message string from the receive buffer of a client.
  * 
- * @param message The message string to be extracted
- * @param client The client whose recv buffer is to be used
- * @return int SUCCESS if message was extracted, FAILURE if not
+ * @param message The extracted message string. (destination)
+ * @param client The client from which to extract the message.
+ * @return Returns SUCCESS if a complete message is extracted, FAILURE otherwise.
  */
 int Server::extractMessageString_(std::string& message, Client& client) {
   std::string& buf = client.getRecvBuffer();
@@ -289,6 +389,12 @@ int Server::extractMessageString_(std::string& message, Client& client) {
   return SUCCESS;
 }
 
+/**
+ * Handles a malformed message received from a client.
+ * 
+ * @param client The client that sent the malformed message.
+ * @param message The malformed message received from the client.
+ */
 void Server::handleMalformedMessage_(Client& client, Message& message) {
   int numeric = message.getNumeric();
   if (numeric == ERR_CUSTOM_ILLEGALNUL) {
