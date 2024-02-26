@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: malaakso <malaakso@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/12 16:12:46 by djames            #+#    #+#             */
-/*   Updated: 2024/02/21 07:35:33 by malaakso         ###   ########.fr       */
+/*   Updated: 2024/02/23 11:25:46 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ class Client {
   void setNickname(const std::string& newNickname);
   void setUserName(const std::string& userName);
   void setPassword(const std::string& password);
-  void appendToSendBuffer(const std::string& message);
+  void appendToSendBuffer(std::string& message);
   void appendToRecvdBuffer(const std::string& message);
   void clearSendBuffer();
   void clearRecvdBuffer();

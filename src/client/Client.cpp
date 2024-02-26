@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: malaakso <malaakso@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/20 10:44:08 by djames            #+#    #+#             */
-/*   Updated: 2024/02/21 07:34:48 by malaakso         ###   ########.fr       */
+/*   Updated: 2024/02/23 11:24:58 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,12 +111,12 @@ bool Client::isGotPassword() const {
   return status_.gotPassword;
 }
 
-void Client::appendToSendBuffer(const std::string& message) {
+void Client::appendToSendBuffer(std::string& message) {
   sendBuffer_ += message;
 }
 
 void Client::appendToRecvdBuffer(const std::string& message) {
-  sendBuffer_ += message;
+  recvBuffer_ += message;
 }
 
 void Client::clearSendBuffer() {
