@@ -1,7 +1,7 @@
 #include "../catch2/catch_amalgamated.hpp"
 
 #include <cerrno>
-#include "../../src/message/message.h"
+#include "../../src/message/Message.h"
 
 using namespace irc;
 
