@@ -10,21 +10,42 @@
 #include <unistd.h>
 #include <cerrno>
 #include <cstring>
+#include <ctime>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "../common/log.h"
 #include "../common/magicNumber.h"
+#include "../common/os.h"
+
+#include "../client/Client.h"
+#include "../message/Message.h"
 
 extern bool isServerRunning_g;
 extern std::string serverHostname_g;
 
 namespace irc {
 
+/**
+ * @class Server
+ * @brief Represents an IRC server that handles client connections and messages.
+ * 
+ * The Server class provides functionality for starting an IRC server, accepting client connections,
+ * sending and receiving messages, and handling client disconnections. It also stores information
+ * about the server's hostname, port, password, and other configuration details.
+ */
 class Server {
  private:
   int setServerHostname_();
+  int acceptClient_(std::vector<pollfd>& pollfds);
+  int disconnectClient_(std::vector<pollfd>& poll_fds,
+                        std::vector<pollfd>::iterator& it);
+  long long sendFromBuffer_(Client& client);
+  long long recvToBuffer_(Client& client);
+  int extractMessageString_(std::string& message, Client& client);
+  void handleMalformedMessage_(Client& client, Message& message);
   char* port_;
   std::string password_;
   int server_socket_fd_;
@@ -33,6 +54,8 @@ class Server {
   int server_socket_protocol_ = DEFAULT_SOCKET_PROTOCOL;
   struct addrinfo hints_;
   struct addrinfo* srvinfo_;
+  std::map<int, Client> clients_;
+  time_t start_time_;
 
  public:
   ~Server();
@@ -46,6 +69,7 @@ class Server {
   int getServerSocketType();
   int getServerSocketProtocol();
   struct addrinfo& getServerInfo();
+  std::string getStartTimeString();
 };
 
 }  // namespace irc
