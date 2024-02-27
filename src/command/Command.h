@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:29 by djames            #+#    #+#             */
-/*   Updated: 2024/02/27 11:54:42 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/27 16:48:51 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ class Command {
   void actionQuit(Client& client);
   void actionPrivmsg(Client& client);
   void actionJoin(Client& client);
+  void actionPass(Client& client);
   ~Command();
 
  private:

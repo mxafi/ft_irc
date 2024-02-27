@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:51 by djames            #+#    #+#             */
-/*   Updated: 2024/02/27 12:57:56 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/27 17:06:40 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,21 +29,29 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                           [](Command* cmd, Client& client) {
                             cmd->actionPart(client);
                           }},
-                         {"kick",
+                         {"PASS",
                           [](Command* cmd, Client& client) {
-                            cmd->actionPart(client);
+                            cmd->actionPass(client);
                           }},
                          {"NICK",
                           [](Command* cmd, Client& client) {
                             cmd->actionNick(client);
                           }},
-                         {"USER", [](Command* cmd, Client& client) {
+                         {"USER",
+                          [](Command* cmd, Client& client) {
                             cmd->actionNick(client);
-                          }},{"quit", [](Command* cmd, Client& client) {
-                            cmd->actionQuit(client);}},
-                            {"privmsg", [](Command* cmd, Client& client) {
-                            cmd->actionPrivmsg(client);}}, {"JOIN", [](Command* cmd, Client& client) {
-                            cmd->actionJoin(client);}}};
+                          }},
+                         {"quit",
+                          [](Command* cmd, Client& client) {
+                            cmd->actionQuit(client);
+                          }},
+                         {"privmsg",
+                          [](Command* cmd, Client& client) {
+                            cmd->actionPrivmsg(client);
+                          }},
+                         {"JOIN", [](Command* cmd, Client& client) {
+                            cmd->actionJoin(client);
+                          }}};
 
 Command::Command(const Message& commandString, Client& client,
                  std::map<int, Client>&
@@ -60,7 +68,7 @@ void Command::execute(Client& client) {
   if (it != commands.end()) {
     it->second(this, client);
   } else {
-    LOG_DEBUG("Command not found: " << commandName_);
+    LOG_DEBUG("Command not found: " << commandName_);  // answer with numeric
   }
 }
 
@@ -75,29 +83,52 @@ void Command::parseCommand(const Message& commandString, Client& client) {
 void Command::actionPing(Client& client) {
   std::string response = ":" + serverHostname_g + " PONG " + serverHostname_g +
                          " :" + client.getNickname();
- 
+  client.appendToSendBuffer(response);
   //:sakura.jp.as.dal.net PONG sakura.jp.as.dal.net :pepit
   LOG_DEBUG(response);
+}
+
+void Command::actionPass(Client& client) {
+  std::string replyJoin =
+      ":" + serverHostname_g + " 001 " + client.getUserName() +
+      ":Welcome to the DIEGOnet IRC Network " + client.getNickname() + "!~" +
+      client.getUserName() + client.getIpAddr() + "\r\n";
+  client.appendToSendBuffer(replyJoin);
+  client.setPassword(param_.at(0));
+  replyJoin =
+      " 002 "
+      ":Your host is " +
+      serverHostname_g +
+      " version 3.0\r\n";  // check the date function Your host is <servername>, running version <ver>
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + " 003 " + client.getUserName() +
+              ":This server was created Now\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + " 004 " + client.getUserName() +
+              serverHostname_g + "Diego2.2\r\n";
+  client.appendToSendBuffer(replyJoin);
+  //:sakura.jp.as.dal.net PONG sakura.jp.as.dal.net :pepit
+  LOG_DEBUG(replyJoin);
 }
 
 void Command::actionChannel(Client& client) {
   std::string response = ":" + serverHostname_g + " #newchannel " +
                          serverHostname_g + " :" + client.getNickname();
- 
+
   LOG_DEBUG(response);
 }
 
 void Command::actionPart(Client& client) {
   std::string response = ":" + serverHostname_g + " #newchannel " +
                          serverHostname_g + " :" + client.getNickname();
- 
+
   LOG_DEBUG(response);
 }
 
 void Command::actionMode(Client& client) {
   std::string response = ":" + serverHostname_g + " #newchannel " +
                          serverHostname_g + " :" + client.getNickname();
- 
+
   // here we need to put the four parts
   LOG_DEBUG(response);
 }
@@ -132,7 +163,7 @@ void Command::actionNick(
   //   return;
   // }
   // if (findClientByNickname(client.getNickname())) {
-  //   std::string nickExist = param_[0] + " :Nickname is already in use\r\n";// fix 
+  //   std::string nickExist = param_[0] + " :Nickname is already in use\r\n";// fix
   //   client.appendToSendBuffer(nickExist);
   //   return;
   // }
@@ -159,51 +190,57 @@ void Command::actionQuit(Client& client) {
 
 void Command::actionJoin(Client& client) {
 
-  std::string replyJoin =":" + serverHostname_g + "NOTICE AUTH :*** Looking up your hostname...\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + "NOTICE AUTH :*** Checking Ident\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + "NOTICE AUTH :*** Found your hostname\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + "NOTICE AUTH :*** No Ident response\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + " 451 * JOIN :You must finish connecting with another nickname first.\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + " 001" + client.getUserName() + ":Welcome to the DIEGOnet IRC Network " + client.getNickname()+ "!~" + client.getUserName() + client.getIpAddr()+ "\r\n";
-  client.appendToSendBuffer(replyJoin);
-  //:lair.nl.eu.dal.net 001 diegoo :Welcome to the DALnet IRC Network diegoo!~djames@194.136.126.51
-  replyJoin = ":" + serverHostname_g + " 002" + client.getUserName() + ":This server was created Now\r\n"; // check the date function
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + " 003" + client.getUserName() + ":This server was created Now\r\n"; 
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + " 004" + client.getUserName() + serverHostname_g + "Diego2.2\r\n";
-  client.appendToSendBuffer(replyJoin);
-//   :lair.nl.eu.dal.net NOTICE AUTH :*** Looking up your hostname...
-// >> :lair.nl.eu.dal.net NOTICE AUTH :*** Checking Ident
-// >> :lair.nl.eu.dal.net NOTICE AUTH :*** Found your hostname
-// >> :lair.nl.eu.dal.net NOTICE AUTH :*** No Ident response
-// >> :lair.nl.eu.dal.net 451 * JOIN :You must finish connecting with another nickname first.
+  std::string replyJoin;
 
-// >> :lair.nl.eu.dal.net 002 diegoo :Your host is lair.nl.eu.dal.net, running version bahamut-2.2.3
-// >> :lair.nl.eu.dal.net 003 diegoo :This server was created Tue Dec 19 2023 at 22:45:40 CET
-// >> :lair.nl.eu.dal.net 004 diegoo lair.nl.eu.dal.net bahamut-2.2.3 aAbcCdefFghHiIjkKmnoOPrRsSwxXy AbceiIjklLmMnoOpPrRsStv beIjklov
-// 001    RPL_WELCOME
-//               "Welcome to the Internet Relay Network
-//                <nick>!<user>@<host>"
-//        002    RPL_YOURHOST
-//               "Your host is <servername>, running version <ver>"
-//        003    RPL_CREATED
-//               "This server was created <date>"
-//        004    RPL_MYINFO
-//               "<servername> <version> <available user modes>
-//                <available channel modes>"
+  replyJoin = ":" + serverHostname_g +
+                          " NOTICE AUTH :*** Looking up your hostname...\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + " NOTICE AUTH :*** Checking Ident\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin =
+      ":" + serverHostname_g + " NOTICE AUTH :*** Found your hostname\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin =
+      ":" + serverHostname_g + " NOTICE AUTH :*** No Ident response\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g +
+              " 451 * JOIN :You must finish connecting with another nickname "
+              "first.\r\n";
+  client.appendToSendBuffer(replyJoin);
+  // replyJoin = ":" + serverHostname_g + " 001 " + client.getUserName() + ":Welcome to the DIEGOnet IRC Network " + client.getNickname()+ "!~" + client.getUserName() + client.getIpAddr()+ "\r\n";
+  // client.appendToSendBuffer(replyJoin);
+  //:lair.nl.eu.dal.net 001 diegoo :Welcome to the DALnet IRC Network diegoo!~djames@194.136.126.51
+  // replyJoin = ":" + serverHostname_g + " 002 " + client.getUserName() + ":This server was created Now\r\n"; // check the date function
+  // client.appendToSendBuffer(replyJoin);
+  // replyJoin = ":" + serverHostname_g + " 003 " + client.getUserName() + ":This server was created Now\r\n";
+  // client.appendToSendBuffer(replyJoin);
+  // replyJoin = ":" + serverHostname_g + " 004 " + client.getUserName() + serverHostname_g + "Diego2.2\r\n";
+  // client.appendToSendBuffer(replyJoin);
+  //   :lair.nl.eu.dal.net NOTICE AUTH :*** Looking up your hostname...
+  // >> :lair.nl.eu.dal.net NOTICE AUTH :*** Checking Ident
+  // >> :lair.nl.eu.dal.net NOTICE AUTH :*** Found your hostname
+  // >> :lair.nl.eu.dal.net NOTICE AUTH :*** No Ident response
+  // >> :lair.nl.eu.dal.net 451 * JOIN :You must finish connecting with another nickname first.
+
+  // >> :lair.nl.eu.dal.net 002 diegoo :Your host is lair.nl.eu.dal.net, running version bahamut-2.2.3
+  // >> :lair.nl.eu.dal.net 003 diegoo :This server was created Tue Dec 19 2023 at 22:45:40 CET
+  // >> :lair.nl.eu.dal.net 004 diegoo lair.nl.eu.dal.net bahamut-2.2.3 aAbcCdefFghHiIjkKmnoOPrRsSwxXy AbceiIjklLmMnoOpPrRsStv beIjklov
+  // 001    RPL_WELCOME
+  //               "Welcome to the Internet Relay Network
+  //                <nick>!<user>@<host>"
+  //        002    RPL_YOURHOST
+  //               "Your host is <servername>, running version <ver>"
+  //        003    RPL_CREATED
+  //               "This server was created <date>"
+  //        004    RPL_MYINFO
+  //               "<servername> <version> <available user modes>
+  //                <available channel modes>"
 
   // we dont send anything to the client wew jusgt set it up
   //:syrk!kalt@millennium.stealth.net QUIT :Gone to have lunch ; User
   //                                syrk has quit IRC to have lunch.
-  LOG_DEBUG("user name is set");
+  // LOG_DEBUG("user name is set");
 }
-
 
 void Command::actionPrivmsg(Client& client) {
 
