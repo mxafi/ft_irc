@@ -51,4 +51,4 @@ obj
 
 # --- Random ignores ---
 *temp*
-
+*.secret
