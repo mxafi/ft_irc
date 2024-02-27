@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:51 by djames            #+#    #+#             */
-/*   Updated: 2024/02/27 17:06:40 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/27 17:33:42 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,7 +90,7 @@ void Command::actionPing(Client& client) {
 
 void Command::actionPass(Client& client) {
   std::string replyJoin =
-      ":" + serverHostname_g + " 001 " + client.getUserName() +
+      " 001 " + client.getUserName() +
       ":Welcome to the DIEGOnet IRC Network " + client.getNickname() + "!~" +
       client.getUserName() + client.getIpAddr() + "\r\n";
   client.appendToSendBuffer(replyJoin);
@@ -101,10 +101,10 @@ void Command::actionPass(Client& client) {
       serverHostname_g +
       " version 3.0\r\n";  // check the date function Your host is <servername>, running version <ver>
   client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + " 003 " + client.getUserName() +
+  replyJoin = " 003 " + client.getUserName() +
               ":This server was created Now\r\n";
   client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + " 004 " + client.getUserName() +
+  replyJoin = " 004 " + client.getUserName() +
               serverHostname_g + "Diego2.2\r\n";
   client.appendToSendBuffer(replyJoin);
   //:sakura.jp.as.dal.net PONG sakura.jp.as.dal.net :pepit
