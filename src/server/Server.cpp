@@ -218,6 +218,7 @@ void irc::Server::loop() {
               }
               LOG_DEBUG("server received message from client on fd "
                         << client.getFd() << ": " << messageString);
+              Command coma(message, client, clients_);
               // call CommandHandler here with parameters: clients_, client, message
             }
           } catch (std::out_of_range& e) {

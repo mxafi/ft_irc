@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:29 by djames            #+#    #+#             */
-/*   Updated: 2024/02/26 17:16:27 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/27 11:54:42 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class Command {
   void actionUser(Client& client);
   void actionQuit(Client& client);
   void actionPrivmsg(Client& client);
+  void actionJoin(Client& client);
   ~Command();
 
  private:
@@ -49,7 +50,7 @@ class Command {
   bool nickCorrectFormat(const std::string& str);
   static std::map<std::string, std::function<void(Command*, Client&)>> commands;
   void parseCommand(const Message& commandString, Client& client);
-  void sendRawMessage(int clientSocket, const std::string& message);
+  //void sendRawMessage(int clientSocket, const std::string& message);
   bool checkconnnect();
   Client client_;
   std::string prefix_;

@@ -22,6 +22,7 @@
 
 #include "../client/Client.h"
 #include "../message/Message.h"
+#include "../command/Command.h"
 
 extern bool isServerRunning_g;
 extern std::string serverHostname_g;

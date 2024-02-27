@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:51 by djames            #+#    #+#             */
-/*   Updated: 2024/02/26 17:17:09 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/27 12:57:56 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ extern std::string serverHostname_g;
 namespace irc {
 // I was thinking here we can put it in a map and acording to the comand we create the response for example ping and pong
 std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
-    Command::commands = {{"ping",
+    Command::commands = {{"PING",
                           [](Command* cmd, Client& client) {
                             cmd->actionPing(client);
                           }},
@@ -33,16 +33,17 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                           [](Command* cmd, Client& client) {
                             cmd->actionPart(client);
                           }},
-                         {"nick",
+                         {"NICK",
                           [](Command* cmd, Client& client) {
                             cmd->actionNick(client);
                           }},
-                         {"user", [](Command* cmd, Client& client) {
+                         {"USER", [](Command* cmd, Client& client) {
                             cmd->actionNick(client);
                           }},{"quit", [](Command* cmd, Client& client) {
                             cmd->actionQuit(client);}},
                             {"privmsg", [](Command* cmd, Client& client) {
-                            cmd->actionPrivmsg(client);}}};
+                            cmd->actionPrivmsg(client);}}, {"JOIN", [](Command* cmd, Client& client) {
+                            cmd->actionJoin(client);}}};
 
 Command::Command(const Message& commandString, Client& client,
                  std::map<int, Client>&
@@ -73,30 +74,30 @@ void Command::parseCommand(const Message& commandString, Client& client) {
 
 void Command::actionPing(Client& client) {
   std::string response = ":" + serverHostname_g + " PONG " + serverHostname_g +
-                         " :" + client_.getNickname();
-  sendRawMessage(client.getFd(), response);
+                         " :" + client.getNickname();
+ 
   //:sakura.jp.as.dal.net PONG sakura.jp.as.dal.net :pepit
   LOG_DEBUG(response);
 }
 
 void Command::actionChannel(Client& client) {
   std::string response = ":" + serverHostname_g + " #newchannel " +
-                         serverHostname_g + " :" + client_.getNickname();
-  sendRawMessage(client.getFd(), response);
+                         serverHostname_g + " :" + client.getNickname();
+ 
   LOG_DEBUG(response);
 }
 
 void Command::actionPart(Client& client) {
   std::string response = ":" + serverHostname_g + " #newchannel " +
-                         serverHostname_g + " :" + client_.getNickname();
-  sendRawMessage(client.getFd(), response);
+                         serverHostname_g + " :" + client.getNickname();
+ 
   LOG_DEBUG(response);
 }
 
 void Command::actionMode(Client& client) {
   std::string response = ":" + serverHostname_g + " #newchannel " +
-                         serverHostname_g + " :" + client_.getNickname();
-  sendRawMessage(client.getFd(), response);
+                         serverHostname_g + " :" + client.getNickname();
+ 
   // here we need to put the four parts
   LOG_DEBUG(response);
 }
@@ -110,34 +111,35 @@ void Command::actionKick(Client& client) {
 
 void Command::actionNick(
     Client& client) {  // we are not printing any error in the server
-  if (checkconnnect()) {
-    if (!(client.getAuthenticated())) {
-      if (!(client.isGotPassword())) {
-        LOG_DEBUG(
-            "you need to set first the password");  // what should we append to the client we decide to check wwith the password first.
-        return;
-      }
-    }
-  }
-  if (!(nickCorrectFormat(client.getNickname()))) {
-    if (numeric_ == ERR_NONICKNAMEGIVEN) {
-      std::string answer = ":No nickname given\r\n";
-      client.appendToSendBuffer(answer);
-    } else if (numeric_ == ERR_ERRONEUSNICKNAME) {
-      std::string erronnick = param_[0] + " :Erroneous nickname\r\n";
-      client.appendToSendBuffer(erronnick);
-    }
-    return;
-  }
-  if (findClientByNickname(client.getNickname())) {
-    std::string nickExist = param_[0] + " :Nickname is already in use\r\n";
-    client.appendToSendBuffer(nickExist);
-    return;
-  }
+  // if (checkconnnect()) {
+  //   if (!(client.getAuthenticated())) {
+  //     if (!(client.isGotPassword())) {
+  //       LOG_DEBUG(
+  //           "you need to set first the password");  // what should we append to the client we decide to check wwith the password first.
+  //       return;
+  //     }
+  //   }
+  // }
+  client_.setNickname(param_[0]);
+  // if (!(nickCorrectFormat(client.getNickname()))) {
+  //   if (numeric_ == ERR_NONICKNAMEGIVEN) {
+  //     std::string answer = ":No nickname given\r\n";
+  //     client.appendToSendBuffer(answer);
+  //   } else if (numeric_ == ERR_ERRONEUSNICKNAME) {
+  //     std::string erronnick = param_[0] + " :Erroneous nickname\r\n";//fix
+  //     client.appendToSendBuffer(erronnick);
+  //   }
+  //   return;
+  // }
+  // if (findClientByNickname(client.getNickname())) {
+  //   std::string nickExist = param_[0] + " :Nickname is already in use\r\n";// fix 
+  //   client.appendToSendBuffer(nickExist);
+  //   return;
+  // }
   client_.setNickname(param_[0]);
   std::string response = ":" + client_.getOldNickname() + "!" +
                          client.getUserName() + "@" + serverHostname_g +
-                         " NICK :" + client_.getNickname() + "\n";
+                         " NICK :" + client_.getNickname() + "\r\n";
   client.appendToSendBuffer(response);
   LOG_DEBUG(response);
 }
@@ -154,6 +156,54 @@ void Command::actionQuit(Client& client) {
   //                                syrk has quit IRC to have lunch.
   LOG_DEBUG("user name is set");
 }
+
+void Command::actionJoin(Client& client) {
+
+  std::string replyJoin =":" + serverHostname_g + "NOTICE AUTH :*** Looking up your hostname...\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + "NOTICE AUTH :*** Checking Ident\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + "NOTICE AUTH :*** Found your hostname\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + "NOTICE AUTH :*** No Ident response\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + " 451 * JOIN :You must finish connecting with another nickname first.\r\n";
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + " 001" + client.getUserName() + ":Welcome to the DIEGOnet IRC Network " + client.getNickname()+ "!~" + client.getUserName() + client.getIpAddr()+ "\r\n";
+  client.appendToSendBuffer(replyJoin);
+  //:lair.nl.eu.dal.net 001 diegoo :Welcome to the DALnet IRC Network diegoo!~djames@194.136.126.51
+  replyJoin = ":" + serverHostname_g + " 002" + client.getUserName() + ":This server was created Now\r\n"; // check the date function
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + " 003" + client.getUserName() + ":This server was created Now\r\n"; 
+  client.appendToSendBuffer(replyJoin);
+  replyJoin = ":" + serverHostname_g + " 004" + client.getUserName() + serverHostname_g + "Diego2.2\r\n";
+  client.appendToSendBuffer(replyJoin);
+//   :lair.nl.eu.dal.net NOTICE AUTH :*** Looking up your hostname...
+// >> :lair.nl.eu.dal.net NOTICE AUTH :*** Checking Ident
+// >> :lair.nl.eu.dal.net NOTICE AUTH :*** Found your hostname
+// >> :lair.nl.eu.dal.net NOTICE AUTH :*** No Ident response
+// >> :lair.nl.eu.dal.net 451 * JOIN :You must finish connecting with another nickname first.
+
+// >> :lair.nl.eu.dal.net 002 diegoo :Your host is lair.nl.eu.dal.net, running version bahamut-2.2.3
+// >> :lair.nl.eu.dal.net 003 diegoo :This server was created Tue Dec 19 2023 at 22:45:40 CET
+// >> :lair.nl.eu.dal.net 004 diegoo lair.nl.eu.dal.net bahamut-2.2.3 aAbcCdefFghHiIjkKmnoOPrRsSwxXy AbceiIjklLmMnoOpPrRsStv beIjklov
+// 001    RPL_WELCOME
+//               "Welcome to the Internet Relay Network
+//                <nick>!<user>@<host>"
+//        002    RPL_YOURHOST
+//               "Your host is <servername>, running version <ver>"
+//        003    RPL_CREATED
+//               "This server was created <date>"
+//        004    RPL_MYINFO
+//               "<servername> <version> <available user modes>
+//                <available channel modes>"
+
+  // we dont send anything to the client wew jusgt set it up
+  //:syrk!kalt@millennium.stealth.net QUIT :Gone to have lunch ; User
+  //                                syrk has quit IRC to have lunch.
+  LOG_DEBUG("user name is set");
+}
+
 
 void Command::actionPrivmsg(Client& client) {
 
@@ -254,20 +304,20 @@ bool Command::nickCorrectFormat(const std::string& str) {
   return true;
 }
 
-void Command::sendRawMessage(int clientSocket, const std::string& message) {
-  const char* msgPtr = message.c_str();
-  size_t msgLen = message.length();
-  ssize_t bytesSent = 0;
+// void Command::sendRawMessage(int clientSocket, const std::string& message) {
+//   const char* msgPtr = message.c_str();
+//   size_t msgLen = message.length();
+//   ssize_t bytesSent = 0;
 
-  while (msgLen > 0) {
-    bytesSent = send(clientSocket, msgPtr, msgLen, 0);
-    if (bytesSent == -1) {
-      LOG_DEBUG("Error sending message to client.");
-      return;
-    }
-    msgPtr += bytesSent;
-    msgLen -= bytesSent;
-  }
-}
+//   while (msgLen > 0) {
+//     bytesSent = send(clientSocket, msgPtr, msgLen, 0);
+//     if (bytesSent == -1) {
+//       LOG_DEBUG("Error sending message to client.");
+//       return;
+//     }
+//     msgPtr += bytesSent;
+//     msgLen -= bytesSent;
+//   }
+// }
 
 }  // namespace irc
