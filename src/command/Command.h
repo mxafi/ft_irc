@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Command.h                                          :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/21 10:42:29 by djames            #+#    #+#             */
-/*   Updated: 2024/02/28 10:41:53 by djames           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef COMMAND_H
 #define COMMAND_H
 
@@ -21,6 +9,7 @@
 #include "../client/Client.h"
 #include "../common/log.h"
 #include "../common/magicNumber.h"
+#include "../common/reply.h"
 #include "../message/Message.h"
 
 #define MAX_BUFFER_SIZE 1024  //maybe this we change
