@@ -27,7 +27,7 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                           }},
                          {"USER",
                           [](Command* cmd, Client& client) {
-                            cmd->actionNick(client);
+                            cmd->actionUser(client);
                           }},
                          {"QUIT",
                           [](Command* cmd, Client& client) {
@@ -41,9 +41,10 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                             cmd->actionJoin(client);
                           }}};
 
-Command::Command(const Message& commandString, Client& client,
-                 std::map<int, Client>&
-                     myClients, std::string password)  // stsd::map<std::string, &clients myclients>
+Command::Command(
+    const Message& commandString, Client& client,
+    std::map<int, Client>& myClients,
+    std::string& password)  // stsd::map<std::string, &clients myclients>
     : client_(client), myClients_(myClients), pass_(password) {
   numeric_ = 0;
   parseCommand(commandString, client);
@@ -60,27 +61,25 @@ Command::~Command() {}
 //   }
 // }
 void Command::execute(Client& client) {
-  if(client.getAuthenticated())
-  {
-  auto it = commands.find(commandName_);  // I will change
-  if (it != commands.end()) {
-    it->second(this, client);
-  } else {
-    LOG_DEBUG("Command not found: " << commandName_);  // answer with numeric
-  }
-  } else if(!(commandName_.compare("NICK") || commandName_.compare("USER") || commandName_.compare("PASS")))
-  {
+  if (client.isAuthenticated()) {
     auto it = commands.find(commandName_);  // I will change
-  if (it != commands.end()) {
-    it->second(this, client);
-  } else {
-    LOG_DEBUG("Command not found: " << commandName_);
-  }
+    if (it != commands.end()) {
+      it->second(this, client);
+    } else {
+      LOG_DEBUG("Command not found: " << commandName_);  // answer with numeric
+    }
+  } else if (!(commandName_.compare("NICK") || commandName_.compare("USER") ||
+               commandName_.compare("PASS"))) {
+    auto it = commands.find(commandName_);  // I will change
+    if (it != commands.end()) {
+      it->second(this, client);
+    } else {
+      LOG_DEBUG("Command not found: " << commandName_);
+    }
   } else {
     LOG_DEBUG("the client ";
   }
 }
-
 
 void Command::parseCommand(const Message& commandString, Client& client) {
   commandName_ = commandString.getCommand();
@@ -99,27 +98,10 @@ void Command::actionPing(Client& client) {
 }
 
 void Command::actionPass(Client& client) {
-  //if(pass_.compare())
-  std::string replyJoin =
-      " 001 " + client.getUserName() +
-      ":Welcome to the DIEGOnet IRC Network " + client.getNickname() + "!~" +
-      client.getUserName() + client.getIpAddr() + "\r\n";
-  client.appendToSendBuffer(replyJoin);
-  client.setPassword(param_.at(0));
-  replyJoin =
-      " 002 "
-      ":Your host is " +
-      serverHostname_g +
-      " version 3.0\r\n";  // check the date function Your host is <servername>, running version <ver>
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = " 003 " + client.getUserName() +
-              ":This server was created Now\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = " 004 " + client.getUserName() +
-              serverHostname_g + "Diego2.2\r\n";
-  client.appendToSendBuffer(replyJoin);
-  //:sakura.jp.as.dal.net PONG sakura.jp.as.dal.net :pepit
-  LOG_DEBUG(replyJoin);
+  if (client.isAuthenticated()) {
+    return;
+  }
+  
 }
 
 void Command::actionChannel(Client& client) {
@@ -163,7 +145,7 @@ void Command::actionNick(
   //   }
   // }
   client_.setNickname(param_[0]);
-  // if (!(nickCorrectFormat(client.getNickname()))) {
+  // if (!(nickCorrectFormat(client.getNickname()))) {//
   //   if (numeric_ == ERR_NONICKNAMEGIVEN) {
   //     std::string answer = ":No nickname given\r\n";
   //     client.appendToSendBuffer(answer);
@@ -251,50 +233,9 @@ void Command::actionPrivmsg(Client& client) {
 
   client.appendToSendBuffer(replyPrivmsg);
 
-  LOG_DEBUG("Private mesage was sent");
 }
 
-void Command::actionUser(
-    Client& client) {  // we are not printing any error in the server
-  if (checkconnnect()) {
-    if (!(client.getAuthenticated())) {
-      if (!(client.isGotPassword())) {
-        LOG_DEBUG(
-            "you need to set first the password");  // what should we append to the client we decide to check wwith the password first.
-        return;
-      } else if (client.isGotUser()) {
-        std::string existingUser =
-            ":Unauthorized command (already registered)\r\n";
-        client.appendToSendBuffer(existingUser);
-        return;
-      }
-    }
-  }
-  std::string lastParameter;
-  // we need to think if change to only 9 characters or no is up to us
-  if (!param_.empty()) {
-    lastParameter = param_.back();
-    if (lastParameter.empty()) {
-      std::string userEmpty = "user :Not enough parameters\r\n";
-      client.appendToSendBuffer(userEmpty);
-      return;
-    }
-  }
-  client_.setUserName(lastParameter);
-  // we dont send anything to the client wew jusgt set it up
-  LOG_DEBUG("user name is set");
-}
-
-bool Command::checkconnnect() {
-  int i = 0;
-  if (client_.isGotPassword())
-    i++;
-  if (client_.isGotUser())
-    i++;
-  if (i >= 1)
-    return true;
-  return false;
-}
+void Command::actionUser(Client& client) {}
 
 bool Command::findClientByNickname(const std::string& nickname) {
   for (std::map<int, Client>::const_iterator it =

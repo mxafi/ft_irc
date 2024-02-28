@@ -19,7 +19,7 @@ namespace irc {
 class Command {
  public:
   Command(const Message& commandString, Client& client,
-          std::map<int, Client>& myClients, std::string password);
+          std::map<int, Client>& myClients, std::string& password);
   void execute(Client& client);
   void actionPing(Client& client);
   void actionChannel(Client& client);
@@ -40,14 +40,12 @@ class Command {
   bool nickCorrectFormat(const std::string& str);
   static std::map<std::string, std::function<void(Command*, Client&)>> commands;
   void parseCommand(const Message& commandString, Client& client);
-  //void sendRawMessage(int clientSocket, const std::string& message);
-  bool checkconnnect();
   Client client_;
   std::string prefix_;
   std::vector<std::string> param_;
   int numeric_;
   std::map<int, Client>& myClients_;
-  std::string pass_;
+  std::string& pass_;
 };
 }  // namespace irc
 
