@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
   LOG_INFO("server starting on port " << argv[1]);
-  LOG_DEBUG("with password " << argv[2]);
+  LOG_DEBUG("with password \")" << argv[2] << "\"");
 
   signal(SIGINT, signalHandler);   // Ctrl+C
   signal(SIGTERM, signalHandler);  // kill
