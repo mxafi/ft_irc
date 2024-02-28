@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Command.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/21 10:42:51 by djames            #+#    #+#             */
-/*   Updated: 2024/02/28 11:39:45 by djames           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "Command.h"
 
 extern std::string serverHostname_g;
@@ -41,7 +29,7 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                           [](Command* cmd, Client& client) {
                             cmd->actionNick(client);
                           }},
-                         {"quit",
+                         {"QUIT",
                           [](Command* cmd, Client& client) {
                             cmd->actionQuit(client);
                           }},
@@ -198,17 +186,20 @@ void Command::actionNick(
   LOG_DEBUG(response);
 }
 
+/**
+ * @brief A client session is terminated with a quit message.
+ * The server acknowledges this by sending an ERROR message to the client
+ * and relays the QUIT message to all other clients on shared channels.
+ * 
+ * @param client The client that is quitting
+ * @example QUIT :Gone to have lunch                        // Message from Client
+ *          ERROR :Bye, see you soon!                       // Response from Server
+ *          :nick!user@servername QUIT :Gone to have lunch  // Relayed to other Clients on shared channels
+ */
 void Command::actionQuit(Client& client) {
-
-  std::string replyQuit =
-      client.getUserName() + "!" + serverHostname_g +
-      "QUIT :" + param_[0];  //ask if this make sense to lionel
-  client.appendToSendBuffer(replyQuit);
+  // TODO: Send a QUIT message to all channels the client is in
+  client.appendToSendBuffer(ERR_MESSAGE("Bye, see you soon!"));
   client.setWantDisconnect();
-  // we dont send anything to the client wew jusgt set it up
-  //:syrk!kalt@millennium.stealth.net QUIT :Gone to have lunch ; User
-  //                                syrk has quit IRC to have lunch.
-  LOG_DEBUG("user name is set");
 }
 
 void Command::actionJoin(Client& client) {
@@ -257,9 +248,9 @@ void Command::actionJoin(Client& client) {
 void Command::actionPrivmsg(Client& client) {
 
   std::string replyPrivmsg = "here you put \r\n";
-      
+
   client.appendToSendBuffer(replyPrivmsg);
-  
+
   LOG_DEBUG("Private mesage was sent");
 }
 

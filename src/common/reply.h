@@ -3,6 +3,7 @@
 
 // Meta definitions
 #define RPL_META_MESSAGE(servername, numeric, message) (std::string(":") + servername + " " + numeric + " " + message + "\r\n")
+#define ERR_MESSAGE(message) (std::string("ERROR :") + message + "\r\n")
 
 // Numeric replies in order
 #define RPL_WELCOME_001(servername, nick, user, host) (RPL_META_MESSAGE(servername, "001", "Welcome to the Internet Relay Network " + nick + "!" + user "@" + host))
