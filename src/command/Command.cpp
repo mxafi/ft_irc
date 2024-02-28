@@ -79,12 +79,12 @@ void Command::execute(Client& client) {
     return;
   }
 
-  if (commandName_ == "CAP" || commandName_ == "JOIN") {
+  if (commandName_ == "CAP") {
     return;
   }
 
-  LOG_DEBUG("Command::execute: Not authenticated, not executing command: "
-            << commandName_);
+  // If the client is sending a command before being authenticated
+  client.appendToSendBuffer(RPL_ERR_NOTREGISTERED_451(serverHostname_g));
 }
 
 void Command::parseCommand(const Message& commandString, Client& client) {
@@ -255,8 +255,9 @@ void Command::sendAuthReplies_(Client& client) {
                       client.getUserName(), client.getIpAddr()));
   client.appendToSendBuffer(
       RPL_YOURHOST_002(serverHostname_g, IRC_SERVER_VERSION));
-  client.appendToSendBuffer(
-      RPL_CREATED_003(serverHostname_g, std::string(ctime(&serverStartTime_))));
+  std::string time = std::string(ctime(&serverStartTime_));
+  time.pop_back();  // Remove the newline character
+  client.appendToSendBuffer(RPL_CREATED_003(serverHostname_g, time));
   client.appendToSendBuffer(RPL_MYINFO_004(serverHostname_g, IRC_SERVER_VERSION,
                                            SUPPORTED_USER_MODES,
                                            SUPPORTED_CHANNEL_MODES));
