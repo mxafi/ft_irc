@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:51 by djames            #+#    #+#             */
-/*   Updated: 2024/02/27 17:33:42 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/28 11:03:45 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,8 +55,8 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
 
 Command::Command(const Message& commandString, Client& client,
                  std::map<int, Client>&
-                     myClients)  // stsd::map<std::string, &clients myclients>
-    : client_(client), myClients_(myClients) {
+                     myClients, std::string password)  // stsd::map<std::string, &clients myclients>
+    : client_(client), myClients_(myClients), pass_(password) {
   numeric_ = 0;
   parseCommand(commandString, client);
 }
@@ -89,6 +89,7 @@ void Command::actionPing(Client& client) {
 }
 
 void Command::actionPass(Client& client) {
+  //if(pass_.compare())
   std::string replyJoin =
       " 001 " + client.getUserName() +
       ":Welcome to the DIEGOnet IRC Network " + client.getNickname() + "!~" +
@@ -191,22 +192,11 @@ void Command::actionQuit(Client& client) {
 void Command::actionJoin(Client& client) {
 
   std::string replyJoin;
-
-  replyJoin = ":" + serverHostname_g +
-                          " NOTICE AUTH :*** Looking up your hostname...\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = ":" + serverHostname_g + " NOTICE AUTH :*** Checking Ident\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin =
-      ":" + serverHostname_g + " NOTICE AUTH :*** Found your hostname\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin =
-      ":" + serverHostname_g + " NOTICE AUTH :*** No Ident response\r\n";
-  client.appendToSendBuffer(replyJoin);
   replyJoin = ":" + serverHostname_g +
               " 451 * JOIN :You must finish connecting with another nickname "
               "first.\r\n";
   client.appendToSendBuffer(replyJoin);
+  LOG_DEBUG("Connection was made");
   // replyJoin = ":" + serverHostname_g + " 001 " + client.getUserName() + ":Welcome to the DIEGOnet IRC Network " + client.getNickname()+ "!~" + client.getUserName() + client.getIpAddr()+ "\r\n";
   // client.appendToSendBuffer(replyJoin);
   //:lair.nl.eu.dal.net 001 diegoo :Welcome to the DALnet IRC Network diegoo!~djames@194.136.126.51
@@ -244,15 +234,11 @@ void Command::actionJoin(Client& client) {
 
 void Command::actionPrivmsg(Client& client) {
 
-  std::string replyQuit =
-      client.getUserName() + "!" + serverHostname_g +
-      "QUIT :" + param_[0];  //ask if this make sense to lionel
-  client.appendToSendBuffer(replyQuit);
-  client.setWantDisconnect();
-  // we dont send anything to the client wew jusgt set it up
-  //:syrk!kalt@millennium.stealth.net QUIT :Gone to have lunch ; User
-  //                                syrk has quit IRC to have lunch.
-  LOG_DEBUG("user name is set");
+  std::string replyPrivmsg = "here you put \r\n";
+      
+  client.appendToSendBuffer(replyPrivmsg);
+  
+  LOG_DEBUG("Private mesage was sent");
 }
 
 void Command::actionUser(

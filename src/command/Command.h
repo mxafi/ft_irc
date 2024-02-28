@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:29 by djames            #+#    #+#             */
-/*   Updated: 2024/02/27 16:48:51 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/28 10:41:53 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ namespace irc {
 class Command {
  public:
   Command(const Message& commandString, Client& client,
-          std::map<int, Client>& myClients);
+          std::map<int, Client>& myClients, std::string password);
   void execute(Client& client);
   void actionPing(Client& client);
   void actionChannel(Client& client);
@@ -58,6 +58,7 @@ class Command {
   std::vector<std::string> param_;
   int numeric_;
   std::map<int, Client>& myClients_;
+  std::string pass_;
 };
 }  // namespace irc
 
