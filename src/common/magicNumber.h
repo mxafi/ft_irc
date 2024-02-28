@@ -28,10 +28,19 @@
 
 // Numeric reply names and numbers
 #define ERR_INPUTTOOLONG 417
+#define RPL_WELCOME 001
+#define RPL_YOURHOST 002
+#define RPL_CREATED 003
+#define RPL_MYINFO 004
+
 
 // Custom numeric replies
 // According to RFC2812 Error codes > 502 are free, and on IRCv3 > 525 and < 670
 #define ERR_CUSTOM_ILLEGALNUL 530
 #define ERR_CUSTOM_TOOMANYPARAMS 531
+#define ERR_NICKNAMEINUSE 433
+#define ERR_ERRONEUSNICKNAME 432
+#define ERR_NONICKNAMEGIVEN 431
+
 
 #endif
