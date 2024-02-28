@@ -3,10 +3,14 @@
 
 #ifdef __APPLE__
 #define ON_MACOS true
+#ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
-#else
+#endif  // MSG_NOSIGNAL
+#else   // __APPLE__
 #define ON_MACOS false
+#ifndef SO_NOSIGPIPE
 #define SO_NOSIGPIPE 0
-#endif
+#endif  // SO_NOSIGPIPE
+#endif  // __APPLE__
 
-#endif
+#endif  // OS_H
