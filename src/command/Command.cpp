@@ -9,11 +9,11 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                           [](Command* cmd, Client& client) {
                             cmd->actionPing(client);
                           }},
-                         {"channel",
+                         {"CHANNEL",
                           [](Command* cmd, Client& client) {
                             cmd->actionChannel(client);
                           }},
-                         {"part",
+                         {"PART",
                           [](Command* cmd, Client& client) {
                             cmd->actionPart(client);
                           }},
@@ -33,7 +33,7 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                           [](Command* cmd, Client& client) {
                             cmd->actionQuit(client);
                           }},
-                         {"privmsg",
+                         {"PRIVMSG",
                           [](Command* cmd, Client& client) {
                             cmd->actionPrivmsg(client);
                           }},
@@ -70,7 +70,7 @@ void Command::execute(Client& client) {
 
   if (commandName_ == "NICK" || commandName_ == "USER" ||
       commandName_ == "PASS") {
-    auto it = commands.find(commandName_);  // I will change
+    auto it = commands.find(commandName_);
     if (it != commands.end()) {
       it->second(this, client);
     } else {
