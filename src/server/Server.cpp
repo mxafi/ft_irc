@@ -218,7 +218,7 @@ void irc::Server::loop() {
               }
               LOG_DEBUG("server received message from client on fd "
                         << client.getFd() << ": " << messageString);
-              Command coma(message, client, clients_, password_);
+              Command coma(message, client, clients_, password_, start_time_);
               // call CommandHandler here with parameters: clients_, client, message
             }
           } catch (std::out_of_range& e) {
@@ -384,7 +384,7 @@ int Server::extractMessageString_(std::string& message, Client& client) {
     return FAILURE;
   }
   message.clear();
-  message = buf.substr(0, pos + pattern.length());
+  message = buf.substr(0, pos);
   buf.erase(0, pos + pattern.length());
   LOG_DEBUG("server extracted message::" << message << ":: from client on fd "
                                          << client.getFd());
