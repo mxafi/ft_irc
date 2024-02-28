@@ -6,7 +6,7 @@
 /*   By: djames <djames@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/21 10:42:51 by djames            #+#    #+#             */
-/*   Updated: 2024/02/28 11:03:45 by djames           ###   ########.fr       */
+/*   Updated: 2024/02/28 11:39:45 by djames           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,14 +63,36 @@ Command::Command(const Message& commandString, Client& client,
 
 Command::~Command() {}
 
+// void Command::execute(Client& client) {
+//   auto it = commands.find(commandName_);  // I will change
+//   if (it != commands.end()) {
+//     it->second(this, client);
+//   } else {
+//     LOG_DEBUG("Command not found: " << commandName_);  // answer with numeric
+//   }
+// }
 void Command::execute(Client& client) {
+  if(client.getAuthenticated())
+  {
   auto it = commands.find(commandName_);  // I will change
   if (it != commands.end()) {
     it->second(this, client);
   } else {
     LOG_DEBUG("Command not found: " << commandName_);  // answer with numeric
   }
+  } else if(!(commandName_.compare("NICK") || commandName_.compare("USER") || commandName_.compare("PASS")))
+  {
+    auto it = commands.find(commandName_);  // I will change
+  if (it != commands.end()) {
+    it->second(this, client);
+  } else {
+    LOG_DEBUG("Command not found: " << commandName_);
+  }
+  } else {
+    LOG_DEBUG("the client ";
+  }
 }
+
 
 void Command::parseCommand(const Message& commandString, Client& client) {
   commandName_ = commandString.getCommand();
