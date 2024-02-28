@@ -9,11 +9,11 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                           [](Command* cmd, Client& client) {
                             cmd->actionPing(client);
                           }},
-                         {"channel",
+                         {"CHANNEL",
                           [](Command* cmd, Client& client) {
                             cmd->actionChannel(client);
                           }},
-                         {"part",
+                         {"PART",
                           [](Command* cmd, Client& client) {
                             cmd->actionPart(client);
                           }},
@@ -27,13 +27,13 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                           }},
                          {"USER",
                           [](Command* cmd, Client& client) {
-                            cmd->actionNick(client);
+                            cmd->actionUser(client);
                           }},
                          {"QUIT",
                           [](Command* cmd, Client& client) {
                             cmd->actionQuit(client);
                           }},
-                         {"privmsg",
+                         {"PRIVMSG",
                           [](Command* cmd, Client& client) {
                             cmd->actionPrivmsg(client);
                           }},
@@ -41,10 +41,14 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                             cmd->actionJoin(client);
                           }}};
 
-Command::Command(const Message& commandString, Client& client,
-                 std::map<int, Client>&
-                     myClients, std::string password)  // stsd::map<std::string, &clients myclients>
-    : client_(client), myClients_(myClients), pass_(password) {
+Command::Command(
+    const Message& commandString, Client& client,
+    std::map<int, Client>& myClients, std::string& password,
+    time_t& serverStartTime)  // stsd::map<std::string, &clients myclients>
+    : client_(client),
+      myClients_(myClients),
+      pass_(password),
+      serverStartTime_(serverStartTime) {
   numeric_ = 0;
   parseCommand(commandString, client);
 }
@@ -52,12 +56,35 @@ Command::Command(const Message& commandString, Client& client,
 Command::~Command() {}
 
 void Command::execute(Client& client) {
-  auto it = commands.find(commandName_);  // I will change
-  if (it != commands.end()) {
-    it->second(this, client);
-  } else {
-    LOG_DEBUG("Command not found: " << commandName_);  // answer with numeric
+  if (client.isAuthenticated()) {
+    auto it = commands.find(commandName_);
+    if (it != commands.end()) {
+      it->second(this, client);
+    } else {
+      client.appendToSendBuffer(
+          RPL_ERR_UNKNOWNCOMMAND_421(serverHostname_g, commandName_));
+      LOG_DEBUG("Command not found: " << commandName_);
+    }
+    return;
   }
+
+  if (commandName_ == "NICK" || commandName_ == "USER" ||
+      commandName_ == "PASS") {
+    auto it = commands.find(commandName_);
+    if (it != commands.end()) {
+      it->second(this, client);
+    } else {
+      LOG_DEBUG("Command not found: " << commandName_);
+    }
+    return;
+  }
+
+  if (commandName_ == "CAP") {
+    return;
+  }
+
+  // If the client is sending a command before being authenticated
+  client.appendToSendBuffer(RPL_ERR_NOTREGISTERED_451(serverHostname_g));
 }
 
 void Command::parseCommand(const Message& commandString, Client& client) {
@@ -77,27 +104,80 @@ void Command::actionPing(Client& client) {
 }
 
 void Command::actionPass(Client& client) {
-  //if(pass_.compare())
-  std::string replyJoin =
-      " 001 " + client.getUserName() +
-      ":Welcome to the DIEGOnet IRC Network " + client.getNickname() + "!~" +
-      client.getUserName() + client.getIpAddr() + "\r\n";
-  client.appendToSendBuffer(replyJoin);
-  client.setPassword(param_.at(0));
-  replyJoin =
-      " 002 "
-      ":Your host is " +
-      serverHostname_g +
-      " version 3.0\r\n";  // check the date function Your host is <servername>, running version <ver>
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = " 003 " + client.getUserName() +
-              ":This server was created Now\r\n";
-  client.appendToSendBuffer(replyJoin);
-  replyJoin = " 004 " + client.getUserName() +
-              serverHostname_g + "Diego2.2\r\n";
-  client.appendToSendBuffer(replyJoin);
-  //:sakura.jp.as.dal.net PONG sakura.jp.as.dal.net :pepit
-  LOG_DEBUG(replyJoin);
+  if (client.isAuthenticated()) {
+    client.appendToSendBuffer(RPL_ERR_ALREADYREGISTRED_462(serverHostname_g));
+    return;
+  }
+  if (param_.size() == 0) {
+    client.appendToSendBuffer(
+        RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "PASS"));
+    return;
+  }
+  if (param_.at(0) != pass_) {
+    LOG_DEBUG("Password incorrect");
+    LOG_DEBUG("param: " << param_.at(0));
+    LOG_DEBUG("pass_: " << pass_);
+    client.appendToSendBuffer(ERR_MESSAGE("Password incorrect"));
+    client.setWantDisconnect();
+    return;
+  }
+  client.setPassword(pass_);
+}
+
+void Command::actionNick(Client& client) {
+  if (client.isGotPassword() == false) {
+    client.appendToSendBuffer(ERR_MESSAGE("You must send a password first"));
+    client.setWantDisconnect();
+    return;
+  }
+  if (param_.size() == 0) {
+    client.appendToSendBuffer(RPL_ERR_NONICKNAMEGIVEN_431(serverHostname_g));
+    return;
+  }
+
+  // TODO: Check if the nickname is valid, below are rules and info about it
+  // nickname   =  ( letter / special ) *8( letter / digit / special / "-" )
+  // letter     =  %x41-5A / %x61-7A       ; A-Z / a-z
+  // digit      =  %x30-39                 ; 0-9
+  // special    =  %x5B-60 / %x7B-7D       ; "[", "]", "\", "`", "_", "^", "{", "|", "}"
+  // Numerics: ERR_ERRONEUSNICKNAME
+
+  // TODO: Check if the nickname is already in use
+  // Because of IRC's Scandinavian origin, the characters {}|^ are
+  // considered to be the lower case equivalents of the characters []\~,
+  // respectively. This is a critical issue when determining the
+  // equivalence of two nicknames or channel names.
+  // When evaluating nickname equivalence, let's convert all characters to lower case.
+  // Numerics: ERR_NICKNAMEINUSE
+
+  client.setNickname(param_.at(0));
+
+  // TODO: Send a NICK message to all channels the client is in, advertising the new nickname
+
+  if (client.isAuthenticated()) {
+    sendAuthReplies_(client);
+  }
+}
+
+void Command::actionUser(Client& client) {
+  if (client.isGotPassword() == false) {
+    client.appendToSendBuffer(ERR_MESSAGE("You must send a password first"));
+    client.setWantDisconnect();
+    return;
+  }
+  if (client.isAuthenticated()) {
+    client.appendToSendBuffer(RPL_ERR_ALREADYREGISTRED_462(serverHostname_g));
+    return;
+  }
+  if (param_.size() < 1) {
+    client.appendToSendBuffer(
+        RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "USER"));
+    return;
+  }
+  client.setUserName(param_.at(0));  // Note: We do not save the real name
+  if (client.isAuthenticated()) {
+    sendAuthReplies_(client);
+  }
 }
 
 void Command::actionChannel(Client& client) {
@@ -129,41 +209,6 @@ void Command::actionKick(Client& client) {
   LOG_DEBUG(response);
 }
 
-void Command::actionNick(
-    Client& client) {  // we are not printing any error in the server
-  // if (checkconnnect()) {
-  //   if (!(client.getAuthenticated())) {
-  //     if (!(client.isGotPassword())) {
-  //       LOG_DEBUG(
-  //           "you need to set first the password");  // what should we append to the client we decide to check wwith the password first.
-  //       return;
-  //     }
-  //   }
-  // }
-  client_.setNickname(param_[0]);
-  // if (!(nickCorrectFormat(client.getNickname()))) {
-  //   if (numeric_ == ERR_NONICKNAMEGIVEN) {
-  //     std::string answer = ":No nickname given\r\n";
-  //     client.appendToSendBuffer(answer);
-  //   } else if (numeric_ == ERR_ERRONEUSNICKNAME) {
-  //     std::string erronnick = param_[0] + " :Erroneous nickname\r\n";//fix
-  //     client.appendToSendBuffer(erronnick);
-  //   }
-  //   return;
-  // }
-  // if (findClientByNickname(client.getNickname())) {
-  //   std::string nickExist = param_[0] + " :Nickname is already in use\r\n";// fix
-  //   client.appendToSendBuffer(nickExist);
-  //   return;
-  // }
-  client_.setNickname(param_[0]);
-  std::string response = ":" + client_.getOldNickname() + "!" +
-                         client.getUserName() + "@" + serverHostname_g +
-                         " NICK :" + client_.getNickname() + "\r\n";
-  client.appendToSendBuffer(response);
-  LOG_DEBUG(response);
-}
-
 /**
  * @brief A client session is terminated with a quit message.
  * The server acknowledges this by sending an ERROR message to the client
@@ -181,46 +226,7 @@ void Command::actionQuit(Client& client) {
 }
 
 void Command::actionJoin(Client& client) {
-
-  std::string replyJoin;
-  replyJoin = ":" + serverHostname_g +
-              " 451 * JOIN :You must finish connecting with another nickname "
-              "first.\r\n";
-  client.appendToSendBuffer(replyJoin);
-  LOG_DEBUG("Connection was made");
-  // replyJoin = ":" + serverHostname_g + " 001 " + client.getUserName() + ":Welcome to the DIEGOnet IRC Network " + client.getNickname()+ "!~" + client.getUserName() + client.getIpAddr()+ "\r\n";
-  // client.appendToSendBuffer(replyJoin);
-  //:lair.nl.eu.dal.net 001 diegoo :Welcome to the DALnet IRC Network diegoo!~djames@194.136.126.51
-  // replyJoin = ":" + serverHostname_g + " 002 " + client.getUserName() + ":This server was created Now\r\n"; // check the date function
-  // client.appendToSendBuffer(replyJoin);
-  // replyJoin = ":" + serverHostname_g + " 003 " + client.getUserName() + ":This server was created Now\r\n";
-  // client.appendToSendBuffer(replyJoin);
-  // replyJoin = ":" + serverHostname_g + " 004 " + client.getUserName() + serverHostname_g + "Diego2.2\r\n";
-  // client.appendToSendBuffer(replyJoin);
-  //   :lair.nl.eu.dal.net NOTICE AUTH :*** Looking up your hostname...
-  // >> :lair.nl.eu.dal.net NOTICE AUTH :*** Checking Ident
-  // >> :lair.nl.eu.dal.net NOTICE AUTH :*** Found your hostname
-  // >> :lair.nl.eu.dal.net NOTICE AUTH :*** No Ident response
-  // >> :lair.nl.eu.dal.net 451 * JOIN :You must finish connecting with another nickname first.
-
-  // >> :lair.nl.eu.dal.net 002 diegoo :Your host is lair.nl.eu.dal.net, running version bahamut-2.2.3
-  // >> :lair.nl.eu.dal.net 003 diegoo :This server was created Tue Dec 19 2023 at 22:45:40 CET
-  // >> :lair.nl.eu.dal.net 004 diegoo lair.nl.eu.dal.net bahamut-2.2.3 aAbcCdefFghHiIjkKmnoOPrRsSwxXy AbceiIjklLmMnoOpPrRsStv beIjklov
-  // 001    RPL_WELCOME
-  //               "Welcome to the Internet Relay Network
-  //                <nick>!<user>@<host>"
-  //        002    RPL_YOURHOST
-  //               "Your host is <servername>, running version <ver>"
-  //        003    RPL_CREATED
-  //               "This server was created <date>"
-  //        004    RPL_MYINFO
-  //               "<servername> <version> <available user modes>
-  //                <available channel modes>"
-
-  // we dont send anything to the client wew jusgt set it up
-  //:syrk!kalt@millennium.stealth.net QUIT :Gone to have lunch ; User
-  //                                syrk has quit IRC to have lunch.
-  // LOG_DEBUG("user name is set");
+  (void)client;
 }
 
 void Command::actionPrivmsg(Client& client) {
@@ -228,50 +234,6 @@ void Command::actionPrivmsg(Client& client) {
   std::string replyPrivmsg = "here you put \r\n";
 
   client.appendToSendBuffer(replyPrivmsg);
-
-  LOG_DEBUG("Private mesage was sent");
-}
-
-void Command::actionUser(
-    Client& client) {  // we are not printing any error in the server
-  if (checkconnnect()) {
-    if (!(client.getAuthenticated())) {
-      if (!(client.isGotPassword())) {
-        LOG_DEBUG(
-            "you need to set first the password");  // what should we append to the client we decide to check wwith the password first.
-        return;
-      } else if (client.isGotUser()) {
-        std::string existingUser =
-            ":Unauthorized command (already registered)\r\n";
-        client.appendToSendBuffer(existingUser);
-        return;
-      }
-    }
-  }
-  std::string lastParameter;
-  // we need to think if change to only 9 characters or no is up to us
-  if (!param_.empty()) {
-    lastParameter = param_.back();
-    if (lastParameter.empty()) {
-      std::string userEmpty = "user :Not enough parameters\r\n";
-      client.appendToSendBuffer(userEmpty);
-      return;
-    }
-  }
-  client_.setUserName(lastParameter);
-  // we dont send anything to the client wew jusgt set it up
-  LOG_DEBUG("user name is set");
-}
-
-bool Command::checkconnnect() {
-  int i = 0;
-  if (client_.isGotPassword())
-    i++;
-  if (client_.isGotUser())
-    i++;
-  if (i >= 1)
-    return true;
-  return false;
 }
 
 bool Command::findClientByNickname(const std::string& nickname) {
@@ -287,51 +249,18 @@ bool Command::findClientByNickname(const std::string& nickname) {
   return false;
 }
 
-bool Command::nickCorrectFormat(const std::string& str) {
-  if (str.empty()) {
-    LOG_DEBUG("the nickname is empty");
-    numeric_ = ERR_NONICKNAMEGIVEN;
-    return false;
-  }
-  char firstChar = str.front();
-  if (std::isdigit(static_cast<unsigned char>(firstChar))) {
-    LOG_DEBUG("the first character of the nickname is a digit");
-    numeric_ = ERR_ERRONEUSNICKNAME;
-    return false;
-  }
-  if ((str.find('#') != std::string::npos)) {
-    LOG_DEBUG("the nickname has #");
-    numeric_ = ERR_ERRONEUSNICKNAME;
-    return false;
-  }
-  if (str.find(':') != std::string::npos) {
-    LOG_DEBUG("the nickname has :");
-    numeric_ = ERR_ERRONEUSNICKNAME;
-    return false;
-  }
-  if (str.find(' ') != std::string::npos) {
-    LOG_DEBUG("the nickname has a space");
-    numeric_ = ERR_ERRONEUSNICKNAME;
-    return false;
-  }
-
-  return true;
+void Command::sendAuthReplies_(Client& client) {
+  client.appendToSendBuffer(
+      RPL_WELCOME_001(serverHostname_g, client.getNickname(),
+                      client.getUserName(), client.getIpAddr()));
+  client.appendToSendBuffer(
+      RPL_YOURHOST_002(serverHostname_g, IRC_SERVER_VERSION));
+  std::string time = std::string(ctime(&serverStartTime_));
+  time.pop_back();  // Remove the newline character
+  client.appendToSendBuffer(RPL_CREATED_003(serverHostname_g, time));
+  client.appendToSendBuffer(RPL_MYINFO_004(serverHostname_g, IRC_SERVER_VERSION,
+                                           SUPPORTED_USER_MODES,
+                                           SUPPORTED_CHANNEL_MODES));
 }
-
-// void Command::sendRawMessage(int clientSocket, const std::string& message) {
-//   const char* msgPtr = message.c_str();
-//   size_t msgLen = message.length();
-//   ssize_t bytesSent = 0;
-
-//   while (msgLen > 0) {
-//     bytesSent = send(clientSocket, msgPtr, msgLen, 0);
-//     if (bytesSent == -1) {
-//       LOG_DEBUG("Error sending message to client.");
-//       return;
-//     }
-//     msgPtr += bytesSent;
-//     msgLen -= bytesSent;
-//   }
-// }
 
 }  // namespace irc

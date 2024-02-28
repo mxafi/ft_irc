@@ -37,7 +37,7 @@ class Client {
   bool isGotUser() const;
   bool isGotNick() const;
   bool isGotPassword() const;
-  bool getAuthenticated();
+  bool isAuthenticated();
   void setWantDisconnect();
   bool getWantDisconnect() const;
   std::string getIpAddr() const;

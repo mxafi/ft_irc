@@ -107,8 +107,10 @@ void Message::setParameters_(std::istringstream& serializedMessage) {
       std::string trailingParameter;
       std::getline(serializedMessage, trailingParameter);
       if (!trailingParameter.empty()) {
+        LOG_DEBUG("last parameter was not empty: " << trailingParameter);
         parameters_.push_back(parameter + " " + trailingParameter);
       } else {
+        LOG_DEBUG("last parameter was empty");
         parameters_.push_back(parameter);
       }
       break;  // No more parameters after a trailing parameter
@@ -145,9 +147,14 @@ void Message::deserialize_(const std::string& serializedMessage) {
   std::istringstream iss(serializedMessage);
 
   setPrefix_(iss);
+  LOG_DEBUG("Message::deserialize_: got prefix_: " + prefix_);
   setCommand_(iss);
+  LOG_DEBUG("Message::deserialize_: got command_: " + command_);
   setParameters_(iss);
+  LOG_DEBUG("Message::deserialize_: got parameters_: ");
+  for (auto& param : parameters_) {
+    LOG_DEBUG(param);
+  }
 }
 
-// std::string Message::serialize() const { }
 }  // namespace irc
