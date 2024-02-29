@@ -125,6 +125,8 @@ void Command::actionPass(Client& client) {
 }
 
 void Command::actionNick(Client& client) {
+  bool isAlreadyAuthenticated = client.isAuthenticated();
+
   if (client.isGotPassword() == false) {
     client.appendToSendBuffer(ERR_MESSAGE("You must send a password first"));
     client.setWantDisconnect();
@@ -161,13 +163,13 @@ void Command::actionNick(Client& client) {
         RPL_ERR_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
     return;
   }
-  client.setNickname(param_.at(0));
-  // TODO: Send a NICK message to all channels the client is in, advertising the new nickname
 
-  if (client
-          .isAuthenticated()) {  // here we need to fix if is already authenticaded everytyme we change the niickname
+  client.setNickname(param_.at(0));
+  if (isAlreadyAuthenticated == false && client.isAuthenticated()) {
     sendAuthReplies_(client);
   }
+
+  // TODO: Send a NICK message to all channels the client is in, advertising the new nickname
 }
 
 void Command::actionUser(Client& client) {
