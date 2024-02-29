@@ -140,7 +140,12 @@ void Command::actionNick(Client& client) {
   // letter     =  %x41-5A / %x61-7A       ; A-Z / a-z
   // digit      =  %x30-39                 ; 0-9
   // special    =  %x5B-60 / %x7B-7D       ; "[", "]", "\", "`", "_", "^", "{", "|", "}"
-  // Numerics: ERR_ERRONEUSNICKNAME
+  // Numerics: ERR_ERRONEUSNICKNAME  and also cut it for 9 ccharacters
+  if (!(isValidNickname(param_.at(0)))) {
+       client.appendToSendBuffer(RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, param_.at(0)));
+       RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, param_.at(0));
+       return;
+  }
 
   // TODO: Check if the nickname is already in use
   // Because of IRC's Scandinavian origin, the characters {}|^ are
@@ -150,6 +155,11 @@ void Command::actionNick(Client& client) {
   // When evaluating nickname equivalence, let's convert all characters to lower case.
   // Numerics: ERR_NICKNAMEINUSE
 
+  if(!isValidNickname(param_.at(0)))
+  {
+    client.appendToSendBuffer(RPL_ERR_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
+    return;
+  }
   client.setNickname(param_.at(0));
 
   // TODO: Send a NICK message to all channels the client is in, advertising the new nickname
@@ -236,17 +246,58 @@ void Command::actionPrivmsg(Client& client) {
   client.appendToSendBuffer(replyPrivmsg);
 }
 
+// bool Command::findClientByNickname(const std::string& nickname) {
+//   for (std::map<int, Client>::const_iterator it =
+//            myClients_.begin();  // it could be auto
+//        it != myClients_.end(); ++it) {
+//     if (it->second.getNickname() == nickname) {
+//       LOG_DEBUG("Found client with nickname: " << nickname);
+//       numeric_ = ERR_NICKNAMEINUSE;
+//       return true;
+//     }
+//   }
+//   return false;
+// }
+
 bool Command::findClientByNickname(const std::string& nickname) {
-  for (std::map<int, Client>::const_iterator it =
-           myClients_.begin();  // it could be auto
-       it != myClients_.end(); ++it) {
-    if (it->second.getNickname() == nickname) {
+ std::string lowerNickname = nickname;
+ std::transform(lowerNickname.begin(), lowerNickname.end(), lowerNickname.begin(), ::tolower);
+ std::replace(lowerNickname.begin(), lowerNickname.end(), '{', '[');
+ std::replace(lowerNickname.begin(), lowerNickname.end(), '}', ']');
+ std::replace(lowerNickname.begin(), lowerNickname.end(), '|', '\\');
+ std::replace(lowerNickname.begin(), lowerNickname.end(), '^', '~');
+
+ for (std::map<int, Client>::const_iterator it = myClients_.begin(); it != myClients_.end(); ++it) {
+    std::string clientNickname = it->second.getNickname();
+    std::transform(clientNickname.begin(), clientNickname.end(), clientNickname.begin(), ::tolower);
+    std::replace(clientNickname.begin(), clientNickname.end(), '{', '[');
+    std::replace(clientNickname.begin(), clientNickname.end(), '}', ']');
+    std::replace(clientNickname.begin(), clientNickname.end(), '|', '\\');
+    std::replace(clientNickname.begin(), clientNickname.end(), '^', '~');
+
+    if (clientNickname == lowerNickname) {
       LOG_DEBUG("Found client with nickname: " << nickname);
       numeric_ = ERR_NICKNAMEINUSE;
       return true;
     }
+ }
+ return false;
+}
+
+bool Command::isValidNickname(std::string& nickname) {
+  std::regex pattern(R"(^[a-zA-Z\[\]\\`_^{|}])");
+  std::regex pattern1(R"(^[a-zA-Z0-9\[\]\\,`_^{|}-]*$)");
+  if (!std::regex_match(nickname.substr(0, 1), pattern)) {
+    return false;
   }
-  return false;
+  if (!std::regex_match(nickname, pattern1)) {
+    return false;
+  }
+  if (nickname.size() > 9) {
+    nickname = nickname.substr(0, 9);
+    std::cout << nickname << std::endl;
+  }
+  return true;
 }
 
 void Command::sendAuthReplies_(Client& client) {
