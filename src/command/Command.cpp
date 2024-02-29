@@ -288,7 +288,7 @@ bool Command::isValidNickname(std::string& nickname) {
   }
   if (nickname.size() > 9) {
     nickname = nickname.substr(0, 9);
-    std::cout << nickname << std::endl;
+    LOG_DEBUG("Command::isValidNickname: nick was too long, shortened to: " << nickname);
   }
   return true;
 }
