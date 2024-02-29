@@ -229,7 +229,25 @@ void Command::actionJoin(Client& client) {
   (void)client;
 }
 
+/****
+    * According to PRIVMSG part 3.3.1 on RFC2812, a target can be:
+    * - a nick
+    * - a user@hostname
+    * - a user%servername@hostname
+    * - a user%servername
+    * - a nick!user@hostname.
+    * -> No delimiter means that it is either a nick or a username
+    *    ! is followed by a username
+    *    % is followed by a servername
+    *    @ is followed by a hostname
+    */
+std::vector<std::string>  Command::getTargetRecipient() {
+   //get target  
+}
+
 void Command::actionPrivmsg(Client& client) {
+
+  std::vector<std::string> target = getTargetRecipient();
 
   std::string replyPrivmsg = "here you put \r\n";
 
