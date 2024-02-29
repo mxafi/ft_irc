@@ -241,17 +241,53 @@ void Command::actionJoin(Client& client) {
     *    % is followed by a servername
     *    @ is followed by a hostname
     */
-std::vector<std::string>  Command::getTargetRecipient() {
-   //get target  
+std::vector<std::string> Command::getTargetRecipient() {
+  std::vector<std::string> recipients;
+  // May need to check here for recipient type and validity
+  for (auto iter = param_.begin(); iter != param_.end() - 1; ++iter) {
+    std::string nickname, username, hostname, servername;
+    size_t pos;
+
+    pos = iter->find('!');
+    if (pos != std::string::npos) {
+      nickname = iter->substr(0, pos);
+      username = iter->substr(pos + 1);
+      pos = username.find_first_of("%@");
+      if (pos != std::string::npos) {
+        if (username[pos] == '%')
+          servername = username.substr(pos + 1);
+      } else {
+        hostname = username.substr(pos + 1);
+      }
+      username = username.substr(0, pos);
+    } else {
+      nickname = *iter;
+    }
+    recipients.push_back(nickname);
+  }
+  return recipients;
 }
 
 void Command::actionPrivmsg(Client& client) {
 
   std::vector<std::string> target = getTargetRecipient();
+  std::string message = param_.back();
 
   std::string replyPrivmsg = "here you put \r\n";
 
   client.appendToSendBuffer(replyPrivmsg);
+}
+
+bool Command::findClientByUser(const std::string& user) {
+  for (std::map<int, Client>::const_iterator it =
+           myClients_.begin();  // it could be auto
+       it != myClients_.end(); ++it) {
+    if (it->second.getUserName() == user) {
+      LOG_DEBUG("Found client with user: " << user);
+      return true;
+    }
+  }
+  return false;
 }
 
 bool Command::findClientByNickname(const std::string& nickname) {
