@@ -50,6 +50,9 @@ class Command {
   std::map<int, Client>& myClients_;
   std::string& pass_;
   time_t serverStartTime_;
+
+    // PRIVMSG
+  std::vector<string> getTargetRecipient();
 };
 }  // namespace irc
 
