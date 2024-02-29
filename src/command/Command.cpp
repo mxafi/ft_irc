@@ -137,7 +137,7 @@ void Command::actionNick(Client& client) {
     return;
   }
 
-  // TODO: Check if the nickname is valid, below are rules and info about it
+  // Check if the nickname is valid, below are rules and info about it
   // nickname   =  ( letter / special ) *8( letter / digit / special / "-" )
   // letter     =  %x41-5A / %x61-7A       ; A-Z / a-z
   // digit      =  %x30-39                 ; 0-9
@@ -150,14 +150,13 @@ void Command::actionNick(Client& client) {
     return;
   }
 
-  // TODO: Check if the nickname is already in use
+  // Check if the nickname is already in use
   // Because of IRC's Scandinavian origin, the characters {}|^ are
   // considered to be the lower case equivalents of the characters []\~,
   // respectively. This is a critical issue when determining the
   // equivalence of two nicknames or channel names.
   // When evaluating nickname equivalence, let's convert all characters to lower case.
   // Numerics: ERR_NICKNAMEINUSE
-
   if (findClientByNickname(param_.at(0))) {
     client.appendToSendBuffer(
         RPL_ERR_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
