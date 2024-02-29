@@ -142,9 +142,10 @@ void Command::actionNick(Client& client) {
   // special    =  %x5B-60 / %x7B-7D       ; "[", "]", "\", "`", "_", "^", "{", "|", "}"
   // Numerics: ERR_ERRONEUSNICKNAME  and also cut it for 9 ccharacters
   if (!(isValidNickname(param_.at(0)))) {
-       client.appendToSendBuffer(RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, param_.at(0)));
-       RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, param_.at(0));
-       return;
+    client.appendToSendBuffer(
+        RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, param_.at(0)));
+    RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, param_.at(0));
+    return;
   }
 
   // TODO: Check if the nickname is already in use
@@ -155,16 +156,16 @@ void Command::actionNick(Client& client) {
   // When evaluating nickname equivalence, let's convert all characters to lower case.
   // Numerics: ERR_NICKNAMEINUSE
 
-  if(!isValidNickname(param_.at(0)))
-  {
-    client.appendToSendBuffer(RPL_ERR_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
+  if (findClientByNickname(param_.at(0))) {
+    client.appendToSendBuffer(
+        RPL_ERR_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
     return;
   }
   client.setNickname(param_.at(0));
-
   // TODO: Send a NICK message to all channels the client is in, advertising the new nickname
 
-  if (client.isAuthenticated()) {
+  if (client
+          .isAuthenticated()) {  // here we need to fix if is already authenticaded everytyme we change the niickname
     sendAuthReplies_(client);
   }
 }
@@ -246,42 +247,32 @@ void Command::actionPrivmsg(Client& client) {
   client.appendToSendBuffer(replyPrivmsg);
 }
 
-// bool Command::findClientByNickname(const std::string& nickname) {
-//   for (std::map<int, Client>::const_iterator it =
-//            myClients_.begin();  // it could be auto
-//        it != myClients_.end(); ++it) {
-//     if (it->second.getNickname() == nickname) {
-//       LOG_DEBUG("Found client with nickname: " << nickname);
-//       numeric_ = ERR_NICKNAMEINUSE;
-//       return true;
-//     }
-//   }
-//   return false;
-// }
-
 bool Command::findClientByNickname(const std::string& nickname) {
- std::string lowerNickname = nickname;
- std::transform(lowerNickname.begin(), lowerNickname.end(), lowerNickname.begin(), ::tolower);
- std::replace(lowerNickname.begin(), lowerNickname.end(), '{', '[');
- std::replace(lowerNickname.begin(), lowerNickname.end(), '}', ']');
- std::replace(lowerNickname.begin(), lowerNickname.end(), '|', '\\');
- std::replace(lowerNickname.begin(), lowerNickname.end(), '^', '~');
+  std::string lowerNickname =
+      nickname;  //here we just put everything in lowercase
+  std::transform(lowerNickname.begin(), lowerNickname.end(),
+                 lowerNickname.begin(), ::tolower);
+  std::replace(lowerNickname.begin(), lowerNickname.end(), '{', '[');
+  std::replace(lowerNickname.begin(), lowerNickname.end(), '}', ']');
+  std::replace(lowerNickname.begin(), lowerNickname.end(), '|', '\\');
+  std::replace(lowerNickname.begin(), lowerNickname.end(), '^', '~');
 
- for (std::map<int, Client>::const_iterator it = myClients_.begin(); it != myClients_.end(); ++it) {
-    std::string clientNickname = it->second.getNickname();
-    std::transform(clientNickname.begin(), clientNickname.end(), clientNickname.begin(), ::tolower);
+  for (std::map<int, Client>::const_iterator it = myClients_.begin();
+       it != myClients_.end(); ++it) {
+    std::string clientNickname =
+        it->second.getNickname();  //here we just put everything in lowercase
+    std::transform(clientNickname.begin(), clientNickname.end(),
+                   clientNickname.begin(), ::tolower);
     std::replace(clientNickname.begin(), clientNickname.end(), '{', '[');
     std::replace(clientNickname.begin(), clientNickname.end(), '}', ']');
     std::replace(clientNickname.begin(), clientNickname.end(), '|', '\\');
     std::replace(clientNickname.begin(), clientNickname.end(), '^', '~');
-
     if (clientNickname == lowerNickname) {
-      LOG_DEBUG("Found client with nickname: " << nickname);
-      numeric_ = ERR_NICKNAMEINUSE;
+      LOG_DEBUG("Found client with the same nickname: " << nickname);
       return true;
     }
- }
- return false;
+  }
+  return false;
 }
 
 bool Command::isValidNickname(std::string& nickname) {
