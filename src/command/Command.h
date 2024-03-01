@@ -11,6 +11,7 @@
 #include "../common/magicNumber.h"
 #include "../common/reply.h"
 #include "../message/Message.h"
+#include <regex>
 
 #define MAX_BUFFER_SIZE 1024  //maybe this we change
 
@@ -41,6 +42,7 @@ class Command {
   void parseCommand(const Message& commandString, Client& client);
   void sendAuthReplies_(Client& client);
   static std::map<std::string, std::function<void(Command*, Client&)>> commands;
+  bool isValidNickname(std::string& nickname);
   Client client_;
   std::string prefix_;
   std::vector<std::string> param_;
