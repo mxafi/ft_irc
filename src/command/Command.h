@@ -53,6 +53,7 @@ class Command {
 
   // PRIVMSG
   std::vector<std::string> getTargetRecipient();
+  bool validateTarget();
 };
 }  // namespace irc
 
