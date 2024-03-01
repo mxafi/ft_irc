@@ -146,4 +146,21 @@ void Client::setDisconnectReason(const std::string& reason) {
   disconnectReason_ = reason;
 }
 
+void Client::recordChannel(Channel& channel) {
+  channels_.push_back(&channel);
+}
+
+void Client::removeChannel(Channel& channel) {
+  for (auto it = channels_.begin(); it != channels_.end(); ++it) {
+    if (*it == &channel) {
+      channels_.erase(it);
+      break;
+    }
+  }
+}
+
+std::vector<Channel*>& Client::getChannels() {
+  return channels_;
+}
+
 }  // namespace irc

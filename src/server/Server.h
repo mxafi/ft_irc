@@ -20,9 +20,10 @@
 #include "../common/magicNumber.h"
 #include "../common/os.h"
 
+#include "../channel/Channel.h"
 #include "../client/Client.h"
-#include "../message/Message.h"
 #include "../command/Command.h"
+#include "../message/Message.h"
 
 extern bool isServerRunning_g;
 extern std::string serverHostname_g;
@@ -56,6 +57,7 @@ class Server {
   struct addrinfo hints_;
   struct addrinfo* srvinfo_;
   std::map<int, Client> clients_;
+  std::map<std::string, Channel> channels_;
   time_t start_time_;
 
  public:

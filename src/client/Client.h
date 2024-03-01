@@ -10,6 +10,9 @@
 #include "../common/log.h"
 #include "../common/magicNumber.h"
 
+// Light interdependancy between client and channel
+class Channel;
+
 namespace irc {
 
 class Client {
@@ -43,6 +46,9 @@ class Client {
   std::string getIpAddr() const;
   std::string getDisconnectReason() const;
   void setDisconnectReason(const std::string& reason);
+  void recordChannel(Channel& channel);
+  void removeChannel(Channel& channel);
+  std::vector<Channel*>& getChannels();
 
  private:
   void setOldNickname_(const std::string& oldNickname);
@@ -56,6 +62,8 @@ class Client {
   std::string recvBuffer_;
   std::string password_;
   std::string disconnectReason_;
+
+  std::vector<Channel*> channels_;
 
   struct ClientStatus {
     bool gotUser;
