@@ -231,51 +231,59 @@ void Command::actionJoin(Client& client) {
 
 /****
     * According to PRIVMSG part 3.3.1 on RFC2812, a target can be:
-    * - a nick
-    * - a user@hostname
-    * - a user%servername@hostname
-    * - a user%servername
-    * - a nick!user@hostname.
+    * - a nick OR #channel
+    * - a user@servername
+    * - a user%userhost@servername
+    * - a user%userhost
+    * - a nick!user@userhost
     * -> No delimiter means that it is either a nick or a username
     *    ! is followed by a username
     *    % is followed by a servername
     *    @ is followed by a hostname
     */
-std::vector<std::string> Command::getTargetRecipient() {
-  std::vector<std::string> recipients;
-  // May need to check here for recipient type and validity
-  for (auto iter = param_.begin(); iter != param_.end() - 1; ++iter) {
-    std::string nickname, username, hostname, servername;
-    size_t pos;
+// std::vector<std::string> Command::getTargetRecipient() {
+//   // May need to check here for recipient type and validity
+//   {
+//     std::string recipient;
+//     std::string nickname, username, hostname, servername;
+//     size_t pos;
 
-    pos = iter->find('!');
-    if (pos != std::string::npos) {
-      nickname = iter->substr(0, pos);
-      username = iter->substr(pos + 1);
-      pos = username.find_first_of("%@");
-      if (pos != std::string::npos) {
-        if (username[pos] == '%')
-          servername = username.substr(pos + 1);
-      } else {
-        hostname = username.substr(pos + 1);
-      }
-      username = username.substr(0, pos);
-    } else {
-      nickname = *iter;
-    }
-    recipients.push_back(nickname);
-  }
-  return recipients;
-}
+//   //   pos = param_->find('!');
+//   //   if (pos != std::string::npos) {
+//   //     nickname = param_->substr(0, pos);
+//   //     username = param_->substr(pos + 1);
+//   //     pos = username.find_first_of("%@");
+//   //     if (pos != std::string::npos) {
+//   //       if (username[pos] == '%')
+//   //         servername = username.substr(pos + 1);
+//   //     } else {
+//   //       hostname = username.substr(pos + 1);
+//   //     }
+//   //     username = username.substr(0, pos);
+//   //   } else {
+//   //     nickname = *param_;
+//   //   }
+//   //   recipients.push_back(nickname);
+//   //
+//   // }
+//   // return recipients;
+// }
 
 void Command::actionPrivmsg(Client& client) {
-
-  std::vector<std::string> target = getTargetRecipient();
-  std::string message = param_.back();
-
-  std::string replyPrivmsg = "here you put \r\n";
-
-  client.appendToSendBuffer(replyPrivmsg);
+  if (param_.size() != 2) {
+    if (param_.size() == 1) {
+      RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+      return;
+      if (param_.size() == 0) {
+        RPL_ERR_NORECIPIENT_411(serverHostname_g);
+        return;
+      } else {
+        RPL_ERR_TOOMANYTARGETS_407(
+            serverHostname_g);  // RFC2812: "<target> :<error code> recipients. <abort message>"
+        return;  // IRCv3: Does not have any message format, may not even be used as it handles multiple recipients
+      }
+    }
+  } else if (param_.begin())
 }
 
 bool Command::findClientByUser(const std::string& user) {

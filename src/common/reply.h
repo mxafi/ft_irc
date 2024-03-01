@@ -11,10 +11,15 @@
 #define RPL_CREATED_003(servername, date) (RPL_META_MESSAGE(servername, "003", "This server was created " + date))
 #define RPL_MYINFO_004(servername, version, user_modes, channel_modes) (RPL_META_MESSAGE(servername, "004", servername + " " + version + " " + user_modes + " " + channel_modes))
 
+#define RPL_ERR_TOOMANYTARGETS_407(servername) (RPL_META_MESSAGE(servername, "407", + " :ERR_TOOMANYTARGETS"))
+#define RPL_ERR_NORECIPIENT_411(servername) (RPL_META_MESSAGE(servername, "411", + " :ERR_NORECIPIENT"))
+#define RPL_ERR_NOTEXTTOSEND_412(servername) (RPL_META_MESSAGE(servername, "412", + " :ERR_NOTEXTTOSEND"))
+
 #define RPL_ERR_UNKNOWNCOMMAND_421(servername, command) (RPL_META_MESSAGE(servername, "421", command + " :Unknown command"))
 #define RPL_ERR_NONICKNAMEGIVEN_431(servername) (RPL_META_MESSAGE(servername, "431", ":No nickname given"))
 #define RPL_ERR_NOTREGISTERED_451(servername) (RPL_META_MESSAGE(servername, "451", ":You have not registered"))
 #define RPL_ERR_NEEDMOREPARAMS_461(servername, command) (RPL_META_MESSAGE(servername, "461", command + " :Not enough parameters"))
 #define RPL_ERR_ALREADYREGISTRED_462(servername) (RPL_META_MESSAGE(servername, "462", ":Unauthorized command (already registered)"))
+
 
 #endif
