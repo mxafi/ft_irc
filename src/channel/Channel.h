@@ -1,6 +1,7 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -28,7 +29,7 @@ class Channel {
   void joinMember(Client& client);
   void partMember(Client& client);
   bool isMember(Client& client);
-  void setOperatorStatus(Client& client, bool isOperator);
+  void setOperatorStatus(Client& client, bool setOperatorStatusTo);
   bool isOperator(Client& client);
   void invite(Client& client);
   void uninvite(Client& client);

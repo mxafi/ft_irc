@@ -10,10 +10,10 @@
 #include "../common/log.h"
 #include "../common/magicNumber.h"
 
+namespace irc {
+
 // Light interdependancy between client and channel
 class Channel;
-
-namespace irc {
 
 class Client {
  public:

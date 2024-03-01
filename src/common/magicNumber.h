@@ -5,6 +5,7 @@
 #define SUPPORTED_USER_MODES "io"
 #define SUPPORTED_CHANNEL_MODES "kost"
 #define CHANNEL_PREFIXES "#&"
+#define CHANNEL_USER_LIMIT_DISABLED -1
 #define SUCCESS 0
 #define FAILURE 1
 #define EXIT_SUCCESS 0
