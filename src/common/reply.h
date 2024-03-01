@@ -24,4 +24,5 @@
 #define RPL_ERR_ERR_NICKNAMEINUSE_433(servername, nick) (RPL_META_MESSAGE(servername, "433", nick + " :Nickname is already in use"))
 
 
+
 #endif

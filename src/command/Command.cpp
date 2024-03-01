@@ -296,7 +296,6 @@ void Command::actionPrivmsg(Client& client) {
       }
     }
   } else if (param_.begin())
-}
 
 bool Command::findClientByUser(const std::string& user) {
   for (std::map<int, Client>::const_iterator it =

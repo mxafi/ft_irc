@@ -54,6 +54,7 @@ class Command {
   // PRIVMSG
   std::vector<std::string> getTargetRecipient();
   bool validateTarget();
+  bool findClientByUser(const std::string& user);
 };
 }  // namespace irc
 
