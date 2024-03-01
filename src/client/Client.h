@@ -41,6 +41,8 @@ class Client {
   void setWantDisconnect();
   bool getWantDisconnect() const;
   std::string getIpAddr() const;
+  std::string getDisconnectReason() const;
+  void setDisconnectReason(const std::string& reason);
 
  private:
   void setOldNickname_(const std::string& oldNickname);
@@ -53,6 +55,7 @@ class Client {
   std::string sendBuffer_;
   std::string recvBuffer_;
   std::string password_;
+  std::string disconnectReason_;
 
   struct ClientStatus {
     bool gotUser;

@@ -18,7 +18,8 @@ bool Client::isAuthenticated() {
 }
 
 void Client::setNickname(const std::string& newNickname) {
-  if (!status_.gotNick) { // if the client is setting their nickname for the first time when they connect
+  if (!status_
+           .gotNick) {  // if the client is setting their nickname for the first time when they connect
     nickname_ = (newNickname.size() > NICK_MAX_LENGTH_RFC2812)
                     ? newNickname.substr(0, NICK_MAX_LENGTH_RFC2812)
                     : newNickname;
@@ -28,7 +29,7 @@ void Client::setNickname(const std::string& newNickname) {
       status_.authenticated = true;
       LOG_DEBUG("client is authenticated")
     }
-  } else { // if the client is changing their nickname
+  } else {  // if the client is changing their nickname
     setOldNickname_(nickname_);
     nickname_ = (newNickname.size() > NICK_MAX_LENGTH_RFC2812)
                     ? newNickname.substr(0, NICK_MAX_LENGTH_RFC2812)
@@ -135,6 +136,14 @@ void Client::setWantDisconnect() {
 
 bool Client::getWantDisconnect() const {
   return status_.wantDisconnect;
+}
+
+std::string Client::getDisconnectReason() const {
+  return disconnectReason_;
+}
+
+void Client::setDisconnectReason(const std::string& reason) {
+  disconnectReason_ = reason;
 }
 
 }  // namespace irc
