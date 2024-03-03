@@ -78,12 +78,20 @@ int Client::getFd() const {
   return fd_;
 }
 
-std::string Client::getIpAddr() const {
+void Client::populateIpAddr_() {
   char ip[INET6_ADDRSTRLEN];
   struct sockaddr_in* sa = (struct sockaddr_in*)&sockaddr_;
   inet_ntop(AF_INET, &sa->sin_addr, ip, INET6_ADDRSTRLEN);
   LOG_DEBUG("client got ip address: " << ip);
-  return std::string(ip);
+  ipAddr_ = std::string(ip);
+  return;
+}
+
+std::string& Client::getHost() {
+  if (ipAddr_.empty()) {
+    populateIpAddr_();
+  }
+  return ipAddr_;
 }
 
 void Client::setSendBuffer(const std::string& sendBuffer) {

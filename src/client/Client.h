@@ -43,15 +43,16 @@ class Client {
   bool isAuthenticated();
   void setWantDisconnect();
   bool getWantDisconnect() const;
-  std::string getIpAddr() const;
   std::string getDisconnectReason() const;
   void setDisconnectReason(const std::string& reason);
   void recordChannel(Channel& channel);
   void removeChannel(Channel& channel);
   std::vector<Channel*>& getChannels();
+  std::string& getHost();
 
  private:
   void setOldNickname_(const std::string& oldNickname);
+  void populateIpAddr_();
   int fd_;
   struct sockaddr sockaddr_;
 
@@ -62,6 +63,7 @@ class Client {
   std::string recvBuffer_;
   std::string password_;
   std::string disconnectReason_;
+  std::string ipAddr_;
 
   std::vector<Channel*> channels_;
 
