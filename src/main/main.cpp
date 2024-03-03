@@ -39,16 +39,16 @@ std::string serverHostname_g;
  */
 void signalHandler(int signum) {
   if (signum == SIGINT) {
-    LOG_INFO("server received SIGINT (Ctrl+C)");
+    LOG_INFO("Server received SIGINT (Ctrl+C)");
   }
   if (signum == SIGTERM) {
-    LOG_INFO("server received SIGTERM (kill)");
+    LOG_INFO("Server received SIGTERM (kill)");
   }
   if (signum == SIGQUIT) {
-    LOG_INFO("server received SIGQUIT (Ctrl+Backslash)");
+    LOG_INFO("Server received SIGQUIT (Ctrl+Backslash)");
   }
   if (signum == SIGHUP) {
-    LOG_INFO("server received SIGHUP (parent died)");
+    LOG_INFO("Server received SIGHUP (parent died)");
   }
   isServerRunning_g = false;
 }
@@ -65,7 +65,7 @@ void signalHandler(int signum) {
  */
 int main(int argc, char** argv) {
   if (argc != 3) {
-    LOG_ERROR("wrong number of arguments");
+    LOG_ERROR("main: wrong number of arguments");
     PRINT_USAGE;
     return EXIT_FAILURE;
   }
@@ -73,11 +73,11 @@ int main(int argc, char** argv) {
   try {
     std::stoi(argv[1]);
   } catch (std::exception& e) {
-    LOG_ERROR("invalid port");
+    LOG_ERROR("main: invalid port");
     PRINT_USAGE;
     return EXIT_FAILURE;
   }
-  LOG_INFO("server starting on port " << argv[1]);
+  LOG_INFO("Server starting on port " << argv[1]);
   LOG_DEBUG("with password \")" << argv[2] << "\"");
 
   signal(SIGINT, signalHandler);   // Ctrl+C
@@ -91,10 +91,10 @@ int main(int argc, char** argv) {
   try {
     server.loop();
   } catch (std::exception& e) {
-    LOG_ERROR("Exception: " << e.what());
+    LOG_ERROR("main: Exception: " << e.what());
     return EXIT_FAILURE;
   }
 
-  LOG_INFO("server shutting down, goodbye!");
+  LOG_INFO("Server shutting down, goodbye!");
   return EXIT_SUCCESS;
 }

@@ -62,12 +62,13 @@ int Server::setServerHostname_() {
 
   if (hostnameLength >= HOSTNAME_MAX_LENGTH) {
     LOG_WARNING(
-        "server failed to get hostname: hostname too long, using hostaddress "
-        "instead");
+        "Server::setServerHostname_: failed to get hostname: hostname too "
+        "long, using hostaddress instead");
     if (inet_ntop(server_socket_domain_,
                   &((struct sockaddr_in*)srvinfo_->ai_addr)->sin_addr, hostname,
                   HOSTNAME_MAX_LENGTH) == NULL) {
-      LOG_ERROR("server inet_ntop failed: " << strerror(errno));
+      LOG_ERROR(
+          "Server::setServerHostname_: inet_ntop failed: " << strerror(errno));
       return FAILURE;
     }
   }
@@ -99,59 +100,59 @@ int Server::start() {
   hints_.ai_socktype = server_socket_type_;
   hints_.ai_flags = AI_PASSIVE;
   if (int gai_ret = getaddrinfo(NULL, port_, &hints_, &srvinfo_) != SUCCESS) {
-    LOG_ERROR("server getaddrinfo failed: (" << gai_ret << ") "
-                                             << gai_strerror(gai_ret));
+    LOG_ERROR("Server::start: getaddrinfo failed: (" << gai_ret << ") "
+                                                     << gai_strerror(gai_ret));
     return FAILURE;
   }
-  LOG_DEBUG("server getaddrinfo success");
+  LOG_DEBUG("Server::start: getaddrinfo success");
 
   if (setServerHostname_() == FAILURE) {
-    LOG_ERROR("server hostname fetching failed");
+    LOG_ERROR("Server::start: hostname fetching failed");
     return FAILURE;
   }
 
   server_socket_fd_ = socket(srvinfo_->ai_family, srvinfo_->ai_socktype,
                              server_socket_protocol_);
   if (server_socket_fd_ == SOCKET_FAILURE) {
-    LOG_ERROR("server socket creation failed");
+    LOG_ERROR("Server::start: socket creation failed");
     return FAILURE;
   }
   LOG_DEBUG("server socket creation success on fd: " << server_socket_fd_);
 
   int fcntl_flags = fcntl(server_socket_fd_, F_GETFL);
   if (fcntl_flags == FCNTL_FAILURE) {
-    LOG_ERROR("server socket fcntl get flags failed");
+    LOG_ERROR("Server::start: socket fcntl get flags failed");
     return FAILURE;
   }
   if (fcntl(server_socket_fd_, F_SETFL, fcntl_flags | O_NONBLOCK) ==
       FCNTL_FAILURE) {
-    LOG_ERROR("server socket fcntl set nonblock failed");
+    LOG_ERROR("Server::start: socket fcntl set nonblock failed");
     return FAILURE;
   }
-  LOG_DEBUG("server socket fcntl nonblock success");
+  LOG_DEBUG("Server::start: socket fcntl nonblock success");
 
   if (ON_MACOS) {
     int optval = TRUE;
     if (setsockopt(server_socket_fd_, SOL_SOCKET, SO_NOSIGPIPE, &optval,
                    sizeof(optval)) == SETSOCKOPT_FAILURE) {
-      LOG_ERROR("server socket setsockopt failed: " << strerror(errno));
+      LOG_ERROR("Server::start: socket setsockopt failed: " << strerror(errno));
       return FAILURE;
     }
-    LOG_DEBUG("server socket setsockopt success");
+    LOG_DEBUG("Server::start: socket setsockopt success");
   }
 
   if (bind(server_socket_fd_, srvinfo_->ai_addr, srvinfo_->ai_addrlen) ==
       BIND_FAILURE) {
-    LOG_ERROR("server bind failed");
+    LOG_ERROR("Server::start: bind failed");
     return FAILURE;
   }
-  LOG_DEBUG("server bind success");
+  LOG_DEBUG("Server::start: bind success");
 
   if (listen(server_socket_fd_, SOMAXCONN) == LISTEN_FAILURE) {
-    LOG_ERROR("server listen failed");
+    LOG_ERROR("Server::start: listen failed");
     return FAILURE;
   }
-  LOG_DEBUG("server listen success");
+  LOG_DEBUG("Server::start: listen success");
 
   isServerRunning_g = true;
   start_time_ = time(nullptr);
@@ -180,7 +181,7 @@ void Server::loop() {
   server_pollfd.events = POLLIN | POLLERR;
   pollfds.push_back(server_pollfd);
 
-  LOG_DEBUG("server loop start")
+  LOG_DEBUG("Server::loop: loop start")
   while (isServerRunning_g) {
     std::vector<pollfd> tmp_pollfds;
 
@@ -189,7 +190,7 @@ void Server::loop() {
       if (errno == EINTR && isServerRunning_g == false) {
         continue;
       }
-      throw std::runtime_error("server poll failed");
+      throw std::runtime_error("Server::loop: poll failed");
     }
 
     std::vector<pollfd>::iterator it = pollfds.begin();
@@ -211,18 +212,19 @@ void Server::loop() {
             while (extractMessageString_(messageString, client) != FAILURE) {
               Message message(messageString);
               if (message.getNumeric() != SUCCESS) {
-                LOG_DEBUG("server got malformed message from client on fd "
-                          << client.getFd() << ": " << messageString);
+                LOG_DEBUG(
+                    "Server::loop: got malformed message from client on fd "
+                    << client.getFd() << ": " << messageString);
                 handleMalformedMessage_(client, message);
                 continue;
               }
-              LOG_DEBUG("server received message from client on fd "
+              LOG_DEBUG("Server::loop: received message from client on fd "
                         << client.getFd() << ": " << messageString);
               Command coma(message, client, clients_, password_, start_time_);
               // call CommandHandler here with parameters: clients_, client, message
             }
           } catch (std::out_of_range& e) {
-            LOG_ERROR("server client object not found for POLLIN at fd "
+            LOG_ERROR("Server::loop: client object not found for POLLIN at fd "
                       << it->fd << ": " << e.what());
             disconnectClient_(pollfds, it);
             break;
@@ -238,7 +240,7 @@ void Server::loop() {
             break;
           }
         } catch (std::out_of_range& e) {
-          LOG_ERROR("server client object not found for POLLOUT at fd "
+          LOG_ERROR("Server::loop: client object not found for POLLOUT at fd "
                     << it->fd << ": " << e.what());
           disconnectClient_(pollfds, it);
           break;
@@ -246,7 +248,7 @@ void Server::loop() {
       }
       if (it->revents & POLLERR) {
         if (it->fd == server_socket_fd_) {
-          throw std::runtime_error("server socket pollerr");
+          throw std::runtime_error("Server::loop: socket pollerr");
         } else {
           disconnectClient_(pollfds, it);
           break;
@@ -257,7 +259,7 @@ void Server::loop() {
 
     pollfds.insert(pollfds.end(), tmp_pollfds.begin(), tmp_pollfds.end());
   }
-  LOG_DEBUG("server loop end")
+  LOG_DEBUG("Server::loop: loop end")
 }
 
 /**
@@ -273,8 +275,8 @@ int Server::acceptClient_(std::vector<pollfd>& pollfds) {
   int new_client_fd =
       accept(server_socket_fd_, &client_info, &client_info_length);
   if (new_client_fd == ACCEPT_FAILURE) {
-    LOG_ERROR(
-        "server failed to accept new client connection: " << strerror(errno));
+    LOG_ERROR("Server::acceptClient_: failed to accept new client connection: "
+              << strerror(errno));
     return ACCEPT_FAILURE;
   }
   clients_.insert(
@@ -300,7 +302,8 @@ int Server::acceptClient_(std::vector<pollfd>& pollfds) {
 int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
                               std::vector<pollfd>::iterator& it) {
   int client_fd = it->fd;
-  LOG_DEBUG("server disconnecting client on fd " << client_fd);
+  LOG_DEBUG("Server::disconnectClient_: disconnecting client on fd "
+            << client_fd);
   close(client_fd);
   std::vector<Channel*> channels = clients_.at(client_fd).getChannels();
   for (Channel* channel : channels) {
@@ -308,7 +311,7 @@ int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
   }
   unsigned long clients_erased = clients_.erase(client_fd);
   if (clients_erased == 0) {
-    LOG_WARNING("server client not found at fd "
+    LOG_WARNING("Server::disconnectClient_: client not found at fd "
                 << client_fd << " to erase from clients_ map");
   }
   poll_fds.erase(it);
@@ -334,11 +337,11 @@ long long Server::sendFromBuffer_(Client& client) {
   long long send_ret =
       send(client.getFd(), buffer.c_str(), buffer.size(), MSG_NOSIGNAL);
   if (send_ret == SEND_FAILURE) {
-    LOG_ERROR("server send failed: " << strerror(errno));
+    LOG_ERROR("Server::sendFromBuffer_: send failed: " << strerror(errno));
     return SEND_FAILURE;
   }
-  LOG_DEBUG("server sent " << send_ret << " bytes to client on fd "
-                           << client.getFd());
+  LOG_DEBUG("Server::sendFromBuffer_: sent "
+            << send_ret << " bytes to client on fd " << client.getFd());
   buffer.erase(0, static_cast<unsigned long>(send_ret));
   return send_ret;
 }
@@ -358,8 +361,8 @@ long long Server::recvToBuffer_(Client& client) {
   memset(tmpRecvBuffer, 0, SERVER_RECV_BUFFER_SIZE);
   recv_ret = recv(client.getFd(), tmpRecvBuffer, SERVER_RECV_BUFFER_SIZE, 0);
   if (recv_ret == RECV_FAILURE) {
-    LOG_ERROR("server recv failed on fd: " << client.getFd()
-                                           << " with: " << strerror(errno));
+    LOG_ERROR("Server::recvToBuffer_: recv failed on fd: "
+              << client.getFd() << " with: " << strerror(errno));
     return RECV_FAILURE;
   }
   if (recv_ret == RECV_ORDERLY_SHUTDOWN) {
@@ -367,7 +370,7 @@ long long Server::recvToBuffer_(Client& client) {
     client.setWantDisconnect();
     return RECV_ORDERLY_SHUTDOWN;
   }
-  LOG_DEBUG("server received a packet of "
+  LOG_DEBUG("Server::recvToBuffer_: received a packet of "
             << recv_ret << " bytes from client on fd " << client.getFd());
   buf.append(tmpRecvBuffer, static_cast<unsigned long>(recv_ret));
   return recv_ret;
@@ -390,8 +393,8 @@ int Server::extractMessageString_(std::string& message, Client& client) {
   message.clear();
   message = buf.substr(0, pos);
   buf.erase(0, pos + pattern.length());
-  LOG_DEBUG("server extracted message::" << message << ":: from client on fd "
-                                         << client.getFd());
+  LOG_DEBUG("Server::extractMessageString_: extracted message::"
+            << message << ":: from client on fd " << client.getFd());
 
   return SUCCESS;
 }
@@ -406,15 +409,15 @@ void Server::handleMalformedMessage_(Client& client, Message& message) {
   int numeric = message.getNumeric();
   if (numeric == ERR_CUSTOM_ILLEGALNUL) {
     LOG_WARNING(
-        "Client on fd "
+        "Server::handleMalformedMessage_: Client on fd "
         << client.getFd()
         << " sent a message that contained a null character: ignoring it");
   } else if (numeric == ERR_INPUTTOOLONG) {
-    LOG_WARNING("Client on fd "
+    LOG_WARNING("Server::handleMalformedMessage_: Client on fd "
                 << client.getFd()
                 << " sent a message that was too long: ignoring it");
   } else if (numeric == ERR_CUSTOM_TOOMANYPARAMS) {
-    LOG_WARNING("Client on fd "
+    LOG_WARNING("Server::handleMalformedMessage_: Client on fd "
                 << client.getFd()
                 << " sent a message with too many parameters: ignoring it");
   }

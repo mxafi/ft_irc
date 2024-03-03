@@ -63,7 +63,7 @@ void Command::execute(Client& client) {
     } else {
       client.appendToSendBuffer(
           RPL_ERR_UNKNOWNCOMMAND_421(serverHostname_g, commandName_));
-      LOG_DEBUG("Command not found: " << commandName_);
+      LOG_DEBUG("Command::execute: command not found: " << commandName_);
     }
     return;
   }
@@ -74,12 +74,14 @@ void Command::execute(Client& client) {
     if (it != commands.end()) {
       it->second(this, client);
     } else {
-      LOG_DEBUG("Command not found: " << commandName_);
+      LOG_WARNING("Command::execute: NICK|USER|PASS command not found: "
+                  << commandName_);
     }
     return;
   }
 
   if (commandName_ == "CAP") {
+    LOG_DEBUG("Command::execute: CAP command received, ignoring");
     return;
   }
 
@@ -114,9 +116,7 @@ void Command::actionPass(Client& client) {
     return;
   }
   if (param_.at(0) != pass_) {
-    LOG_DEBUG("Password incorrect");
-    LOG_DEBUG("param: " << param_.at(0));
-    LOG_DEBUG("pass_: " << pass_);
+    LOG_DEBUG("Command::actionPass: password incorrect");
     client.appendToSendBuffer(ERR_MESSAGE("Password incorrect"));
     client.setWantDisconnect();
     return;
@@ -292,7 +292,9 @@ bool Command::findClientByNickname(const std::string& nickname) {
     std::replace(clientNickname.begin(), clientNickname.end(), '|', '\\');
     std::replace(clientNickname.begin(), clientNickname.end(), '^', '~');
     if (clientNickname == lowerNickname) {
-      LOG_DEBUG("Found client with the same nickname: " << nickname);
+      LOG_DEBUG(
+          "Command::findClientByNickname: found client with the same nickname: "
+          << nickname);
       return true;
     }
   }

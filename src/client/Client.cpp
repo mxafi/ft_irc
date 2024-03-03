@@ -27,7 +27,7 @@ void Client::setNickname(const std::string& newNickname) {
     status_.gotNick = true;
     if (status_.gotUser && status_.gotPassword) {
       status_.authenticated = true;
-      LOG_DEBUG("client is authenticated")
+      LOG_DEBUG("Client::setNickname: client is authenticated")
     }
   } else {  // if the client is changing their nickname
     setOldNickname_(nickname_);
@@ -35,7 +35,7 @@ void Client::setNickname(const std::string& newNickname) {
                     ? newNickname.substr(0, NICK_MAX_LENGTH_RFC2812)
                     : newNickname;
   }
-  LOG_DEBUG("nickname is set to: " << nickname_);
+  LOG_DEBUG("Client::setNickname: nickname is set to: " << nickname_);
 }
 
 void Client::setOldNickname_(const std::string& oldNickname) {
@@ -47,9 +47,9 @@ void Client::setUserName(const std::string& userName) {
   status_.gotUser = true;
   if (status_.gotPassword && status_.gotNick) {
     status_.authenticated = true;
-    LOG_DEBUG("client is authenticated")
+    LOG_DEBUG("Client::setUserName: client is authenticated")
   }
-  LOG_DEBUG("user is set to: " << userName_);
+  LOG_DEBUG("Client::setUserName: user is set to: " << userName_);
 }
 
 void Client::setPassword(const std::string& password) {
@@ -57,9 +57,9 @@ void Client::setPassword(const std::string& password) {
   status_.gotPassword = true;
   if (status_.gotUser && status_.gotNick) {
     status_.authenticated = true;
-    LOG_DEBUG("client is authenticated")
+    LOG_DEBUG("Client::setPassword: client is authenticated")
   }
-  LOG_DEBUG("password is set to: " << password_);
+  LOG_DEBUG("Client::setPassword: password is set to: " << password_);
 }
 
 std::string Client::getNickname() const {
@@ -82,7 +82,7 @@ void Client::populateIpAddr_() {
   char ip[INET6_ADDRSTRLEN];
   struct sockaddr_in* sa = (struct sockaddr_in*)&sockaddr_;
   inet_ntop(AF_INET, &sa->sin_addr, ip, INET6_ADDRSTRLEN);
-  LOG_DEBUG("client got ip address: " << ip);
+  LOG_DEBUG("Client::populateIpAddr_: client got ip address: " << ip);
   ipAddr_ = std::string(ip);
   return;
 }
