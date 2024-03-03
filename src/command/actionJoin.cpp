@@ -9,7 +9,7 @@ void Command::actionJoin(Client& client) {
     return;
   }
   if (param_.size() == 1 && param_.at(0) == "0") {
-    // Leave all channels the client is in using PART
+    // TODO: Leave all channels the client is in using PART
   }
 
   // Get the channel names
@@ -43,12 +43,16 @@ void Command::actionJoin(Client& client) {
           RPL_ERR_TOOMANYCHANNELS_405(serverHostname_g, channelName));
       break;
     }
-    // Check if the channel name is valid (regex) (ERR_NOSUCHCHANNEL) remember to create if valid and not reply with error
-    // Check if there is a key for the channel and if it is valid (ERR_BADCHANNELKEY)
-    // Check if the channel user limit is reached (ERR_CHANNELISFULL)
-    // Check if the channel is invite-only, and invite is valid (ERR_INVITEONLYCHAN)
-    // join the channel
-    // send the required messages upon joining (JOIN to channel members, RPL_TOPIC, RPL_NAMREPLY including the joining client, RPL_ENDOFNAMES)
+    // TODO: Check if the channel name is valid (regex) (ERR_NOSUCHCHANNEL)
+    // if channel name is valid and does not exist, create the channel
+  
+    // else: do the things below
+    // TODO: Check if there is a key for the channel and if it is valid (ERR_BADCHANNELKEY)
+    // TODO: Check if the channel user limit is reached (ERR_CHANNELISFULL)
+    // TODO: Check if the channel is invite-only, and invite is valid (ERR_INVITEONLYCHAN)
+    // TODO: join the channel (how to access the channel object, and add it to the server's channel vector?)
+
+    // TODO: send the required messages upon joining (JOIN to channel members, RPL_TOPIC, RPL_NAMREPLY including the joining client, RPL_ENDOFNAMES)
   }
 }
 
