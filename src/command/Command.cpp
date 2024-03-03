@@ -96,11 +96,7 @@ void Command::parseCommand(const Message& commandString, Client& client) {
 }
 
 void Command::actionPing(Client& client) {
-  std::string response = ":" + serverHostname_g + " PONG " + serverHostname_g +
-                         " :" + client.getNickname();
-  client.appendToSendBuffer(response);
-  //:sakura.jp.as.dal.net PONG sakura.jp.as.dal.net :pepit
-  LOG_DEBUG(response);
+  client.appendToSendBuffer(RPL_MESSAGE("PONG " + serverHostname_g));
 }
 
 void Command::actionPass(Client& client) {
@@ -287,7 +283,8 @@ bool Command::isValidNickname(std::string& nickname) {
   }
   if (nickname.size() > 9) {
     nickname = nickname.substr(0, 9);
-    LOG_DEBUG("Command::isValidNickname: nick was too long, shortened to: " << nickname);
+    LOG_DEBUG("Command::isValidNickname: nick was too long, shortened to: "
+              << nickname);
   }
   return true;
 }
