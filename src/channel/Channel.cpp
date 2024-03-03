@@ -77,7 +77,7 @@ void Channel::joinMember(Client& client) {
     return;
   }
   if (userLimit_ != CHANNEL_USER_LIMIT_DISABLED &&
-      members_.size() >= userLimit_) {
+      static_cast<int>(members_.size()) >= userLimit_) {
     LOG_WARNING("Channel::joinMember: user limit reached, not joining")
     return;
   }
