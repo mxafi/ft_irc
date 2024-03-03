@@ -234,10 +234,11 @@ void Command::actionKick(Client& client) {
 void Command::actionQuit(Client& client) {
   // Find out the reason for quitting
   std::string quitReason;
-  if (param_.size() == 0) {
+  if (param_.size() != 0) {
+    quitReason = param_.at(0);
+  } else {
     quitReason = "Client quit";
   }
-  quitReason = param_.at(0);
   if (quitReason.length() > 1 && quitReason[0] == ':') {
     quitReason = quitReason.substr(1);
   }
