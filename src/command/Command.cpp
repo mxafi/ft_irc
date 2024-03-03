@@ -262,7 +262,25 @@ void Command::actionQuit(Client& client) {
 }
 
 void Command::actionJoin(Client& client) {
-  (void)client;
+  if (param_.size() == 0) {
+    client.appendToSendBuffer(
+        RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "JOIN"));
+    return;
+  }
+  if (param_.size() == 1 && param_.at(0) == "0") {
+    // Leave all channels the client is in using PART
+  }
+
+  // Get the channel names
+  std::stringstream ss(param_.at(0));
+  std::string rChannel;
+  std::unordered_map<std::string, std::string> rChannelKeyPairs;
+  while (std::getline(ss, rChannel, ',')) {
+    rChannelKeyPairs[rChannel] = "";
+  }
+
+  // Get the channel keys
+  
 }
 
 void Command::actionPrivmsg(Client& client) {

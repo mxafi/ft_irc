@@ -6,7 +6,10 @@
 #include <iostream>
 #include <map>
 #include <regex>
+#include <sstream>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "../channel/Channel.h"
 #include "../client/Client.h"
