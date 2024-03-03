@@ -302,6 +302,10 @@ int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
   int client_fd = it->fd;
   LOG_DEBUG("server disconnecting client on fd " << client_fd);
   close(client_fd);
+  std::vector<Channel*> channels = clients_.at(client_fd).getChannels();
+  for (Channel* channel : channels) {
+    channel->partMember(clients_.at(client_fd));
+  }
   unsigned long clients_erased = clients_.erase(client_fd);
   if (clients_erased == 0) {
     LOG_WARNING("server client not found at fd "
