@@ -20,6 +20,7 @@ RFLAGS				:=	-O3
 rwildcard			=		$(strip $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *,%,$2),$d)))
 
 SRCS					:=	$(strip $(call rwildcard,src/,*.cpp))
+INCS					:=	$(strip $(call rwildcard,src/,*.h)) $(strip $(call rwildcard,src/,*.hpp))
 OBJS					:=	$(strip $(patsubst src/%, obj/%, $(SRCS:.cpp=.o)))
 
 TEST_SRCS			:=	$(strip $(call rwildcard,test/,*.cpp))
@@ -30,7 +31,7 @@ all: CFLAGS += $(DFLAGS)
 all: CFLAGS += $(SFLAGS)
 all: $(NAME)
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) $(INCS)
 	$(CC) $(CFLAGS) -o $(NAME) $(OBJS)
 
 obj/%.o: src/%.cpp
