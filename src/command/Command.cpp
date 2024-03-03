@@ -295,7 +295,7 @@ bool Command::isValidNickname(std::string& nickname) {
 void Command::sendAuthReplies_(Client& client) {
   client.appendToSendBuffer(
       RPL_WELCOME_001(serverHostname_g, client.getNickname(),
-                      client.getUserName(), client.getIpAddr()));
+                      client.getUserName(), client.getHost()));
   client.appendToSendBuffer(
       RPL_YOURHOST_002(serverHostname_g, IRC_SERVER_VERSION));
   std::string time = std::string(ctime(&serverStartTime_));
