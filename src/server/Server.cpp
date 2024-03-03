@@ -173,7 +173,7 @@ int Server::start() {
  * 
  * @note The function also logs debug messages for various events during the server loop.
  */
-void irc::Server::loop() {
+void Server::loop() {
   std::vector<pollfd> pollfds;
   pollfd server_pollfd;
   server_pollfd.fd = server_socket_fd_;
