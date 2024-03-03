@@ -220,11 +220,11 @@ void Server::loop() {
               }
               LOG_DEBUG("Server::loop: received message from client on fd "
                         << client.getFd() << ": " << messageString);
-              Command coma(message, client, clients_, password_, start_time_);
-              // call CommandHandler here with parameters: clients_, client, message
+              Command command(message, client, clients_, password_,
+                              start_time_);
             }
           } catch (std::out_of_range& e) {
-            LOG_ERROR("Server::loop: client object not found for POLLIN at fd "
+            LOG_ERROR("Server::loop: out of range exception for fd "
                       << it->fd << ": " << e.what());
             disconnectClient_(pollfds, it);
             break;
