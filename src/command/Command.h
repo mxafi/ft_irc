@@ -5,13 +5,15 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <regex>
 #include <string>
+
+#include "../channel/Channel.h"
 #include "../client/Client.h"
 #include "../common/log.h"
 #include "../common/magicNumber.h"
 #include "../common/reply.h"
 #include "../message/Message.h"
-#include <regex>
 
 #define MAX_BUFFER_SIZE 1024  //maybe this we change
 

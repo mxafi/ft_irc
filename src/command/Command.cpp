@@ -90,7 +90,7 @@ void Command::execute(Client& client) {
 void Command::parseCommand(const Message& commandString, Client& client) {
   commandName_ = commandString.getCommand();
   prefix_ = commandString.getPrefix();
-  param_ = commandString.getParameters();  //
+  param_ = commandString.getParameters();
   numeric_ = commandString.getNumeric();
   execute(client);
 }
@@ -232,7 +232,30 @@ void Command::actionKick(Client& client) {
  *          :nick!user@servername QUIT :Gone to have lunch  // Relayed to other Clients on shared channels
  */
 void Command::actionQuit(Client& client) {
-  // TODO: Send a QUIT message to all channels the client is in
+  // Find out the reason for quitting
+  std::string quitReason;
+  if (param_.size() == 0) {
+    quitReason = "Client quit";
+  }
+  quitReason = param_.at(0);
+  if (quitReason.length() > 1 && quitReason[0] == ':') {
+    quitReason = quitReason.substr(1);
+  }
+  client.setDisconnectReason(quitReason);
+
+  // Send the QUIT message to all shared channels with the reason
+  std::vector<Channel*> channels = client.getChannels();
+  for (Channel* channel : channels) {
+    if (channel == nullptr) {
+      LOG_ERROR("Command::actionQuit: channel is null, skipping");
+      continue;
+    }
+    channel->sendMessageToMembers(
+        COM_MESSAGE(client.getNickname(), client.getUserName(),
+                    client.getHost(), "QUIT", quitReason));
+  }
+
+  // Send the ERROR message to the client and disconnect
   client.appendToSendBuffer(ERR_MESSAGE("Bye, see you soon!"));
   client.setWantDisconnect();
 }
@@ -287,7 +310,8 @@ bool Command::isValidNickname(std::string& nickname) {
   }
   if (nickname.size() > 9) {
     nickname = nickname.substr(0, 9);
-    LOG_DEBUG("Command::isValidNickname: nick was too long, shortened to: " << nickname);
+    LOG_DEBUG("Command::isValidNickname: nick was too long, shortened to: "
+              << nickname);
   }
   return true;
 }
