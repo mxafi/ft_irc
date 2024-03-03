@@ -159,7 +159,7 @@ void Command::actionNick(Client& client) {
   // Numerics: ERR_NICKNAMEINUSE
   if (findClientByNickname(param_.at(0))) {
     client.appendToSendBuffer(
-        RPL_ERR_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
+        RPL_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
     return;
   }
 
@@ -280,7 +280,7 @@ void Command::actionJoin(Client& client) {
   }
 
   // Get the channel keys
-  
+
 }
 
 void Command::actionPrivmsg(Client& client) {
