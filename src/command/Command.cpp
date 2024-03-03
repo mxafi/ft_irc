@@ -1,10 +1,8 @@
 #include "Command.h"
 
-extern std::string serverHostname_g;
-
 namespace irc {
-// I was thinking here we can put it in a map and acording to the comand we create the response for example ping and pong
-std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
+
+std::map<std::string, std::function<void(Command*, Client&)>>
     Command::commands = {{"PING",
                           [](Command* cmd, Client& client) {
                             cmd->actionPing(client);
@@ -41,10 +39,9 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                             cmd->actionJoin(client);
                           }}};
 
-Command::Command(
-    const Message& commandString, Client& client,
-    std::map<int, Client>& myClients, std::string& password,
-    time_t& serverStartTime)  // stsd::map<std::string, &clients myclients>
+Command::Command(const Message& commandString, Client& client,
+                 std::map<int, Client>& myClients, std::string& password,
+                 time_t& serverStartTime)
     : client_(client),
       myClients_(myClients),
       pass_(password),
@@ -259,28 +256,6 @@ void Command::actionQuit(Client& client) {
   // Send the ERROR message to the client and disconnect
   client.appendToSendBuffer(ERR_MESSAGE("Bye, see you soon!"));
   client.setWantDisconnect();
-}
-
-void Command::actionJoin(Client& client) {
-  if (param_.size() == 0) {
-    client.appendToSendBuffer(
-        RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "JOIN"));
-    return;
-  }
-  if (param_.size() == 1 && param_.at(0) == "0") {
-    // Leave all channels the client is in using PART
-  }
-
-  // Get the channel names
-  std::stringstream ss(param_.at(0));
-  std::string rChannel;
-  std::unordered_map<std::string, std::string> rChannelKeyPairs;
-  while (std::getline(ss, rChannel, ',')) {
-    rChannelKeyPairs[rChannel] = "";
-  }
-
-  // Get the channel keys
-
 }
 
 void Command::actionPrivmsg(Client& client) {

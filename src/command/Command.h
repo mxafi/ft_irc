@@ -20,6 +20,8 @@
 
 #define MAX_BUFFER_SIZE 1024  //maybe this we change
 
+extern std::string serverHostname_g;
+
 namespace irc {
 
 class Command {
