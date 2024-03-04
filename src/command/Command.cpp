@@ -253,60 +253,40 @@ void Command::actionJoin(Client& client) {
     *    % is followed by a servername
     *    @ is followed by a hostname
     */
-// std::vector<std::string> Command::getTargetRecipient() {
-//   // May need to check here for recipient type and validity
-//   {
-//     std::string recipient;
-//     std::string nickname, username, hostname, servername;
-//     size_t pos;
-
-//   //   pos = param_->find('!');
-//   //   if (pos != std::string::npos) {
-//   //     nickname = param_->substr(0, pos);
-//   //     username = param_->substr(pos + 1);
-//   //     pos = username.find_first_of("%@");
-//   //     if (pos != std::string::npos) {
-//   //       if (username[pos] == '%')
-//   //         servername = username.substr(pos + 1);
-//   //     } else {
-//   //       hostname = username.substr(pos + 1);
-//   //     }
-//   //     username = username.substr(0, pos);
-//   //   } else {
-//   //     nickname = *param_;
-//   //   }
-//   //   recipients.push_back(nickname);
-//   //
-//   // }
-//   // return recipients;
-// }
-
 void Command::actionPrivmsg(Client& client) {
-  if (param_.size() != 2) {
-    if (param_.size() == 1) {
+  if (param_.size() != 2) { // required amount of parameters: target + message
+    if (param_.size() == 1) { // assume the missing parameter is the message 
       RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
       return;
-      if (param_.size() == 0) {
+      if (param_.size() == 0) { // missing both target and message
         RPL_ERR_NORECIPIENT_411(serverHostname_g);
         return;
       } else {
-        RPL_ERR_TOOMANYTARGETS_407(
+        RPL_ERR_TOOMANYTARGETS_407( // Implies that there is at least an extra parameter (target)
             serverHostname_g);  // RFC2812: "<target> :<error code> recipients. <abort message>"
         return;  // IRCv3: Does not have any message format, may not even be used as it handles multiple recipients
       }
     }
-  } else if (param_.begin())
-
-bool Command::findClientByUser(const std::string& user) {
-  for (std::map<int, Client>::const_iterator it =
-           myClients_.begin();  // it could be auto
-       it != myClients_.end(); ++it) {
-    if (it->second.getUserName() == user) {
-      LOG_DEBUG("Found client with user: " << user);
-      return true;
+  } else if (param_.at(1).front() == ':' && param_.at(1).length() == 1) { // Message contains  only the trailing parameter colon ':' delimiter
+    RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+    return;
+  }
+  if (param_.at(0).find(CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
+    if (validateChannel() == FALSE) {         // TODO: implementation 
+      RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
+      return;
+    }
+    else if (senderAllowedToMsg() == FALSE) {   // TODO: implementation 
+      RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
+        return;
+    }
+  } else {
+    if (isValidNickname(param_.at(0)) == FALSE){
+      RPL_ERR_NOSUCHNICK_401(serverHostname_g, param_.at(0));
+      return;
     }
   }
-  return false;
+  //get fd of target and append to its buffer the message and the origin
 }
 
 bool Command::findClientByNickname(const std::string& nickname) {
@@ -348,7 +328,8 @@ bool Command::isValidNickname(std::string& nickname) {
   }
   if (nickname.size() > 9) {
     nickname = nickname.substr(0, 9);
-    LOG_DEBUG("Command::isValidNickname: nick was too long, shortened to: " << nickname);
+    LOG_DEBUG("Command::isValidNickname: nick was too long, shortened to: "
+              << nickname);
   }
   return true;
 }

@@ -4,6 +4,7 @@
 #define IRC_SERVER_VERSION "ft_irc-v1.0"
 #define SUPPORTED_USER_MODES "io"
 #define SUPPORTED_CHANNEL_MODES "kost"
+#define CHANNEL_PREFIXES "#&"
 #define SUCCESS 0
 #define FAILURE 1
 #define EXIT_SUCCESS 0

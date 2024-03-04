@@ -50,11 +50,10 @@ class Command {
   void parseCommand(const Message& commandString, Client& client);
   void sendAuthReplies_(Client& client);
   static std::map<std::string, std::function<void(Command*, Client&)>> commands;
+  bool isValidNickname(std::string& nickname);
 
   // PRIVMSG
-  std::vector<std::string> getTargetRecipient();
   bool validateTarget();
-  bool findClientByUser(const std::string& user);
 };
 }  // namespace irc
 
