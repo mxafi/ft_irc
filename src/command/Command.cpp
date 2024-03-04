@@ -250,40 +250,44 @@ void Command::actionJoin(Client& client) {
     *    @ is followed by a hostname
     */
 void Command::actionPrivmsg(Client& client) {
-  if (param_.size() != 2) { // required amount of parameters: target + message
-    if (param_.size() == 1) { // assume the missing parameter is the message 
-      RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
-      return;
-      if (param_.size() == 0) { // missing both target and message
-        RPL_ERR_NORECIPIENT_411(serverHostname_g);
-        return;
-      } else {
-        RPL_ERR_TOOMANYTARGETS_407( // Implies that there is at least an extra parameter (target)
-            serverHostname_g);  // RFC2812: "<target> :<error code> recipients. <abort message>"
-        return;  // IRCv3: Does not have any message format, may not even be used as it handles multiple recipients
-      }
-    }
-  } else if (param_.at(1).front() == ':' && param_.at(1).length() == 1) { // Message contains  only the trailing parameter colon ':' delimiter
-    RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
-    return;
-  }
-  if (param_.at(0).find(CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
-    if (validateChannel() == FALSE) {         // TODO: implementation 
-      RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
-      return;
-    }
-    else if (senderAllowedToMsg() == FALSE) {   // TODO: implementation 
-      RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
-        return;
-    }
-  } else {
-    if (isValidNickname(param_.at(0)) == FALSE){
-      RPL_ERR_NOSUCHNICK_401(serverHostname_g, param_.at(0));
-      return;
-    }
-  }
-  //get fd of target and append to its buffer the message and the origin
+  // if (param_.size() != 2) {  // required amount of parameters: target + message
+  //   if (param_.size() == 1) {  // assume the missing parameter is the message
+  //     RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+  //     return;
+  //   }
+  //   if (param_.size() == 0) {  // missing both target and message
+  //     RPL_ERR_NORECIPIENT_411(serverHostname_g);
+  //     return;
+  //   } else {
+  //     RPL_ERR_TOOMANYTARGETS_407(  // Implies that there is at least an extra parameter (target)
+  //         serverHostname_g);  // RFC2812: "<target> :<error code> recipients. <abort message>"
+  //     return;  // IRCv3: Does not have any message format, may not even be used as it handles multiple recipients
+  //   }
+  // } else if (
+  //     // Message contains  only the trailing parameter colon ':' delimiter
+  //     param_.at(1).front() == ':' && param_.at(1).length() == 1) {
+  //   RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+  //   return;
+  // }
+  // // if (param_.at(0).find(
+  // //         CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
+  // //   if (validateChannel() == FALSE) {  // TODO: implementation
+  // //     RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
+  // //     return;
+  // //   } else if (senderAllowedToMsg() == FALSE) {  // TODO: implementation
+  // //     RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
+  // //     return;
+  // //   }
+  // // } else {
+  // if (isValidNickname(param_.at(0)) == FALSE) {
+  //   RPL_ERR_NOSUCHNICK_401(serverHostname_g, param_.at(0));
+  //   return;
+  // }
+  int i = client.getFd();
+  myClients_.find(i)->second.appendToSendBuffer("whatever string");
 }
+
+//get fd of target and append to its buffer the message and the origin
 
 bool Command::findClientByNickname(const std::string& nickname) {
   std::string lowerNickname =
@@ -342,6 +346,6 @@ void Command::sendAuthReplies_(Client& client) {
   client.appendToSendBuffer(RPL_MYINFO_004(serverHostname_g, IRC_SERVER_VERSION,
                                            SUPPORTED_USER_MODES,
                                            SUPPORTED_CHANNEL_MODES));
-}
 
+}
 }  // namespace irc
