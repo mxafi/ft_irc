@@ -96,11 +96,7 @@ void Command::parseCommand(const Message& commandString, Client& client) {
 }
 
 void Command::actionPing(Client& client) {
-  std::string response = ":" + serverHostname_g + " PONG " + serverHostname_g +
-                         " :" + client.getNickname();
-  client.appendToSendBuffer(response);
-  //:sakura.jp.as.dal.net PONG sakura.jp.as.dal.net :pepit
-  LOG_DEBUG(response);
+  client.appendToSendBuffer(RPL_MESSAGE("PONG " + serverHostname_g));
 }
 
 void Command::actionPass(Client& client) {
