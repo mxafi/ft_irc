@@ -27,6 +27,9 @@
 #define RPL_ERR_ERRONEUSNICKNAME_432(servername, nick) (RPL_META_MESSAGE(servername, "432", nick + " :Erroneous nickname"))
 #define RPL_ERR_ERR_NICKNAMEINUSE_433(servername, nick) (RPL_META_MESSAGE(servername, "433", nick + " :Nickname is already in use"))
 
+//User format
+#define FORMAT_NICK_USER_HOST(nickname, username, hostname) (std::string(":") + nickname + "!" + username + "@" + hostname)
+#define PRIVMSG_FORMAT(formattedSender, target, message) (std::string(formattedTarget) + " PRIVMSG " + target + message + "\n")
 
 
 #endif

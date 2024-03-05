@@ -46,7 +46,7 @@ class Command {
   std::string& pass_;
   time_t serverStartTime_;
 
-  bool findClientByNickname(const std::string& nickname);
+  int findClientByNickname(const std::string& nickname);
   void parseCommand(const Message& commandString, Client& client);
   void sendAuthReplies_(Client& client);
   static std::map<std::string, std::function<void(Command*, Client&)>> commands;

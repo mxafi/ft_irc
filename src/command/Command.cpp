@@ -250,46 +250,74 @@ void Command::actionJoin(Client& client) {
     *    @ is followed by a hostname
     */
 void Command::actionPrivmsg(Client& client) {
-  // if (param_.size() != 2) {  // required amount of parameters: target + message
-  //   if (param_.size() == 1) {  // assume the missing parameter is the message
-  //     RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
-  //     return;
-  //   }
-  //   if (param_.size() == 0) {  // missing both target and message
-  //     RPL_ERR_NORECIPIENT_411(serverHostname_g);
-  //     return;
-  //   } else {
-  //     RPL_ERR_TOOMANYTARGETS_407(  // Implies that there is at least an extra parameter (target)
-  //         serverHostname_g);  // RFC2812: "<target> :<error code> recipients. <abort message>"
-  //     return;  // IRCv3: Does not have any message format, may not even be used as it handles multiple recipients
-  //   }
-  // } else if (
+  if (param_.size() == 0) {
+    RPL_ERR_NORECIPIENT_411(serverHostname_g);
+    RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+    LOG_DEBUG("NO RECIPIENT and NO TEXT provided");
+    return;
+  }
+  std::string target = param_.at(0);
+  std::string message = param_.at(1);
+  if (param_.size() != 2) {  // required amount of parameters: target + message
+    if (message.front() != ':' ||
+        message.empty()) {  // A message should be prefixed with a ':'
+      RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+      LOG_DEBUG("NO TEXT TO SEND");
+      return;
+    }
+    // if (target.empty()) {
+    //   RPL_ERR_NORECIPIENT_411(serverHostname_g);
+    //   LOG_DEBUG("NO RECIPIENT");
+    //   return;
+    // }
+    // There is no parameter containing ":" aka, no text to send
+  } else if (target.front() == ':') {
+    RPL_ERR_NORECIPIENT_411(serverHostname_g);
+    LOG_DEBUG("NO RECIPIENT");
+    return;
+  } else if (param_.size() > 2) {
+    RPL_ERR_TOOMANYTARGETS_407(
+        serverHostname_g);  // RFC2812: "<target> :<error code> recipients. <abort message>"
+    LOG_DEBUG("TOO MANY TARGETS");
+    return;  // IRCv3: Does not have any message format, may not even be used as it handles multiple recipients
+  }
+
+  // else if (
   //     // Message contains  only the trailing parameter colon ':' delimiter
   //     param_.at(1).front() == ':' && param_.at(1).length() == 1) {
   //   RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
   //   return;
   // }
-  // // if (param_.at(0).find(
-  // //         CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
-  // //   if (validateChannel() == FALSE) {  // TODO: implementation
-  // //     RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
-  // //     return;
-  // //   } else if (senderAllowedToMsg() == FALSE) {  // TODO: implementation
-  // //     RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
-  // //     return;
-  // //   }
-  // // } else {
-  // if (isValidNickname(param_.at(0)) == FALSE) {
-  //   RPL_ERR_NOSUCHNICK_401(serverHostname_g, param_.at(0));
-  //   return;
-  // }
-  int i = client.getFd();
-  myClients_.find(i)->second.appendToSendBuffer("whatever string");
+
+  // CHANNELS //
+
+  // if (param_.at(0).find(
+  //         CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
+  //   if (validateChannel() == FALSE) {  // TODO: implementation
+  //     RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
+  //     return;
+  //   } else if (senderAllowedToMsg() == FALSE) {  // TODO: implementation
+  //     RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
+  //     return;
+  //   }
+  // } else {
+  if (isValidNickname(param_.at(0)) == FALSE) {
+    RPL_ERR_NOSUCHNICK_401(serverHostname_g, param_.at(0));
+    LOG_DEBUG("NO SUCH NICK");
+    return;
+  }
+  if (param_.size() == 2) {
+    int sender = client.getFd();
+    sender = findClientByNickname(param_.at(0));
+    LOG_DEBUG("Message is :" + param_.at(1) + " from " + client.getNickname() +
+              " to " + param_.at(0));
+    myClients_.find(sender)->second.appendToSendBuffer(param_.at(1) + "\n");
+  }
 }
 
 //get fd of target and append to its buffer the message and the origin
 
-bool Command::findClientByNickname(const std::string& nickname) {
+int Command::findClientByNickname(const std::string& nickname) {
   std::string lowerNickname =
       nickname;  //here we just put everything in lowercase
   std::transform(lowerNickname.begin(), lowerNickname.end(),
@@ -311,10 +339,12 @@ bool Command::findClientByNickname(const std::string& nickname) {
     std::replace(clientNickname.begin(), clientNickname.end(), '^', '~');
     if (clientNickname == lowerNickname) {
       LOG_DEBUG("Found client with the same nickname: " << nickname);
-      return true;
+      return it->second
+          .getFd();  // Return the file descriptor of the found client
     }
   }
-  return false;
+
+  return 0;
 }
 
 bool Command::isValidNickname(std::string& nickname) {
@@ -346,6 +376,5 @@ void Command::sendAuthReplies_(Client& client) {
   client.appendToSendBuffer(RPL_MYINFO_004(serverHostname_g, IRC_SERVER_VERSION,
                                            SUPPORTED_USER_MODES,
                                            SUPPORTED_CHANNEL_MODES));
-
 }
 }  // namespace irc
