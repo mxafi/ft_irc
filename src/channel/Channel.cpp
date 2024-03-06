@@ -20,7 +20,7 @@ Channel::Channel(Client& creatorClient, const std::string& name)
   }
   members_.push_back(&creatorClient);
   operators_.push_back(&creatorClient);
-  creatorClient.recordChannel(*this);
+  creatorClient.recordMyChannel(name_);
 }
 
 std::string Channel::getName() const {
@@ -88,13 +88,13 @@ void Channel::joinMember(Client& client) {
     return;
   }
   members_.push_back(&client);
-  client.recordChannel(*this);
+  client.recordMyChannel(name_);
 }
 
 void Channel::partMember(Client& client) {
   for (auto it = members_.begin(); it != members_.end(); it++) {
     if (*it == &client) {
-      client.removeChannel(*this);
+      client.unrecordMyChannel(name_);
       if (isOperator(client)) {
         setOperatorStatus(client, false);
       }
