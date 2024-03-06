@@ -45,9 +45,9 @@ Command::Command(const Message& commandString, Client& client,
                  std::map<std::string, Channel>& allChannels)
     : client_(client),
       allClients_(myClients),
+      allChannels_(allChannels),
       pass_(password),
-      serverStartTime_(serverStartTime),
-      allChannels_(allChannels) {
+      serverStartTime_(serverStartTime) {
   numeric_ = 0;
   parseCommand(commandString, client);
 }

@@ -105,14 +105,14 @@ int Channel::partMember(Client& client) {
       members_.erase(it);
       LOG_DEBUG("Channel::partMember: client "
                 << client.getNickname() << " parted from channel " << name_);
-      return members_.size();
+      return static_cast<int>(members_.size());
     }
     if (members_.empty()) {
       LOG_DEBUG(
           "Channel::partMember: no members left, the channel should be "
           "deleted: "
           << name_);
-      return members_.size();
+      return static_cast<int>(members_.size());
     }
   }
   LOG_WARNING("Channel::partMember: client is not a member, not parting nick "
