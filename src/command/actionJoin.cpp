@@ -69,15 +69,21 @@ void Command::actionJoin(Client& client) {
           RPL_ERR_TOOMANYCHANNELS_405(serverHostname_g, channelName));
       break;
     }
-    // TODO: Check if the channel name is valid (regex) (ERR_NOSUCHCHANNEL)
-    // if channel name is valid and does not exist, create the channel
 
-    // else: do the things below
-    // TODO: Check if there is a key for the channel and if it is valid (ERR_BADCHANNELKEY)
-    // TODO: Check if the channel user limit is reached (ERR_CHANNELISFULL)
-    // TODO: Check if the channel is invite-only, and invite is valid (ERR_INVITEONLYCHAN)
-    // TODO: join the channel (how to access the channel object, and add it to the server's channel vector?)
+    if (Channel::isChannelNameValid(channelName) == false) {
+      client.appendToSendBuffer(
+          RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, channelName));
+      continue;
+    }
 
+    if (Channel::isChannelNameFree(channelName, allChannels_) == false) {
+      // TODO: Check if there is a key for the channel and if it is valid (ERR_BADCHANNELKEY)
+      // TODO: Check if the channel is invite-only, and invite is valid (ERR_INVITEONLYCHAN)
+      // TODO: Check if the channel user limit is reached (ERR_CHANNELISFULL)
+    }
+
+    allChannels_.insert(std::make_pair(
+        channelName, Channel(client, channelName, allChannels_)));
     // TODO: send the required messages upon joining (JOIN to channel members, RPL_TOPIC, RPL_NAMREPLY including the joining client, RPL_ENDOFNAMES)
   }
 }

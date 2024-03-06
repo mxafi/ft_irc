@@ -2,6 +2,7 @@
 
 namespace irc {
 
+// TODO: Maybe unrecord the channel from all clients, and erase from allChannels_?
 Channel::~Channel() {}
 
 Channel::Channel(Client& creatorClient, const std::string& name,
