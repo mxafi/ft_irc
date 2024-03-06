@@ -1,6 +1,7 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -34,6 +35,7 @@ class Channel {
   void invite(Client& client);
   void uninvite(Client& client);
   bool isInvited(Client& client);
+  static bool isChannelNameValid(const std::string& name);
 
  private:
   std::string name_;

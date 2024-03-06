@@ -1,5 +1,10 @@
 #include "Channel.h"
 
+static bool isChannelNameFree_(const std::string& name) {
+  // TODO: implement
+  return false;
+}
+
 namespace irc {
 
 Channel::~Channel() {}
@@ -9,7 +14,8 @@ Channel::Channel(Client& creatorClient, const std::string& name)
       isInviteOnly_(false),
       isTopicProtected_(false),
       userLimit_(CHANNEL_USER_LIMIT_DISABLED) {
-  if (name == "taken") {  // TODO: Implement check if channel name is valid
+
+  if (!isChannelNameValid(name) || !isChannelNameFree_(name)) {
     throw std::invalid_argument("Channel name is invalid or taken");
   }
   members_.push_back(&creatorClient);
@@ -170,6 +176,21 @@ bool Channel::isInvited(Client& client) {
       return true;
     }
   }
+  return false;
+}
+
+bool Channel::isChannelNameValid(const std::string& name) {
+  std::regex pattern(R"(^[&#][a-zA-Z0-9_-]+$)", std::regex::icase);
+
+  if (name.length() < MIN_CHANNELNAME_LENGTH ||
+      name.length() > MAX_CHANNELNAME_LENGTH) {
+    LOG_DEBUG("Channel::isChannelNameValid: name length is invalid");
+    return false;
+  }
+  if (std::regex_match(name, pattern)) {
+    return true;
+  }
+  LOG_DEBUG("Channel::isChannelNameValid: name does not match pattern");
   return false;
 }
 
