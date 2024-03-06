@@ -293,27 +293,37 @@ int Server::acceptClient_(std::vector<pollfd>& pollfds) {
  * @brief Disconnects a client from the server.
  * 
  * This function disconnects a client from the server by closing its file descriptor,
- * removing it from the clients_ map, and erasing it from the poll_fds vector.
+ * removing it from the clients_ map, removing it from it's channels,
+ * and erasing it from the poll_fds vector.
  * 
  * @param poll_fds The vector of pollfd structures representing the active file descriptors.
  * @param it An iterator pointing to the pollfd structure of the client to be disconnected.
  * @return int Returns SUCCESS if the client was successfully disconnected.
+ * Otherwise, returns FAILURE.
  */
 int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
                               std::vector<pollfd>::iterator& it) {
+  // Close client file descriptor
   int client_fd = it->fd;
+  Client client = clients_.at(client_fd);
   LOG_DEBUG("Server::disconnectClient_: disconnecting client on fd "
             << client_fd);
   close(client_fd);
-  std::vector<Channel*> channels = clients_.at(client_fd).getChannels();
-  for (Channel* channel : channels) {
-    channel->partMember(clients_.at(client_fd));
+
+  // Remove client from all channels
+  std::vector<std::string> channelNames = client.getMyChannels();
+  for (std::string channelName : channelNames) {
+    Channel channel = channels_.at(channelName);
+    channel.partMember(client);
   }
   unsigned long clients_erased = clients_.erase(client_fd);
   if (clients_erased == 0) {
     LOG_WARNING("Server::disconnectClient_: client not found at fd "
                 << client_fd << " to erase from clients_ map");
+    return FAILURE;
   }
+
+  // Erase client from poll_fds (the poll loop vector)
   poll_fds.erase(it);
   LOG_INFO("Clients remaining on server: " << clients_.size());
   return SUCCESS;
