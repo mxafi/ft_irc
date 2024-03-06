@@ -7,13 +7,11 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+
 #include "../common/log.h"
 #include "../common/magicNumber.h"
 
 namespace irc {
-
-// Light interdependancy between client and channel
-class Channel;
 
 class Client {
  public:
@@ -35,7 +33,7 @@ class Client {
   void appendToSendBuffer(const std::string& packet);
   void appendToRecvBuffer(const std::string& packet);
   void clearSendBuffer();
-  void clearRecvdBuffer();
+  void clearRecvBuffer();
   std::string getUserName() const;
   bool isGotUser() const;
   bool isGotNick() const;
@@ -45,9 +43,9 @@ class Client {
   bool getWantDisconnect() const;
   std::string getDisconnectReason() const;
   void setDisconnectReason(const std::string& reason);
-  void recordChannel(Channel& channel);
-  void removeChannel(Channel& channel);
-  std::vector<Channel*>& getChannels();
+  void recordMyChannel(std::string& channel);
+  void unrecordMyChannel(std::string& channel);
+  std::vector<std::string>& getMyChannels();
   std::string& getHost();
 
  private:
@@ -65,7 +63,7 @@ class Client {
   std::string disconnectReason_;
   std::string ipAddr_;
 
-  std::vector<Channel*> channels_;
+  std::vector<std::string> myChannelsByName_;
 
   struct ClientStatus {
     bool gotUser;

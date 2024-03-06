@@ -242,15 +242,12 @@ void Command::actionQuit(Client& client) {
   client.setDisconnectReason(quitReason);
 
   // Send the QUIT message to all shared channels with the reason
-  std::vector<Channel*> channels = client.getChannels();
-  for (Channel* channel : channels) {
-    if (channel == nullptr) {
-      LOG_ERROR("Command::actionQuit: channel is null, skipping");
-      continue;
-    }
-    channel->sendMessageToMembers(
-        COM_MESSAGE(client.getNickname(), client.getUserName(),
-                    client.getHost(), "QUIT", quitReason));
+  std::vector<std::string> channels = client.getMyChannels();
+  for (std::string channel : channels) {
+    // TODO: Find the channel
+    // channel->sendMessageToMembers(
+    //     COM_MESSAGE(client.getNickname(), client.getUserName(),
+    //                 client.getHost(), "QUIT", quitReason));
   }
 
   // Send the ERROR message to the client and disconnect
