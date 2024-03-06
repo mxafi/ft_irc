@@ -41,11 +41,13 @@ std::map<std::string, std::function<void(Command*, Client&)>>
 
 Command::Command(const Message& commandString, Client& client,
                  std::map<int, Client>& myClients, std::string& password,
-                 time_t& serverStartTime)
+                 time_t& serverStartTime,
+                 std::map<std::string, Channel>& allChannels)
     : client_(client),
       myClients_(myClients),
       pass_(password),
-      serverStartTime_(serverStartTime) {
+      serverStartTime_(serverStartTime),
+      allChannels_(allChannels) {
   numeric_ = 0;
   parseCommand(commandString, client);
 }
@@ -239,15 +241,17 @@ void Command::actionQuit(Client& client) {
   if (quitReason.length() > 1 && quitReason[0] == ':') {
     quitReason = quitReason.substr(1);
   }
-  client.setDisconnectReason(quitReason);
+  if (client.getDisconnectReason().empty()) {
+    client.setDisconnectReason(quitReason);
+  }
 
   // Send the QUIT message to all shared channels with the reason
-  std::vector<std::string> channels = client.getMyChannels();
-  for (std::string channel : channels) {
-    // TODO: Find the channel
-    // channel->sendMessageToMembers(
-    //     COM_MESSAGE(client.getNickname(), client.getUserName(),
-    //                 client.getHost(), "QUIT", quitReason));
+  std::vector<std::string> channelNames = client.getMyChannels();
+  for (std::string channelName : channelNames) {
+    Channel& channel = allChannels_.at(channelName);
+    channel.sendMessageToMembers(
+        COM_MESSAGE(client.getNickname(), client.getUserName(),
+                    client.getHost(), "QUIT", quitReason));
   }
 
   // Send the ERROR message to the client and disconnect

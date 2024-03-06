@@ -28,7 +28,7 @@ class Command {
  public:
   Command(const Message& commandString, Client& client,
           std::map<int, Client>& myClients, std::string& password,
-          time_t& serverStartTime);
+          time_t& serverStartTime, std::map<std::string, Channel>& allChannels);
   void execute(Client& client);
   void actionPing(Client& client);
   void actionChannel(Client& client);
@@ -55,6 +55,7 @@ class Command {
   std::vector<std::string> param_;
   int numeric_;
   std::map<int, Client>& myClients_;
+  std::map<std::string, Channel>& allChannels_;
   std::string& pass_;
   time_t serverStartTime_;
 };
