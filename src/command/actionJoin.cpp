@@ -9,8 +9,34 @@ void Command::actionJoin(Client& client) {
         RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "JOIN"));
     return;
   }
+  // Leave all channels
   if (param_.size() == 1 && param_.at(0) == "0") {
-    // TODO: Leave all channels the client is in using PART
+    std::vector<std::string> myChannels = client.getMyChannels();
+    for (std::string channelName : myChannels) {
+      if (allChannels_.find(channelName) == allChannels_.end()) {
+        LOG_ERROR(
+            "Command::actionJoin: Channel object not found using client's "
+            "channel list"
+            << client.getNickname() << " " << channelName)
+        continue;
+      }
+
+      Channel currentChannel = allChannels_.at(channelName);
+      if (currentChannel.isMember(client) == false) {
+        LOG_ERROR(
+            "Command::actionJoin: Client is not a member of the channel that "
+            "is in its channel list"
+            << client.getNickname() << " " << channelName)
+        continue;
+      }
+
+      currentChannel.sendMessageToMembers(
+          COM_MESSAGE(client.getNickname(), client.getUserName(),
+                      client.getHost(), "PART", client.getNickname()));
+      currentChannel.partMember(client);
+    }
+    // TODO: do we send something to the client as confirmation? RFC?
+    return;
   }
 
   // Get the channel names
@@ -46,7 +72,7 @@ void Command::actionJoin(Client& client) {
     }
     // TODO: Check if the channel name is valid (regex) (ERR_NOSUCHCHANNEL)
     // if channel name is valid and does not exist, create the channel
-  
+
     // else: do the things below
     // TODO: Check if there is a key for the channel and if it is valid (ERR_BADCHANNELKEY)
     // TODO: Check if the channel user limit is reached (ERR_CHANNELISFULL)
