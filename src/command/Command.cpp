@@ -252,70 +252,65 @@ void Command::actionJoin(Client& client) {
 void Command::actionPrivmsg(Client& client) {
   if (param_.size() == 0) {
     RPL_ERR_NORECIPIENT_411(serverHostname_g);
+    LOG_DEBUG("CMD::PRIVMSG::NO RECIPIENT and NO MESSAGE");
+    return;
+  }
+  if (param_.size() > 2) {
+    RPL_ERR_TOOMANYTARGETS_407(serverHostname_g);
+    LOG_DEBUG("CMD::PRIVMSG::TOO MANY TARGETS");
+    return;
+  }
+  if (param_.size() == 1) {
     RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
-    LOG_DEBUG("NO RECIPIENT and NO TEXT provided");
+    LOG_DEBUG("CMD::PRIVMSG::NO TEXT (1 param only)");
     return;
   }
-  std::string target = param_.at(0);
-  std::string message = param_.at(1);
-  if (param_.size() != 2) {  // required amount of parameters: target + message
-    if (message.front() != ':' ||
-        message.empty()) {  // A message should be prefixed with a ':'
-      RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
-      LOG_DEBUG("NO TEXT TO SEND");
-      return;
-    }
-    // if (target.empty()) {
-    //   RPL_ERR_NORECIPIENT_411(serverHostname_g);
-    //   LOG_DEBUG("NO RECIPIENT");
-    //   return;
-    // }
-    // There is no parameter containing ":" aka, no text to send
-  } else if (target.front() == ':') {
-    RPL_ERR_NORECIPIENT_411(serverHostname_g);
-    LOG_DEBUG("NO RECIPIENT");
+
+  if (param_.at(1).front() != ':') {
+    RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+    LOG_DEBUG("CMD::PRIVMSG::NO TEXT (2nd param missing colon)");
     return;
-  } else if (param_.size() > 2) {
-    RPL_ERR_TOOMANYTARGETS_407(
-        serverHostname_g);  // RFC2812: "<target> :<error code> recipients. <abort message>"
-    LOG_DEBUG("TOO MANY TARGETS");
-    return;  // IRCv3: Does not have any message format, may not even be used as it handles multiple recipients
+  } else {
+    param_.at(1).erase(0,1);
+    LOG_DEBUG("CMD::PRIVMSG::erased colon");
   }
 
-  // else if (
-  //     // Message contains  only the trailing parameter colon ':' delimiter
-  //     param_.at(1).front() == ':' && param_.at(1).length() == 1) {
-  //   RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
-  //   return;
-  // }
+// else if (
+//     // Message contains  only the trailing parameter colon ':' delimiter
+//     param_.at(1).front() == ':' && param_.at(1).length() == 1) {
+//   RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+//   return;
+// }
+// if (param_.at(0).find(
+//         CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
+//   if (validateChannel() == FALSE) {  // TODO: implementation
+//     RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
+//     return;
+//   } else if (senderAllowedToMsg() == FALSE) {  // TODO: implementation
+//     RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
+//     return;
+//   }
+// } else {
 
-  // CHANNELS //
-
-  // if (param_.at(0).find(
-  //         CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
-  //   if (validateChannel() == FALSE) {  // TODO: implementation
-  //     RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
-  //     return;
-  //   } else if (senderAllowedToMsg() == FALSE) {  // TODO: implementation
-  //     RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
-  //     return;
-  //   }
-  // } else {
-  if (isValidNickname(param_.at(0)) == FALSE) {
-    RPL_ERR_NOSUCHNICK_401(serverHostname_g, param_.at(0));
-    LOG_DEBUG("NO SUCH NICK");
-    return;
-  }
-  if (param_.size() == 2) {
-    int sender = client.getFd();
-    sender = findClientByNickname(param_.at(0));
-    LOG_DEBUG("Message is :" + param_.at(1) + " from " + client.getNickname() +
-              " to " + param_.at(0));
-    myClients_.find(sender)->second.appendToSendBuffer(param_.at(1) + "\n");
-  }
+int target;
+target = findClientByNickname(param_.at(0));
+if (target == 0) {
+  RPL_ERR_NOSUCHNICK_401(serverHostname_g, param_.at(0));
+  LOG_DEBUG("CMD::PRIVMSG::findClientByNickname: USER NOT FOUND");
+  return;
 }
+LOG_DEBUG("CMD::PRIVMSG: Message is :" + param_.at(1) + " from " +
+          client.getNickname() + " to " + param_.at(0));
 
-//get fd of target and append to its buffer the message and the origin
+std::string message = param_.at(1);
+std::string formattedSender =
+    FORMAT_NICK_USER_HOST(client.getNickname(), client.getUserName(),
+                          "senderHost");  //fix in channel branch
+std::string privmsg =
+    PRIVMSG_FORMAT(formattedSender, param_.at(0), param_.at(1));
+
+myClients_.find(target)->second.appendToSendBuffer(privmsg);
+}
 
 int Command::findClientByNickname(const std::string& nickname) {
   std::string lowerNickname =

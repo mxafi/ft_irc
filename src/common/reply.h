@@ -29,7 +29,7 @@
 
 //User format
 #define FORMAT_NICK_USER_HOST(nickname, username, hostname) (std::string(":") + nickname + "!" + username + "@" + hostname)
-#define PRIVMSG_FORMAT(formattedSender, target, message) (std::string(formattedTarget) + " PRIVMSG " + target + message + "\n")
+#define PRIVMSG_FORMAT(formattedSender, target, text) (RPL_MESSAGE(std::string(formattedSender) + " PRIVMSG " + target + " :" + text))
 
 
 #endif
