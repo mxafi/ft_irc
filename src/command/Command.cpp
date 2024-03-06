@@ -250,17 +250,18 @@ void Command::actionJoin(Client& client) {
     *    @ is followed by a hostname
     */
 void Command::actionPrivmsg(Client& client) {
-  if (param_.size() == 0) {
+  size_t amountParameters = param_.size();
+  if (amountParameters == 0) {
     RPL_ERR_NORECIPIENT_411(serverHostname_g);
     LOG_DEBUG("CMD::PRIVMSG::NO RECIPIENT and NO MESSAGE");
     return;
   }
-  if (param_.size() > 2) {
+  if (amountParameters > 2) {
     RPL_ERR_TOOMANYTARGETS_407(serverHostname_g);
     LOG_DEBUG("CMD::PRIVMSG::TOO MANY TARGETS");
     return;
   }
-  if (param_.size() == 1) {
+  if (amountParameters == 1) {
     RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
     LOG_DEBUG("CMD::PRIVMSG::NO TEXT (1 param only)");
     return;
@@ -270,46 +271,44 @@ void Command::actionPrivmsg(Client& client) {
     RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
     LOG_DEBUG("CMD::PRIVMSG::NO TEXT (2nd param missing colon)");
     return;
-  } else {
-    param_.at(1).erase(0,1);
-    LOG_DEBUG("CMD::PRIVMSG::erased colon");
   }
 
-// else if (
-//     // Message contains  only the trailing parameter colon ':' delimiter
-//     param_.at(1).front() == ':' && param_.at(1).length() == 1) {
-//   RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
-//   return;
-// }
-// if (param_.at(0).find(
-//         CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
-//   if (validateChannel() == FALSE) {  // TODO: implementation
-//     RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
-//     return;
-//   } else if (senderAllowedToMsg() == FALSE) {  // TODO: implementation
-//     RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
-//     return;
-//   }
-// } else {
+  // else if (
+  //     // Message contains  only the trailing parameter colon ':' delimiter
+  //     param_.at(1).front() == ':' && param_.at(1).length() == 1) {
+  //   RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+  //   return;
+  // }
+  // if (param_.at(0).find(
+  //         CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
+  //   if (validateChannel() == FALSE) {  // TODO: implementation
+  //     RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
+  //     return;
+  //   } else if (senderAllowedToMsg() == FALSE) {  // TODO: implementation
+  //     RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
+  //     return;
+  //   }
+  // } else {
 
-int target;
-target = findClientByNickname(param_.at(0));
-if (target == 0) {
-  RPL_ERR_NOSUCHNICK_401(serverHostname_g, param_.at(0));
-  LOG_DEBUG("CMD::PRIVMSG::findClientByNickname: USER NOT FOUND");
-  return;
-}
-LOG_DEBUG("CMD::PRIVMSG: Message is :" + param_.at(1) + " from " +
-          client.getNickname() + " to " + param_.at(0));
 
-std::string message = param_.at(1);
-std::string formattedSender =
-    FORMAT_NICK_USER_HOST(client.getNickname(), client.getUserName(),
-                          "senderHost");  //fix in channel branch
-std::string privmsg =
-    PRIVMSG_FORMAT(formattedSender, param_.at(0), param_.at(1));
+  std::string messageWithoutColon = param_.at(1).erase(0, 1);
+  int target = findClientByNickname(param_.at(0));
+  std::string targetRecipient = param_.at(0);
+  if (target == 0) {
+    RPL_ERR_NOSUCHNICK_401(serverHostname_g, targetRecipient);
+    LOG_DEBUG("CMD::PRIVMSG::findClientByNickname: USER NOT FOUND");
+    return;
+  }
+  LOG_DEBUG("CMD::PRIVMSG: Message is :" + messageWithoutColon + " from " +
+            client.getNickname() + " to " + targetRecipient);
 
-myClients_.find(target)->second.appendToSendBuffer(privmsg);
+  std::string formattedSender =
+      FORMAT_NICK_USER_HOST(client.getNickname(), client.getUserName(),
+                            "senderHost");  // TODO: fix in channel branch
+  std::string privmsg =
+      PRIVMSG_FORMAT(formattedSender, targetRecipient, messageWithoutColon);
+
+  myClients_.find(target)->second.appendToSendBuffer(privmsg);
 }
 
 int Command::findClientByNickname(const std::string& nickname) {
