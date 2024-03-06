@@ -27,7 +27,7 @@ namespace irc {
 class Command {
  public:
   Command(const Message& commandString, Client& client,
-          std::map<int, Client>& myClients, std::string& password,
+          std::map<int, Client>& allClients, std::string& password,
           time_t& serverStartTime, std::map<std::string, Channel>& allChannels);
   void execute(Client& client);
   void actionPing(Client& client);
@@ -54,7 +54,7 @@ class Command {
   std::string prefix_;
   std::vector<std::string> param_;
   int numeric_;
-  std::map<int, Client>& myClients_;
+  std::map<int, Client>& allClients_;
   std::map<std::string, Channel>& allChannels_;
   std::string& pass_;
   time_t serverStartTime_;

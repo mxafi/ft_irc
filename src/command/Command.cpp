@@ -44,7 +44,7 @@ Command::Command(const Message& commandString, Client& client,
                  time_t& serverStartTime,
                  std::map<std::string, Channel>& allChannels)
     : client_(client),
-      myClients_(myClients),
+      allClients_(myClients),
       pass_(password),
       serverStartTime_(serverStartTime),
       allChannels_(allChannels) {
@@ -276,8 +276,8 @@ bool Command::findClientByNickname(const std::string& nickname) {
   std::replace(lowerNickname.begin(), lowerNickname.end(), '|', '\\');
   std::replace(lowerNickname.begin(), lowerNickname.end(), '^', '~');
 
-  for (std::map<int, Client>::const_iterator it = myClients_.begin();
-       it != myClients_.end(); ++it) {
+  for (std::map<int, Client>::const_iterator it = allClients_.begin();
+       it != allClients_.end(); ++it) {
     std::string clientNickname =
         it->second.getNickname();  //here we just put everything in lowercase
     std::transform(clientNickname.begin(), clientNickname.end(),
