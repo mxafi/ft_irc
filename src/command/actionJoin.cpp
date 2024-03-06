@@ -3,6 +3,7 @@
 namespace irc {
 
 void Command::actionJoin(Client& client) {
+  // Check user parameters
   if (param_.size() == 0) {
     client.appendToSendBuffer(
         RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "JOIN"));

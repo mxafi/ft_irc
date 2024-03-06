@@ -199,10 +199,48 @@ void Command::actionChannel(Client& client) {
 }
 
 void Command::actionPart(Client& client) {
-  std::string response = ":" + serverHostname_g + " #newchannel " +
-                         serverHostname_g + " :" + client.getNickname();
+  std::string partMessage = client.getNickname();
+  if (param_.size() == 0) {
+    client.appendToSendBuffer(
+        RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "PART"));
+    return;
+  }
+  if (param_.size() >= 2) {
+    partMessage = param_.at(1);
+    if (partMessage.length() > 1 && partMessage[0] == ':') {
+      partMessage = partMessage.substr(1);
+    }
+  }
 
-  LOG_DEBUG(response);
+  // Get the channel names
+  std::stringstream ssChan(param_.at(0));
+  std::string channelParseBuffer;
+  std::vector<std::string> channelsToPart;
+  while (std::getline(ssChan, channelParseBuffer, ',')) {
+    channelsToPart.push_back(channelParseBuffer);
+  }
+
+  // Part the channels one by one
+  for (std::string channelName : channelsToPart) {
+
+    if (allChannels_.find(channelName) == allChannels_.end()) {
+      client.appendToSendBuffer(
+          RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, channelName));
+      continue;
+    }
+
+    Channel currentChannel = allChannels_.at(channelName);
+    if (currentChannel.isMember(client) == false) {
+      client.appendToSendBuffer(
+          RPL_ERR_NOTONCHANNEL_442(serverHostname_g, channelName));
+      continue;
+    }
+
+    currentChannel.sendMessageToMembers(
+        COM_MESSAGE(client.getNickname(), client.getUserName(),
+                    client.getHost(), "PART", partMessage));
+    currentChannel.partMember(client);
+  }
 }
 
 void Command::actionMode(Client& client) {
