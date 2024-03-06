@@ -252,7 +252,7 @@ void Command::actionJoin(Client& client) {
 void Command::actionPrivmsg(Client& client) {
   size_t amountParameters = param_.size();
   if (amountParameters == 0) {
-    client.appendToSendBuffer(RPL_ERR_NORECIPIENT_411(serverHostname_g));
+    client.appendToSendBuffer(RPL_ERR_NORECIPIENT_411(serverHostname_g, "privmsg"));
     LOG_DEBUG("CMD::PRIVMSG::NO RECIPIENT and NO MESSAGE");
     return;
   }
@@ -290,12 +290,12 @@ void Command::actionPrivmsg(Client& client) {
   //   }
   // } else {
 
-
   std::string messageWithoutColon = param_.at(1).erase(0, 1);
   int target = findClientByNickname(param_.at(0));
   std::string targetRecipient = param_.at(0);
   if (target == 0) {
-    client.appendToSendBuffer(RPL_ERR_NOSUCHNICK_401(serverHostname_g, targetRecipient));
+    client.appendToSendBuffer(
+        RPL_ERR_NOSUCHNICK_401(serverHostname_g, targetRecipient));
     LOG_DEBUG("CMD::PRIVMSG::findClientByNickname: USER NOT FOUND");
     return;
   }
