@@ -35,7 +35,6 @@ void Command::actionJoin(Client& client) {
                       client.getHost(), "PART", client.getNickname()));
       currentChannel.partMember(client);
     }
-    // TODO: do we send something to the client as confirmation? RFC?
     return;
   }
 
