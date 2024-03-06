@@ -38,6 +38,8 @@ class Channel {
   void uninvite(Client& client);
   bool isInvited(Client& client);
   static bool isChannelNameValid(const std::string& name);
+  static bool isChannelNameFree(const std::string& name,
+                                std::map<std::string, Channel>& allChannels);
 
  private:
   std::string name_;

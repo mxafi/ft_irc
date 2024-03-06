@@ -1,10 +1,5 @@
 #include "Channel.h"
 
-static bool isChannelNameFree_(const std::string& name) {
-  // TODO: implement
-  return false;
-}
-
 namespace irc {
 
 Channel::~Channel() {}
@@ -17,7 +12,7 @@ Channel::Channel(Client& creatorClient, const std::string& name,
       userLimit_(CHANNEL_USER_LIMIT_DISABLED),
       allChannels_(allChannels) {
 
-  if (!isChannelNameValid(name) || !isChannelNameFree_(name)) {
+  if (!isChannelNameValid(name) || !isChannelNameFree(name, allChannels_)) {
     throw std::invalid_argument("Channel name is invalid or taken");
   }
   members_.push_back(creatorClient);
@@ -120,7 +115,8 @@ int Channel::partMember(Client& client) {
       return members_.size();
     }
   }
-  LOG_WARNING("Channel::partMember: client is not a member, not parting nick " << name_);
+  LOG_WARNING("Channel::partMember: client is not a member, not parting nick "
+              << name_);
   return CHANNEL_PART_FAILURE;
 }
 
@@ -216,6 +212,20 @@ bool Channel::isChannelNameValid(const std::string& name) {
   }
   LOG_DEBUG("Channel::isChannelNameValid: name does not match pattern");
   return false;
+}
+
+bool Channel::isChannelNameFree(const std::string& name,
+                                std::map<std::string, Channel>& allChannels) {
+  std::string lowercaseName = name;
+  std::transform(lowercaseName.begin(), lowercaseName.end(),
+                 lowercaseName.begin(), ::tolower);
+
+  for (auto it = allChannels.begin(); it != allChannels.end(); it++) {
+    if (it->second.getName() == lowercaseName) {
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace irc
