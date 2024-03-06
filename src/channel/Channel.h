@@ -1,6 +1,7 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
+#include <map>
 #include <regex>
 #include <stdexcept>
 #include <string>
@@ -13,7 +14,8 @@ namespace irc {
 class Channel {
  public:
   ~Channel();
-  Channel(Client& creatorClient, const std::string& name);
+  Channel(Client& creatorClient, const std::string& name,
+          std::map<std::string, Channel>& allChannels);
 
   std::string getName() const;
   void sendMessageToMembers(const std::string& message);
@@ -28,7 +30,7 @@ class Channel {
   void setUserLimit(int userLimit);
   int getUserLimit() const;
   void joinMember(Client& client);
-  void partMember(Client& client);
+  int partMember(Client& client);
   bool isMember(Client& client);
   void setOperatorStatus(Client& client, bool setOperatorStatusTo);
   bool isOperator(Client& client);
@@ -39,14 +41,15 @@ class Channel {
 
  private:
   std::string name_;
-  std::vector<Client*> invited_;
-  std::vector<Client*> members_;
-  std::vector<Client*> operators_;
+  std::vector<Client> invited_;
+  std::vector<Client> members_;
+  std::vector<Client> operators_;
   std::string topic_;
   std::string key_;
   bool isInviteOnly_;
   bool isTopicProtected_;
   int userLimit_;
+  std::map<std::string, Channel>& allChannels_;
 };
 
 }  // namespace irc

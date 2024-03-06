@@ -9,17 +9,19 @@ namespace irc {
 
 Channel::~Channel() {}
 
-Channel::Channel(Client& creatorClient, const std::string& name)
+Channel::Channel(Client& creatorClient, const std::string& name,
+                 std::map<std::string, Channel>& allChannels)
     : name_(name),
       isInviteOnly_(false),
       isTopicProtected_(false),
-      userLimit_(CHANNEL_USER_LIMIT_DISABLED) {
+      userLimit_(CHANNEL_USER_LIMIT_DISABLED),
+      allChannels_(allChannels) {
 
   if (!isChannelNameValid(name) || !isChannelNameFree_(name)) {
     throw std::invalid_argument("Channel name is invalid or taken");
   }
-  members_.push_back(&creatorClient);
-  operators_.push_back(&creatorClient);
+  members_.push_back(creatorClient);
+  operators_.push_back(creatorClient);
   creatorClient.recordMyChannel(name_);
 }
 
@@ -28,12 +30,8 @@ std::string Channel::getName() const {
 }
 
 void Channel::sendMessageToMembers(const std::string& message) {
-  for (Client* member : members_) {
-    if (member == nullptr) {
-      LOG_ERROR("Channel::sendMessageToMember: member is null, skipping");
-      continue;
-    }
-    member->appendToSendBuffer(message);
+  for (Client member : members_) {
+    member.appendToSendBuffer(message);
   }
 }
 
@@ -87,33 +85,49 @@ void Channel::joinMember(Client& client) {
     LOG_WARNING("Channel::joinMember: user limit reached, not joining")
     return;
   }
-  members_.push_back(&client);
+  members_.push_back(client);
   client.recordMyChannel(name_);
 }
 
-void Channel::partMember(Client& client) {
+/**
+ * @brief Remove a member from the channel members,
+ * operators and unrecord the channel from the client
+ * 
+ * @param client The client to be removed
+ * @return int Number of members left in the channel, or CHANNEL_PART_FAILURE
+ * if the client is not a member
+ */
+int Channel::partMember(Client& client) {
+  int clientFd = client.getFd();
   for (auto it = members_.begin(); it != members_.end(); it++) {
-    if (*it == &client) {
+    if (it->getFd() == clientFd) {
       client.unrecordMyChannel(name_);
       if (isOperator(client)) {
         setOperatorStatus(client, false);
+        LOG_DEBUG("Channel::partMember: client "
+                  << client.getNickname() << " was an operator, removing");
       }
       members_.erase(it);
-      if (members_.empty()) {
-        LOG_DEBUG(
-            "Channel::partMember: no members left, the channel should be "
-            "deleted: "
-            << name_);
-      }
-      return;
+      LOG_DEBUG("Channel::partMember: client "
+                << client.getNickname() << " parted from channel " << name_);
+      return members_.size();
+    }
+    if (members_.empty()) {
+      LOG_DEBUG(
+          "Channel::partMember: no members left, the channel should be "
+          "deleted: "
+          << name_);
+      return members_.size();
     }
   }
-  LOG_WARNING("Channel::partMember: client is not a member, not parting");
+  LOG_WARNING("Channel::partMember: client is not a member, not parting nick " << name_);
+  return CHANNEL_PART_FAILURE;
 }
 
 bool Channel::isMember(Client& client) {
-  for (Client* member : members_) {
-    if (member == &client) {
+  int clientFd = client.getFd();
+  for (Client member : members_) {
+    if (member.getFd() == clientFd) {
       return true;
     }
   }
@@ -121,19 +135,22 @@ bool Channel::isMember(Client& client) {
 }
 
 void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
+  int clientFd = client.getFd();
+
   if (!isMember(client)) {
     LOG_WARNING(
         "Channel::setOperatorStatus: client is not a member, not setting "
         "operator status")
     return;
   }
+
   if (setOperatorStatusTo && !isOperator(client)) {
-    operators_.push_back(&client);
-    LOG_DEBUG("Channel::setOperatorStatus: operator status set to "
+    operators_.push_back(client);
+    LOG_DEBUG("Channel::setOperatorStatus: operator status added to "
               << client.getNickname() << " in channel " << name_);
   } else {
     for (auto it = operators_.begin(); it != operators_.end(); it++) {
-      if (*it == &client) {
+      if (it->getFd() == clientFd) {
         operators_.erase(it);
         LOG_DEBUG("Channel::setOperatorStatus: operator status removed from "
                   << client.getNickname() << " in channel " << name_);
@@ -144,8 +161,9 @@ void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
 }
 
 bool Channel::isOperator(Client& client) {
-  for (Client* operator_ : operators_) {
-    if (operator_ == &client) {
+  int clientFd = client.getFd();
+  for (Client operator_ : operators_) {
+    if (operator_.getFd() == clientFd) {
       return true;
     }
   }
@@ -157,12 +175,17 @@ void Channel::invite(Client& client) {
     LOG_WARNING("Channel::invite: client is already invited, not inviting");
     return;
   }
-  invited_.push_back(&client);
+  LOG_DEBUG("Channel::invite: inviting client " << client.getNickname()
+                                                << " to channel " << name_);
+  invited_.push_back(client);
 }
 
 void Channel::uninvite(Client& client) {
+  int clientFd = client.getFd();
   for (auto it = invited_.begin(); it != invited_.end(); it++) {
-    if (*it == &client) {
+    if (it->getFd() == clientFd) {
+      LOG_DEBUG("Channel::uninvite: uninviting client "
+                << client.getNickname() << " from channel " << name_);
       invited_.erase(it);
       return;
     }
@@ -171,8 +194,9 @@ void Channel::uninvite(Client& client) {
 }
 
 bool Channel::isInvited(Client& client) {
-  for (Client* invited : invited_) {
-    if (invited == &client) {
+  int clientFd = client.getFd();
+  for (Client invited : invited_) {
+    if (invited.getFd() == clientFd) {
       return true;
     }
   }
