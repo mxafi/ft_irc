@@ -221,7 +221,7 @@ void Server::loop() {
               LOG_DEBUG("Server::loop: received message from client on fd "
                         << client.getFd() << ": " << messageString);
               Command command(message, client, clients_, password_,
-                              start_time_);
+                              start_time_, channels_);
             }
           } catch (std::out_of_range& e) {
             LOG_ERROR("Server::loop: out of range exception for fd "
