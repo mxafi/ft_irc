@@ -123,22 +123,34 @@ bool Client::isGotPassword() const {
 }
 
 void Client::appendToSendBuffer(const std::string& packet) {
+  LOG_DEBUG(
+      "Client::appendToSendBuffer: appending message to sendBuffer for nick: "
+      << nickname_ << ": " << packet)
   sendBuffer_ += packet;
 }
 
 void Client::appendToRecvBuffer(const std::string& packet) {
+  LOG_DEBUG(
+      "Client::appendToRecvBuffer: appending message to recvBuffer for nick: "
+      << nickname_ << ": " << packet)
   recvBuffer_ += packet;
 }
 
 void Client::clearSendBuffer() {
+  LOG_DEBUG("Client::clearSendBuffer: clearing sendBuffer for nick "
+            << nickname_);
   sendBuffer_.clear();
 }
 
 void Client::clearRecvBuffer() {
+  LOG_DEBUG("Client::clearRecvBuffer: clearing recvBuffer for nick "
+            << nickname_);
   recvBuffer_.clear();
 }
 
 void Client::setWantDisconnect() {
+  LOG_DEBUG("Client::setWantDisconnect: nick " << nickname_
+                                               << " wants to disconnect");
   status_.wantDisconnect = true;
 }
 
@@ -151,11 +163,15 @@ std::string Client::getDisconnectReason() const {
 }
 
 void Client::setDisconnectReason(const std::string& reason) {
+  LOG_DEBUG("Client::setDisconnectReason: nick"
+            << nickname_ << " set disconnectReason: " << reason);
   disconnectReason_ = reason;
 }
 
 void Client::recordMyChannel(std::string& channelName) {
   myChannelsByName_.push_back(channelName);
+  LOG_DEBUG("Client::recordMyChannel: nick "
+            << nickname_ << " recorded channel " << channelName);
 }
 
 void Client::unrecordMyChannel(std::string& channelName) {
@@ -163,6 +179,8 @@ void Client::unrecordMyChannel(std::string& channelName) {
   while (it != myChannelsByName_.end()) {
     if (*it == channelName) {
       myChannelsByName_.erase(it);
+      LOG_DEBUG("Client::unrecordMyChannel: nick "
+                << nickname_ << " unrecorded channel " << channelName);
       break;
     }
     it++;
