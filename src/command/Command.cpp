@@ -252,23 +252,23 @@ void Command::actionJoin(Client& client) {
 void Command::actionPrivmsg(Client& client) {
   size_t amountParameters = param_.size();
   if (amountParameters == 0) {
-    RPL_ERR_NORECIPIENT_411(serverHostname_g);
+    client.appendToSendBuffer(RPL_ERR_NORECIPIENT_411(serverHostname_g));
     LOG_DEBUG("CMD::PRIVMSG::NO RECIPIENT and NO MESSAGE");
     return;
   }
   if (amountParameters > 2) {
-    RPL_ERR_TOOMANYTARGETS_407(serverHostname_g);
+    client.appendToSendBuffer(RPL_ERR_TOOMANYTARGETS_407(serverHostname_g));
     LOG_DEBUG("CMD::PRIVMSG::TOO MANY TARGETS");
     return;
   }
   if (amountParameters == 1) {
-    RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+    client.appendToSendBuffer(RPL_ERR_NOTEXTTOSEND_412(serverHostname_g));
     LOG_DEBUG("CMD::PRIVMSG::NO TEXT (1 param only)");
     return;
   }
 
   if (param_.at(1).front() != ':') {
-    RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
+    client.appendToSendBuffer(RPL_ERR_NOTEXTTOSEND_412(serverHostname_g));
     LOG_DEBUG("CMD::PRIVMSG::NO TEXT (2nd param missing colon)");
     return;
   }
@@ -295,7 +295,7 @@ void Command::actionPrivmsg(Client& client) {
   int target = findClientByNickname(param_.at(0));
   std::string targetRecipient = param_.at(0);
   if (target == 0) {
-    RPL_ERR_NOSUCHNICK_401(serverHostname_g, targetRecipient);
+    client.appendToSendBuffer(RPL_ERR_NOSUCHNICK_401(serverHostname_g, targetRecipient));
     LOG_DEBUG("CMD::PRIVMSG::findClientByNickname: USER NOT FOUND");
     return;
   }
@@ -307,7 +307,6 @@ void Command::actionPrivmsg(Client& client) {
                             "senderHost");  // TODO: fix in channel branch
   std::string privmsg =
       PRIVMSG_FORMAT(formattedSender, targetRecipient, messageWithoutColon);
-
   myClients_.find(target)->second.appendToSendBuffer(privmsg);
 }
 
