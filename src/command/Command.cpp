@@ -250,9 +250,11 @@ void Command::actionJoin(Client& client) {
     *    @ is followed by a hostname
     */
 void Command::actionPrivmsg(Client& client) {
+  LOG_DEBUG("CMD::PRIVMSG _____ START _____");
   size_t amountParameters = param_.size();
   if (amountParameters == 0) {
-    client.appendToSendBuffer(RPL_ERR_NORECIPIENT_411(serverHostname_g, "privmsg"));
+    client.appendToSendBuffer(
+        RPL_ERR_NORECIPIENT_411(serverHostname_g, "privmsg"));
     LOG_DEBUG("CMD::PRIVMSG::NO RECIPIENT and NO MESSAGE");
     return;
   }
@@ -293,6 +295,9 @@ void Command::actionPrivmsg(Client& client) {
   std::string messageWithoutColon = param_.at(1).erase(0, 1);
   int target = findClientByNickname(param_.at(0));
   std::string targetRecipient = param_.at(0);
+  std::cout << "Target is: " + targetRecipient + "fd is: " << target
+            << std::endl;
+  std::cout << "Target value: " << target << std::endl;
   if (target == 0) {
     client.appendToSendBuffer(
         RPL_ERR_NOSUCHNICK_401(serverHostname_g, targetRecipient));
@@ -304,11 +309,13 @@ void Command::actionPrivmsg(Client& client) {
 
   std::string formattedSender =
       FORMAT_NICK_USER_HOST(client.getNickname(), client.getUserName(),
-                            "senderHost");  // TODO: fix in channel branch
+                            serverHostname_g);  // TODO: fix in channel branch
   std::string privmsg =
       PRIVMSG_FORMAT(formattedSender, targetRecipient, messageWithoutColon);
   myClients_.find(target)->second.appendToSendBuffer(privmsg);
+  LOG_DEBUG("CMD::PRIVMSG _____ END _____");
 }
+
 
 int Command::findClientByNickname(const std::string& nickname) {
   std::string lowerNickname =
@@ -331,12 +338,16 @@ int Command::findClientByNickname(const std::string& nickname) {
     std::replace(clientNickname.begin(), clientNickname.end(), '|', '\\');
     std::replace(clientNickname.begin(), clientNickname.end(), '^', '~');
     if (clientNickname == lowerNickname) {
-      LOG_DEBUG("Found client with the same nickname: " << nickname);
+      std::cout << nickname << "was found" << std::endl;
+      LOG_DEBUG(
+          "CMD::findClientByNickname: Found client with the same nickname: "
+          << nickname);
       return it->second
           .getFd();  // Return the file descriptor of the found client
     }
   }
-
+  LOG_DEBUG("CMD::findClientByNickname: " + nickname + " not found");
+  std::cout << nickname << "was not found" << std::endl;
   return 0;
 }
 

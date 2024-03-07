@@ -53,25 +53,99 @@ using namespace irc;
 TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
   int errno_before = errno;
   REQUIRE(errno == errno_before);
-  std::string serverHostname = "test.server.com";
+  std::string serverHostname = serverHostname_g;
   time_t serverStartTime = time(NULL);
   std::string password = "password";
   struct sockaddr sockaddr;
 
-  Client client(1, sockaddr);
-  client.setPassword("password");
-  client.setUserName("userName");
-  client.setNickname("nickname");
+  Client sender(1, sockaddr);
+  sender.setPassword("senderP");
+  sender.setUserName("senderU");
+  sender.setNickname("senderN");
 
-  std::map<int, Client> myClients = {{1, client}};
+  Client receiver(2, sockaddr);
+  receiver.setPassword("receiverP");
+  receiver.setUserName("receiverU");
+  receiver.setNickname("receiverN");
 
-  SECTION("PRIVMSG with no parameters") {
+  Client random(3, sockaddr);
+  random.setPassword("randomP");
+  random.setUserName("randomU");
+  random.setNickname("randomN");
+  std::map<int, Client> myClients = {{1, sender}, {2, receiver}, {3, random}};
+
+  SECTION("PRIVMSG - Valid") {
+    std::string response = ":senderN!senderU@" + serverHostname_g + " PRIVMSG receiverN :A valid message!\r\n";
+    std::string msgWithoutParameters = "PRIVMSG receiverN :A valid message!";
+    Message msg(msgWithoutParameters);
+    Command cmd(msg, sender, myClients, password, serverStartTime);
+    std::vector<std::string>  param_ = msg.getParameters(); 
+    sender.clearSendBuffer();
+    receiver.clearSendBuffer();
+    cmd.actionPrivmsg(sender);
+    // std::cout << " sender's receive buffer: " + sender.getRecvBuffer() << std::endl;
+    // std::cout << " sender's send buffer: " + sender.getSendBuffer() << std::endl;
+    // std::cout << " receiver's receive buffer: " + receiver.getRecvBuffer() << std::endl;
+    // std::cout << " receiver's send buffer: " + receiver.getSendBuffer() << std::endl;
+    // std::cout << " receiver's receive buffer: " + myClients.find(2)->second.getSendBuffer() << std::endl;
+    REQUIRE(myClients.find(2)->second.getSendBuffer() == response);
+    REQUIRE(sender.getSendBuffer() == "");
+  }
+
+  SECTION("PRIVMSG - no parameters -> 411 NORECIPIENT") {
     std::string response = ": 411 :No recipient given (privmsg)\r\n";
     std::string msgWithoutParameters = "PRIVMSG";
     Message msg(msgWithoutParameters);
-    Command cmd(msg, client, myClients, password, serverStartTime);
-    client.clearSendBuffer();
-    cmd.actionPrivmsg(client);
-    REQUIRE(client.getSendBuffer() == response );
+    Command cmd(msg, sender, myClients, password, serverStartTime);
+    sender.clearSendBuffer();
+    cmd.actionPrivmsg(sender);
+    REQUIRE(sender.getSendBuffer() == response);
   }
+
+  SECTION("PRIVMSG - too many parameters -> 407 TOOMANYTARGETS") {
+    std::string response = ": 407 <target> :<error code> recipients. <abort message>\r\n";
+    std::string msgWithTooManyTargets = "PRIVMSG client client client";
+    Message msg(msgWithTooManyTargets);
+    Command cmd(msg, sender, myClients, password, serverStartTime);
+    sender.clearSendBuffer();
+    cmd.actionPrivmsg(sender);
+    REQUIRE(sender.getSendBuffer() == response);
+  }
+
+  SECTION("PRIVMSG - 1 parameter -> 412 NOTEXTTOSEND") {
+    std::string response = ": 412 :No text to send\r\n";
+    std::string msgWithNoTextToSend = "PRIVMSG client";
+    Message msg(msgWithNoTextToSend);
+    Command cmd(msg, sender, myClients, password, serverStartTime);
+    sender.clearSendBuffer();
+    cmd.actionPrivmsg(sender);
+    REQUIRE(sender.getSendBuffer() == response);
+  }
+
+  SECTION("PRIVMSG - missing ':' for trailing parameter -> 412 NOTEXTTOSEND") {
+    std::string response = ": 412 :No text to send\r\n";
+    std::string msgWithNoTextToSend = "PRIVMSG sender message";
+    Message msg(msgWithNoTextToSend);
+    Command cmd(msg, sender, myClients, password, serverStartTime);
+    sender.clearSendBuffer();
+    cmd.actionPrivmsg(sender);
+    REQUIRE(sender.getSendBuffer() == response);
+  }
+
+  SECTION("PRIVMSG - non existing nickname -> 401 NOSUCHNICK") {
+    std::string response = ": <blah> :No such nick/channel";
+    std::string msgWithNonExistingNickname = "PRIVMSG blah :a message";
+    sender.clearSendBuffer();
+    std::cout << "Buffer cleared" << std::endl;
+    Message msg(msgWithNonExistingNickname);
+    Command cmd(msg, sender, myClients, password, serverStartTime);
+    std::cout << " sender's receive buffer: " + sender.getRecvBuffer() << std::endl;
+    std::cout << " sender's send buffer: " + sender.getSendBuffer() << std::endl;
+    std::cout << " receiver's receive buffer: " + receiver.getRecvBuffer() << std::endl;
+    std::cout << " receiver's send buffer: " + receiver.getSendBuffer() << std::endl;
+    std::cout << " receiver's receive buffer: " + myClients.find(2)->second.getSendBuffer() << std::endl;
+    cmd.actionPrivmsg(sender);
+    REQUIRE(sender.getSendBuffer() == response);
+  }
+
 }
