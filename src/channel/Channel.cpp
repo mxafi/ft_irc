@@ -229,4 +229,8 @@ bool Channel::isChannelNameFree(const std::string& name,
   return true;
 }
 
+unsigned long Channel::getMemberCount() const {
+  return members_.size();
+}
+
 }  // namespace irc

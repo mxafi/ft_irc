@@ -37,6 +37,7 @@ class Channel {
   void invite(Client& client);
   void uninvite(Client& client);
   bool isInvited(Client& client);
+  unsigned long getMemberCount() const;
   static bool isChannelNameValid(const std::string& name);
   static bool isChannelNameFree(const std::string& name,
                                 std::map<std::string, Channel>& allChannels);

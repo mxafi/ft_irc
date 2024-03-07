@@ -77,15 +77,46 @@ void Command::actionJoin(Client& client) {
     }
 
     if (Channel::isChannelNameFree(channelName, allChannels_) == false) {
-      // TODO: Check if there is a key for the channel and if it is valid (ERR_BADCHANNELKEY)
-      // TODO: Check if the channel is invite-only, and invite is valid (ERR_INVITEONLYCHAN)
-      // TODO: Check if the channel user limit is reached (ERR_CHANNELISFULL)
+      Channel existingChannel = allChannels_.at(channelName);
+      if (channelKey != existingChannel.getKey()) {
+        client.appendToSendBuffer(
+            RPL_ERR_BADCHANNELKEY_475(serverHostname_g, channelName));
+        continue;
+      }
+      if (existingChannel.getUserLimit() != CHANNEL_USER_LIMIT_DISABLED &&
+          existingChannel.getMemberCount() >= existingChannel.getUserLimit()) {
+        client.appendToSendBuffer(
+            RPL_ERR_CHANNELISFULL_471(serverHostname_g, channelName));
+        continue;
+      }
+      if (existingChannel.isInviteOnly() &&
+          existingChannel.isInvited(client) == false) {
+        client.appendToSendBuffer(
+            RPL_ERR_INVITEONLYCHAN_473(serverHostname_g, channelName));
+        continue;
+      }
+      existingChannel.joinMember(client);
+    } else {
+      allChannels_.insert(std::make_pair(
+          channelName, Channel(client, channelName, allChannels_)));
     }
 
-    allChannels_.insert(std::make_pair(
-        channelName, Channel(client, channelName, allChannels_)));
-    // TODO: send the required messages upon joining (JOIN to channel members, RPL_TOPIC, RPL_NAMREPLY including the joining client, RPL_ENDOFNAMES)
-  }
+    Channel currentChannel = allChannels_.at(channelName);
+    // Join message for the channel, and as a reply to the client
+    currentChannel.sendMessageToMembers(
+        COM_MESSAGE(client.getNickname(), client.getUserName(),
+                    client.getHost(), "JOIN", channelName));
+
+    if (currentChannel.getTopic() != "") {
+      client.appendToSendBuffer(RPL_TOPIC_332(serverHostname_g, channelName,
+                                              currentChannel.getTopic()));
+    } else {
+      client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, channelName));
+    }
+
+    // TODO: send the list of channel members with RPL_NAMREPLY (RPL_ENDOFNAMES?)
+
+  } // for (rit = rChannelKeyPairs.begin(); rit != rChannelKeyPairs.end(); rit++)
 }
 
 }  // namespace irc
