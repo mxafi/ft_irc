@@ -14,6 +14,7 @@
 
 #define RPL_NOTOPIC_331(servername, channel) (RPL_META_MESSAGE(servername, "331", channel + " :No topic is set"))
 #define RPL_TOPIC_332(servername, channel, topic) (RPL_META_MESSAGE(servername, "332", channel + " :" + topic))
+#define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) (RPL_META_MESSAGE(servername, "353", client + " " + symbol + " " + channel + " :" + namelist))
 
 #define RPL_ERR_NOSUCHCHANNEL_403(servername, channel) (RPL_META_MESSAGE(servername, "403", channel + " :No such channel"))
 #define RPL_ERR_TOOMANYCHANNELS_405(servername, channel) (RPL_META_MESSAGE(servername, "405", channel + " :You have joined too many channels"))

@@ -233,4 +233,21 @@ unsigned long Channel::getMemberCount() const {
   return members_.size();
 }
 
+std::vector<Client>& Channel::getMembers() {
+  return members_;
+}
+
+std::string Channel::getNamesList() {
+  std::string namesList;
+  for (Client member : members_) {
+    if (isOperator(member)) {
+      namesList.append(CHANNEL_OPERATOR_SYMBOL);
+    }
+    namesList.append(member.getNickname() + " ");
+  }
+  // get rid of the trailing space
+  namesList.pop_back();
+  return namesList;
+}
+
 }  // namespace irc

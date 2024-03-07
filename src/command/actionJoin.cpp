@@ -115,8 +115,9 @@ void Command::actionJoin(Client& client) {
       client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, channelName));
     }
 
-    // TODO: send the list of channel members with RPL_NAMREPLY (RPL_ENDOFNAMES?)
-
+    client.appendToSendBuffer(
+        RPL_NAMREPLY_353(serverHostname_g, client.getNickname(), CHANNEL_SYMBOL_PUBLIC,
+                         channelName, currentChannel.getNamesList()));
   }  // for (rit = rChannelKeyPairs.begin(); rit != rChannelKeyPairs.end(); rit++)
 }
 
