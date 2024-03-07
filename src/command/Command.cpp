@@ -1,10 +1,8 @@
 #include "Command.h"
 
-extern std::string serverHostname_g;
-
 namespace irc {
-// I was thinking here we can put it in a map and acording to the comand we create the response for example ping and pong
-std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
+
+std::map<std::string, std::function<void(Command*, Client&)>>
     Command::commands = {{"PING",
                           [](Command* cmd, Client& client) {
                             cmd->actionPing(client);
@@ -41,12 +39,13 @@ std::map<std::string, std::function<void(Command*, Client&)>>  //this is auto
                             cmd->actionJoin(client);
                           }}};
 
-Command::Command(
-    const Message& commandString, Client& client,
-    std::map<int, Client>& myClients, std::string& password,
-    time_t& serverStartTime)  // stsd::map<std::string, &clients myclients>
+Command::Command(const Message& commandString, Client& client,
+                 std::map<int, Client>& myClients, std::string& password,
+                 time_t& serverStartTime,
+                 std::map<std::string, Channel>& allChannels)
     : client_(client),
-      myClients_(myClients),
+      allClients_(myClients),
+      allChannels_(allChannels),
       pass_(password),
       serverStartTime_(serverStartTime) {
   numeric_ = 0;
@@ -63,7 +62,7 @@ void Command::execute(Client& client) {
     } else {
       client.appendToSendBuffer(
           RPL_ERR_UNKNOWNCOMMAND_421(serverHostname_g, commandName_));
-      LOG_DEBUG("Command not found: " << commandName_);
+      LOG_DEBUG("Command::execute: command not found: " << commandName_);
     }
     return;
   }
@@ -74,12 +73,14 @@ void Command::execute(Client& client) {
     if (it != commands.end()) {
       it->second(this, client);
     } else {
-      LOG_DEBUG("Command not found: " << commandName_);
+      LOG_WARNING("Command::execute: NICK|USER|PASS command not found: "
+                  << commandName_);
     }
     return;
   }
 
   if (commandName_ == "CAP") {
+    LOG_DEBUG("Command::execute: CAP command received, ignoring");
     return;
   }
 
@@ -90,7 +91,7 @@ void Command::execute(Client& client) {
 void Command::parseCommand(const Message& commandString, Client& client) {
   commandName_ = commandString.getCommand();
   prefix_ = commandString.getPrefix();
-  param_ = commandString.getParameters();  //
+  param_ = commandString.getParameters();
   numeric_ = commandString.getNumeric();
   execute(client);
 }
@@ -110,9 +111,7 @@ void Command::actionPass(Client& client) {
     return;
   }
   if (param_.at(0) != pass_) {
-    LOG_DEBUG("Password incorrect");
-    LOG_DEBUG("param: " << param_.at(0));
-    LOG_DEBUG("pass_: " << pass_);
+    LOG_DEBUG("Command::actionPass: password incorrect");
     client.appendToSendBuffer(ERR_MESSAGE("Password incorrect"));
     client.setWantDisconnect();
     return;
@@ -155,7 +154,7 @@ void Command::actionNick(Client& client) {
   // Numerics: ERR_NICKNAMEINUSE
   if (findClientByNickname(param_.at(0))) {
     client.appendToSendBuffer(
-        RPL_ERR_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
+        RPL_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
     return;
   }
 
@@ -196,10 +195,48 @@ void Command::actionChannel(Client& client) {
 }
 
 void Command::actionPart(Client& client) {
-  std::string response = ":" + serverHostname_g + " #newchannel " +
-                         serverHostname_g + " :" + client.getNickname();
+  std::string partMessage = client.getNickname();
+  if (param_.size() == 0) {
+    client.appendToSendBuffer(
+        RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "PART"));
+    return;
+  }
+  if (param_.size() >= 2) {
+    partMessage = param_.at(1);
+    if (partMessage.length() > 1 && partMessage[0] == ':') {
+      partMessage = partMessage.substr(1);
+    }
+  }
 
-  LOG_DEBUG(response);
+  // Get the channel names
+  std::stringstream ssChan(param_.at(0));
+  std::string channelParseBuffer;
+  std::vector<std::string> channelsToPart;
+  while (std::getline(ssChan, channelParseBuffer, ',')) {
+    channelsToPart.push_back(channelParseBuffer);
+  }
+
+  // Part the channels one by one
+  for (std::string channelName : channelsToPart) {
+
+    if (allChannels_.find(channelName) == allChannels_.end()) {
+      client.appendToSendBuffer(
+          RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, channelName));
+      continue;
+    }
+
+    Channel currentChannel = allChannels_.at(channelName);
+    if (currentChannel.isMember(client) == false) {
+      client.appendToSendBuffer(
+          RPL_ERR_NOTONCHANNEL_442(serverHostname_g, channelName));
+      continue;
+    }
+
+    currentChannel.sendMessageToMembers(
+        COM_MESSAGE(client.getNickname(), client.getUserName(),
+                    client.getHost(), "PART", partMessage));
+    currentChannel.partMember(client);
+  }
 }
 
 void Command::actionMode(Client& client) {
@@ -228,13 +265,32 @@ void Command::actionKick(Client& client) {
  *          :nick!user@servername QUIT :Gone to have lunch  // Relayed to other Clients on shared channels
  */
 void Command::actionQuit(Client& client) {
-  // TODO: Send a QUIT message to all channels the client is in
+  // Find out the reason for quitting
+  std::string quitReason;
+  if (param_.size() != 0) {
+    quitReason = param_.at(0);
+  } else {
+    quitReason = "Client quit";
+  }
+  if (quitReason.length() > 1 && quitReason[0] == ':') {
+    quitReason = quitReason.substr(1);
+  }
+  if (client.getDisconnectReason().empty()) {
+    client.setDisconnectReason(quitReason);
+  }
+
+  // Send the QUIT message to all shared channels with the reason
+  std::vector<std::string> channelNames = client.getMyChannels();
+  for (std::string channelName : channelNames) {
+    Channel& channel = allChannels_.at(channelName);
+    channel.sendMessageToMembers(
+        COM_MESSAGE(client.getNickname(), client.getUserName(),
+                    client.getHost(), "QUIT", quitReason));
+  }
+
+  // Send the ERROR message to the client and disconnect
   client.appendToSendBuffer(ERR_MESSAGE("Bye, see you soon!"));
   client.setWantDisconnect();
-}
-
-void Command::actionJoin(Client& client) {
-  (void)client;
 }
 
 void Command::actionPrivmsg(Client& client) {
@@ -254,8 +310,8 @@ bool Command::findClientByNickname(const std::string& nickname) {
   std::replace(lowerNickname.begin(), lowerNickname.end(), '|', '\\');
   std::replace(lowerNickname.begin(), lowerNickname.end(), '^', '~');
 
-  for (std::map<int, Client>::const_iterator it = myClients_.begin();
-       it != myClients_.end(); ++it) {
+  for (std::map<int, Client>::const_iterator it = allClients_.begin();
+       it != allClients_.end(); ++it) {
     std::string clientNickname =
         it->second.getNickname();  //here we just put everything in lowercase
     std::transform(clientNickname.begin(), clientNickname.end(),
@@ -265,7 +321,9 @@ bool Command::findClientByNickname(const std::string& nickname) {
     std::replace(clientNickname.begin(), clientNickname.end(), '|', '\\');
     std::replace(clientNickname.begin(), clientNickname.end(), '^', '~');
     if (clientNickname == lowerNickname) {
-      LOG_DEBUG("Found client with the same nickname: " << nickname);
+      LOG_DEBUG(
+          "Command::findClientByNickname: found client with the same nickname: "
+          << nickname);
       return true;
     }
   }
@@ -292,7 +350,7 @@ bool Command::isValidNickname(std::string& nickname) {
 void Command::sendAuthReplies_(Client& client) {
   client.appendToSendBuffer(
       RPL_WELCOME_001(serverHostname_g, client.getNickname(),
-                      client.getUserName(), client.getIpAddr()));
+                      client.getUserName(), client.getHost()));
   client.appendToSendBuffer(
       RPL_YOURHOST_002(serverHostname_g, IRC_SERVER_VERSION));
   std::string time = std::string(ctime(&serverStartTime_));
