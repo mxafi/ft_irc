@@ -5,6 +5,7 @@
 #define RPL_META_MESSAGE(servername, numeric, message) (std::string(":") + servername + " " + numeric + " " + message + "\r\n")
 #define ERR_MESSAGE(message) (std::string("ERROR :") + message + "\r\n")
 #define COM_MESSAGE(nick, user, host, command, params) (std::string(":") + nick + "!" + user + "@" + host + " " + command + " " + params + "\r\n")
+#define RPL_MESSAGE(message) (std::string(message) + "\r\n")
 
 // Numeric replies in order
 #define RPL_WELCOME_001(servername, nick, user, host) (RPL_META_MESSAGE(servername, "001", ":Welcome to the Internet Relay Network " + nick + "!" + user + "@" + host))
