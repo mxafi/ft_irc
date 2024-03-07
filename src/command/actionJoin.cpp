@@ -84,7 +84,8 @@ void Command::actionJoin(Client& client) {
         continue;
       }
       if (existingChannel.getUserLimit() != CHANNEL_USER_LIMIT_DISABLED &&
-          existingChannel.getMemberCount() >= existingChannel.getUserLimit()) {
+          static_cast<long long>(existingChannel.getMemberCount()) >=
+              existingChannel.getUserLimit()) {
         client.appendToSendBuffer(
             RPL_ERR_CHANNELISFULL_471(serverHostname_g, channelName));
         continue;
@@ -116,7 +117,7 @@ void Command::actionJoin(Client& client) {
 
     // TODO: send the list of channel members with RPL_NAMREPLY (RPL_ENDOFNAMES?)
 
-  } // for (rit = rChannelKeyPairs.begin(); rit != rChannelKeyPairs.end(); rit++)
+  }  // for (rit = rChannelKeyPairs.begin(); rit != rChannelKeyPairs.end(); rit++)
 }
 
 }  // namespace irc
