@@ -161,9 +161,12 @@ void Command::actionNick(Client& client) {
   client.setNickname(param_.at(0));
   if (isAlreadyAuthenticated == false && client.isAuthenticated()) {
     sendAuthReplies_(client);
+    return;
   }
 
   // TODO: Send a NICK message to all channels the client is in, advertising the new nickname
+  // TODO: if not part of any channel, send a NICK message to the client
+  
 }
 
 void Command::actionUser(Client& client) {
