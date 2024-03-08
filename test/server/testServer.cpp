@@ -6,7 +6,6 @@
 #include "../../src/common/magicNumber.h"
 
 TEST_CASE("server is started properly", "[server]") {
-  int errno_before = errno;
   char port[] = "6667";
   std::string password = "horse";
   irc::Server server(port, password);
@@ -25,5 +24,5 @@ TEST_CASE("server is started properly", "[server]") {
   REQUIRE(server.getServerInfo().ai_protocol == TCP_PROTOCOL);
   REQUIRE(server.getPassword() == password);
   REQUIRE(server.getPort() == port);
-  REQUIRE(errno == errno_before);
+  REQUIRE(errno == 0);
 }
