@@ -48,6 +48,7 @@ class Command {
   std::string commandName_;
   std::vector<std::string> param_;
   int numeric_;
+  Client& client_;
   std::map<int, Client>& allClients_;
   std::map<std::string, Channel>& allChannels_;
   std::string& pass_;
