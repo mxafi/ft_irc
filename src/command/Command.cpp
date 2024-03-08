@@ -295,9 +295,6 @@ void Command::actionPrivmsg(Client& client) {
   std::string messageWithoutColon = param_.at(1).erase(0, 1);
   int target = findClientByNickname(param_.at(0));
   std::string targetRecipient = param_.at(0);
-  std::cout << "Target is: " + targetRecipient + "fd is: " << target
-            << std::endl;
-  std::cout << "Target value: " << target << std::endl;
   if (target == 0) {
     client.appendToSendBuffer(
         RPL_ERR_NOSUCHNICK_401(serverHostname_g, targetRecipient));
