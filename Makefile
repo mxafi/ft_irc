@@ -67,7 +67,7 @@ makefile-debug:
 	$(info NOMAIN_SRCS=$(NOMAIN_SRCS))
 
 .PHONY: run
-run: re
+run: all
 	./$(NAME) 6667 horse
 
 .PHONY: release
