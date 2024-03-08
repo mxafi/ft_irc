@@ -70,6 +70,19 @@ makefile-debug:
 run: all
 	./$(NAME) 6667 horse
 
+.PHONY: ports
+ports:
+	@echo "Port 6667 in use by:"
+	@lsof -i -P -n | grep "6667" | tr -s ' ' | cut -d' ' -f1-3,5,8-10
+
+.PHONY: kill
+kill:
+	@lsof -i -P -n | grep "6667" | tr -s ' ' | cut -d' ' -f2 | xargs kill -9
+
+.PHONY: softkill
+softkill:
+	@lsof -i -P -n | grep "6667" | tr -s ' ' | cut -d' ' -f2 | xargs kill
+
 .PHONY: release
 release: CFLAGS += $(RFLAGS)
 release: fclean $(NAME)
