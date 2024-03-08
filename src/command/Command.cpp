@@ -303,7 +303,9 @@ void Command::actionPrivmsg(Client& client) {
     return;
   }
   if (amountParameters > 2) {
-    client.appendToSendBuffer(RPL_ERR_TOOMANYTARGETS_407(serverHostname_g, param_.at(1), std::to_string(param_.size() - 1), "Only one target per message."));
+    client.appendToSendBuffer(RPL_ERR_TOOMANYTARGETS_407(
+        serverHostname_g, param_.at(1), std::to_string(param_.size() - 1),
+        "Only one target per message."));
     LOG_DEBUG("CMD::PRIVMSG::TOO MANY TARGETS");
     return;
   }
@@ -357,7 +359,6 @@ void Command::actionPrivmsg(Client& client) {
   LOG_DEBUG("CMD::PRIVMSG _____ END _____");
 }
 
-
 int Command::findClientByNickname(const std::string& nickname) {
   std::string lowerNickname =
       nickname;  //here we just put everything in lowercase
@@ -408,16 +409,17 @@ bool Command::isValidNickname(std::string& nickname) {
 }
 
 void Command::sendAuthReplies_(Client& client) {
+  std::string clientNick = client.getNickname();
+  client.appendToSendBuffer(RPL_WELCOME_001(
+      serverHostname_g, clientNick, client.getUserName(), client.getHost()));
   client.appendToSendBuffer(
-      RPL_WELCOME_001(serverHostname_g, client.getNickname(),
-                      client.getUserName(), client.getHost()));
-  client.appendToSendBuffer(
-      RPL_YOURHOST_002(serverHostname_g, IRC_SERVER_VERSION));
+      RPL_YOURHOST_002(serverHostname_g, clientNick, IRC_SERVER_VERSION));
   std::string time = std::string(ctime(&serverStartTime_));
   time.pop_back();  // Remove the newline character
-  client.appendToSendBuffer(RPL_CREATED_003(serverHostname_g, time));
-  client.appendToSendBuffer(RPL_MYINFO_004(serverHostname_g, IRC_SERVER_VERSION,
-                                           SUPPORTED_USER_MODES,
-                                           SUPPORTED_CHANNEL_MODES));
+  client.appendToSendBuffer(
+      RPL_CREATED_003(serverHostname_g, clientNick, time));
+  client.appendToSendBuffer(
+      RPL_MYINFO_004(serverHostname_g, clientNick, IRC_SERVER_VERSION,
+                     SUPPORTED_USER_MODES, SUPPORTED_CHANNEL_MODES));
 }
 }  // namespace irc

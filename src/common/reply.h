@@ -8,10 +8,10 @@
 #define RPL_MESSAGE(message) (std::string(message) + "\r\n")
 
 // Numeric replies in order
-#define RPL_WELCOME_001(servername, nick, user, host) (RPL_META_MESSAGE(servername, "001", ":Welcome to the Internet Relay Network " + nick + "!" + user + "@" + host))
-#define RPL_YOURHOST_002(servername, version) (RPL_META_MESSAGE(servername, "002", ":Your host is " + servername + ", running version " + version))
-#define RPL_CREATED_003(servername, date) (RPL_META_MESSAGE(servername, "003", ":This server was created " + date))
-#define RPL_MYINFO_004(servername, version, user_modes, channel_modes) (RPL_META_MESSAGE(servername, "004", servername + " " + version + " " + user_modes + " " + channel_modes))
+#define RPL_WELCOME_001(servername, nick, user, host) (RPL_META_MESSAGE(servername, "001", nick + " :Welcome to the Internet Relay Network " + nick + "!" + user + "@" + host))
+#define RPL_YOURHOST_002(servername, nick, version) (RPL_META_MESSAGE(servername, "002", nick + " :Your host is " + servername + ", running version " + version))
+#define RPL_CREATED_003(servername, nick, date) (RPL_META_MESSAGE(servername, "003", nick + " :This server was created " + date))
+#define RPL_MYINFO_004(servername, nick, version, user_modes, channel_modes) (RPL_META_MESSAGE(servername, "004", nick + " " + servername + " " + version + " " + user_modes + " " + channel_modes))
 
 #define RPL_NOTOPIC_331(servername, channel) (RPL_META_MESSAGE(servername, "331", channel + " :No topic is set"))
 #define RPL_TOPIC_332(servername, channel, topic) (RPL_META_MESSAGE(servername, "332", channel + " :" + topic))
@@ -40,6 +40,5 @@
 //User format
 #define FORMAT_NICK_USER_HOST(nickname, username, hostname) (std::string(":") + nickname + "!" + username + "@" + hostname)
 #define PRIVMSG_FORMAT(formattedSender, target, text) (RPL_MESSAGE(std::string(formattedSender) + " PRIVMSG " + target + " :" + text))
-
 
 #endif
