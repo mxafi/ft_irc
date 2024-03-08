@@ -68,7 +68,7 @@ makefile-debug:
 
 .PHONY: run
 run: all
-	./$(NAME) 6667 horse
+	./run.sh 6667 horse
 
 .PHONY: ports
 ports:
