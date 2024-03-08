@@ -151,10 +151,6 @@ void Message::deserialize_(const std::string& serializedMessage) {
   setCommand_(iss);
   LOG_DEBUG("Message::deserialize_: got command_: " + command_);
   setParameters_(iss);
-  LOG_DEBUG("Message::deserialize_: got parameters_: ");
-  // for (auto& param : parameters_) {
-  //   LOG_DEBUG(param);
-  // }
 }
 
 }  // namespace irc

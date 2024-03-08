@@ -5,23 +5,30 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <regex>
+#include <sstream>
 #include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "../channel/Channel.h"
 #include "../client/Client.h"
 #include "../common/log.h"
 #include "../common/magicNumber.h"
 #include "../common/reply.h"
 #include "../message/Message.h"
-#include <regex>
 
 #define MAX_BUFFER_SIZE 1024  //maybe this we change
+
+extern std::string serverHostname_g;
 
 namespace irc {
 
 class Command {
  public:
   Command(const Message& commandString, Client& client,
-          std::map<int, Client>& myClients, std::string& password,
-          time_t& serverStartTime);
+          std::map<int, Client>& allClients, std::string& password,
+          time_t& serverStartTime, std::map<std::string, Channel>& allChannels);
   void execute(Client& client);
   void actionPing(Client& client);
   void actionChannel(Client& client);
@@ -41,8 +48,8 @@ class Command {
   std::string commandName_;
   std::vector<std::string> param_;
   int numeric_;
-  Client client_;
-  std::map<int, Client>& myClients_;
+  std::map<int, Client>& allClients_;
+  std::map<std::string, Channel>& allChannels_;
   std::string& pass_;
   time_t serverStartTime_;
 

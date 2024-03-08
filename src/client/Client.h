@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+
 #include "../common/log.h"
 #include "../common/magicNumber.h"
 
@@ -32,7 +33,7 @@ class Client {
   void appendToSendBuffer(const std::string& packet);
   void appendToRecvBuffer(const std::string& packet);
   void clearSendBuffer();
-  void clearRecvdBuffer();
+  void clearRecvBuffer();
   std::string getUserName() const;
   bool isGotUser() const;
   bool isGotNick() const;
@@ -40,10 +41,16 @@ class Client {
   bool isAuthenticated();
   void setWantDisconnect();
   bool getWantDisconnect() const;
-  std::string getIpAddr() const;
+  std::string getDisconnectReason() const;
+  void setDisconnectReason(const std::string& reason);
+  void recordMyChannel(std::string& channel);
+  void unrecordMyChannel(std::string& channel);
+  std::vector<std::string>& getMyChannels();
+  std::string& getHost();
 
  private:
   void setOldNickname_(const std::string& oldNickname);
+  void populateIpAddr_();
   int fd_;
   struct sockaddr sockaddr_;
 
@@ -53,6 +60,10 @@ class Client {
   std::string sendBuffer_;
   std::string recvBuffer_;
   std::string password_;
+  std::string disconnectReason_;
+  std::string ipAddr_;
+
+  std::vector<std::string> myChannelsByName_;
 
   struct ClientStatus {
     bool gotUser;
