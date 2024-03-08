@@ -93,8 +93,8 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
   }
 
   SECTION("PRIVMSG - too many parameters -> 407 TOOMANYTARGETS") {
-    std::string response = ": 407 <target> :<error code> recipients. <abort message>\r\n";
-    std::string msgWithTooManyTargets = "PRIVMSG client client client";
+    std::string response = ": 407 client2 :3 recipients. Only one target per message.\r\n";
+    std::string msgWithTooManyTargets = "PRIVMSG client1 client2 client3 :message";
     Message msg(msgWithTooManyTargets);
     Command cmd(msg, sender, myClients, password, serverStartTime);
     REQUIRE(sender.getSendBuffer() == response);

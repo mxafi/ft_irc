@@ -259,7 +259,7 @@ void Command::actionPrivmsg(Client& client) {
     return;
   }
   if (amountParameters > 2) {
-    client.appendToSendBuffer(RPL_ERR_TOOMANYTARGETS_407(serverHostname_g));
+    client.appendToSendBuffer(RPL_ERR_TOOMANYTARGETS_407(serverHostname_g, param_.at(1), std::to_string(param_.size() - 1), "Only one target per message."));
     LOG_DEBUG("CMD::PRIVMSG::TOO MANY TARGETS");
     return;
   }

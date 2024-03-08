@@ -15,7 +15,7 @@
 #define RPL_ERR_NOSUCHNICK_401(servername, nick) (RPL_META_MESSAGE(servername, "401", nick + " :No such nick/channel"))
 #define RPL_ERR_NOSUCHCHANNEL_403(servername, channelName) (RPL_META_MESSAGE(servername, "403", channelName + ":No such channel"))
 #define RPL_ERR_CANNOTSENDTOCHAN_404(servername, channelName) (RPL_META_MESSAGE(servername, "404", channelName + ":Cannot send to channel"))
-#define RPL_ERR_TOOMANYTARGETS_407(servername) (RPL_META_MESSAGE(servername, "407", + ":Too many recipients."))
+#define RPL_ERR_TOOMANYTARGETS_407(servername, target, errorcode, abortmessage) (RPL_META_MESSAGE(servername, "407", target + " :" + errorcode + " recipients. " + abortmessage))
 #define RPL_ERR_NORECIPIENT_411(servername, command) (RPL_META_MESSAGE(servername, "411", + ":No recipient given (" + command + ")"))
 #define RPL_ERR_NOTEXTTOSEND_412(servername) (RPL_META_MESSAGE(servername, "412", + ":No text to send"))
 
