@@ -72,16 +72,16 @@ run: all
 
 .PHONY: ports
 ports:
-	@echo "Port 6667 in use by:"
-	@lsof -i -P -n | grep "6667" | tr -s ' ' | cut -d' ' -f1-3,5,8-10
+	@echo "ircserv running on ports and sockets:"
+	@lsof -i -P -n | grep "ircserv" | tr -s ' ' | cut -d' ' -f1,2,5,9,10
 
 .PHONY: kill
 kill:
-	@lsof -i -P -n | grep "6667" | tr -s ' ' | cut -d' ' -f2 | xargs kill -9
+	@lsof -i -P -n | grep "ircserv" | tr -s ' ' | cut -d' ' -f2 | sort | uniq | xargs kill -9
 
 .PHONY: softkill
 softkill:
-	@lsof -i -P -n | grep "6667" | tr -s ' ' | cut -d' ' -f2 | xargs kill
+	@lsof -i -P -n | grep "ircserv" | tr -s ' ' | cut -d' ' -f2 | sort | uniq | xargs kill
 
 .PHONY: release
 release: CFLAGS += $(RFLAGS)
