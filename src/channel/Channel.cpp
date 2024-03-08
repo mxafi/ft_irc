@@ -31,6 +31,15 @@ void Channel::sendMessageToMembers(const std::string& message) {
   }
 }
 
+void Channel::sendMessageToMembersExcluding(const std::string& message,
+                                            const Client& excludedClient) {
+  for (Client member : members_) {
+    if (member.getFd() != excludedClient.getFd()) {
+      member.appendToSendBuffer(message);
+    }
+  }
+}
+
 void Channel::setTopic(const std::string& topic) {
   topic_ = topic;
 }
