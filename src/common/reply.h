@@ -17,8 +17,14 @@
 #define RPL_TOPIC_332(servername, channel, topic) (RPL_META_MESSAGE(servername, "332", channel + " :" + topic))
 #define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) (RPL_META_MESSAGE(servername, "353", client + " " + symbol + " " + channel + " :" + namelist))
 
-#define RPL_ERR_NOSUCHCHANNEL_403(servername, channel) (RPL_META_MESSAGE(servername, "403", channel + " :No such channel"))
+#define RPL_ERR_NOSUCHNICK_401(servername, nick) (RPL_META_MESSAGE(servername, "401", nick + " :No such nick/channel"))
+#define RPL_ERR_NOSUCHCHANNEL_403(servername, channelName) (RPL_META_MESSAGE(servername, "403", channelName + ":No such channel"))
+#define RPL_ERR_CANNOTSENDTOCHAN_404(servername, channelName) (RPL_META_MESSAGE(servername, "404", channelName + ":Cannot send to channel"))
 #define RPL_ERR_TOOMANYCHANNELS_405(servername, channel) (RPL_META_MESSAGE(servername, "405", channel + " :You have joined too many channels"))
+#define RPL_ERR_TOOMANYTARGETS_407(servername, target, errorcode, abortmessage) (RPL_META_MESSAGE(servername, "407", target + " :" + errorcode + " recipients. " + abortmessage))
+#define RPL_ERR_NORECIPIENT_411(servername, command) (RPL_META_MESSAGE(servername, "411", + ":No recipient given (" + command + ")"))
+#define RPL_ERR_NOTEXTTOSEND_412(servername) (RPL_META_MESSAGE(servername, "412", + ":No text to send"))
+
 #define RPL_ERR_UNKNOWNCOMMAND_421(servername, command) (RPL_META_MESSAGE(servername, "421", command + " :Unknown command"))
 #define RPL_ERR_NONICKNAMEGIVEN_431(servername) (RPL_META_MESSAGE(servername, "431", ":No nickname given"))
 #define RPL_ERR_NOTONCHANNEL_442(servername, channel) (RPL_META_MESSAGE(servername, "442", channel + " :You're not on that channel"))
@@ -30,5 +36,10 @@
 #define RPL_ERR_BADCHANNELKEY_475(servername, channel) (RPL_META_MESSAGE(servername, "475", channel + " :Cannot join channel (+k)"))
 #define RPL_ERR_ERRONEUSNICKNAME_432(servername, nick) (RPL_META_MESSAGE(servername, "432", nick + " :Erroneous nickname"))
 #define RPL_ERR_NICKNAMEINUSE_433(servername, nick) (RPL_META_MESSAGE(servername, "433", nick + " :Nickname is already in use"))
+
+//User format
+#define FORMAT_NICK_USER_HOST(nickname, username, hostname) (std::string(":") + nickname + "!" + username + "@" + hostname)
+#define PRIVMSG_FORMAT(formattedSender, target, text) (RPL_MESSAGE(std::string(formattedSender) + " PRIVMSG " + target + " :" + text))
+
 
 #endif

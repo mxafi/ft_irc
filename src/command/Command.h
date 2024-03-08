@@ -44,20 +44,23 @@ class Command {
   ~Command();
 
  private:
-  std::string commandName_;
-  bool findClientByNickname(const std::string& nickname);
-  void parseCommand(const Message& commandString, Client& client);
-  void sendAuthReplies_(Client& client);
-  static std::map<std::string, std::function<void(Command*, Client&)>> commands;
-  bool isValidNickname(std::string& nickname);
-  Client client_;
   std::string prefix_;
+  std::string commandName_;
   std::vector<std::string> param_;
   int numeric_;
   std::map<int, Client>& allClients_;
   std::map<std::string, Channel>& allChannels_;
   std::string& pass_;
   time_t serverStartTime_;
+
+  int findClientByNickname(const std::string& nickname);
+  void parseCommand(const Message& commandString, Client& client);
+  void sendAuthReplies_(Client& client);
+  static std::map<std::string, std::function<void(Command*, Client&)>> commands;
+  bool isValidNickname(std::string& nickname);
+
+  // PRIVMSG
+  bool validateTarget();
 };
 }  // namespace irc
 
