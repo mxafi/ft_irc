@@ -403,9 +403,6 @@ int Server::extractMessageString_(std::string& message, Client& client) {
   message.clear();
   message = buf.substr(0, pos);
   buf.erase(0, pos + pattern.length());
-  LOG_DEBUG("Server::extractMessageString_: extracted message::"
-            << message << ":: from client on fd " << client.getFd());
-
   return SUCCESS;
 }
 
