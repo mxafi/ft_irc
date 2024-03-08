@@ -7,8 +7,11 @@
 #ifdef DEBUG
 #define LOG_DEBUG(string) \
   { std::cout << CYAN << "Debug: " << string << RESET << std::endl; }
+#define LOG_DEBUG_HL(string) \
+  { std::cout << MAGENTA << "Debug: " << string << RESET << std::endl; }
 #else
 #define LOG_DEBUG(string)
+#define LOG_DEBUG_HL(string)
 #endif
 
 #define LOG_INFO(string) \
