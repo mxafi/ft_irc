@@ -80,14 +80,6 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     Message msg(msgWithoutParameters);
     Command cmd(msg, sender, myClients, password, serverStartTime);
     std::vector<std::string>  param_ = msg.getParameters(); 
-    sender.clearSendBuffer();
-    receiver.clearSendBuffer();
-    cmd.actionPrivmsg(sender);
-    // std::cout << " sender's receive buffer: " + sender.getRecvBuffer() << std::endl;
-    // std::cout << " sender's send buffer: " + sender.getSendBuffer() << std::endl;
-    // std::cout << " receiver's receive buffer: " + receiver.getRecvBuffer() << std::endl;
-    // std::cout << " receiver's send buffer: " + receiver.getSendBuffer() << std::endl;
-    // std::cout << " receiver's receive buffer: " + myClients.find(2)->second.getSendBuffer() << std::endl;
     REQUIRE(myClients.find(2)->second.getSendBuffer() == response);
     REQUIRE(sender.getSendBuffer() == "");
   }
@@ -97,8 +89,6 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     std::string msgWithoutParameters = "PRIVMSG";
     Message msg(msgWithoutParameters);
     Command cmd(msg, sender, myClients, password, serverStartTime);
-    sender.clearSendBuffer();
-    cmd.actionPrivmsg(sender);
     REQUIRE(sender.getSendBuffer() == response);
   }
 
@@ -107,8 +97,6 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     std::string msgWithTooManyTargets = "PRIVMSG client client client";
     Message msg(msgWithTooManyTargets);
     Command cmd(msg, sender, myClients, password, serverStartTime);
-    sender.clearSendBuffer();
-    cmd.actionPrivmsg(sender);
     REQUIRE(sender.getSendBuffer() == response);
   }
 
@@ -117,8 +105,6 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     std::string msgWithNoTextToSend = "PRIVMSG client";
     Message msg(msgWithNoTextToSend);
     Command cmd(msg, sender, myClients, password, serverStartTime);
-    sender.clearSendBuffer();
-    cmd.actionPrivmsg(sender);
     REQUIRE(sender.getSendBuffer() == response);
   }
 
@@ -127,24 +113,14 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     std::string msgWithNoTextToSend = "PRIVMSG sender message";
     Message msg(msgWithNoTextToSend);
     Command cmd(msg, sender, myClients, password, serverStartTime);
-    sender.clearSendBuffer();
-    cmd.actionPrivmsg(sender);
     REQUIRE(sender.getSendBuffer() == response);
   }
 
   SECTION("PRIVMSG - non existing nickname -> 401 NOSUCHNICK") {
-    std::string response = ": <blah> :No such nick/channel";
+    std::string response = ": 401 blah :No such nick/channel\r\n";
     std::string msgWithNonExistingNickname = "PRIVMSG blah :a message";
-    sender.clearSendBuffer();
-    std::cout << "Buffer cleared" << std::endl;
     Message msg(msgWithNonExistingNickname);
     Command cmd(msg, sender, myClients, password, serverStartTime);
-    std::cout << " sender's receive buffer: " + sender.getRecvBuffer() << std::endl;
-    std::cout << " sender's send buffer: " + sender.getSendBuffer() << std::endl;
-    std::cout << " receiver's receive buffer: " + receiver.getRecvBuffer() << std::endl;
-    std::cout << " receiver's send buffer: " + receiver.getSendBuffer() << std::endl;
-    std::cout << " receiver's receive buffer: " + myClients.find(2)->second.getSendBuffer() << std::endl;
-    cmd.actionPrivmsg(sender);
     REQUIRE(sender.getSendBuffer() == response);
   }
 

@@ -12,7 +12,7 @@
 #define RPL_CREATED_003(servername, date) (RPL_META_MESSAGE(servername, "003", "This server was created " + date))
 #define RPL_MYINFO_004(servername, version, user_modes, channel_modes) (RPL_META_MESSAGE(servername, "004", servername + " " + version + " " + user_modes + " " + channel_modes))
 
-#define RPL_ERR_NOSUCHNICK_401(servername, nick) (RPL_META_MESSAGE(servername, "401", nick + ":No such nick/channel"))
+#define RPL_ERR_NOSUCHNICK_401(servername, nick) (RPL_META_MESSAGE(servername, "401", nick + " :No such nick/channel"))
 #define RPL_ERR_NOSUCHCHANNEL_403(servername, channelName) (RPL_META_MESSAGE(servername, "403", channelName + ":No such channel"))
 #define RPL_ERR_CANNOTSENDTOCHAN_404(servername, channelName) (RPL_META_MESSAGE(servername, "404", channelName + ":Cannot send to channel"))
 #define RPL_ERR_TOOMANYTARGETS_407(servername) (RPL_META_MESSAGE(servername, "407", + ":Too many recipients."))
