@@ -152,10 +152,13 @@ void Command::actionNick(Client& client) {
   // equivalence of two nicknames or channel names.
   // When evaluating nickname equivalence, let's convert all characters to lower case.
   // Numerics: ERR_NICKNAMEINUSE
-  if (findClientByNickname(param_.at(0))) {
+  try {
+    (void)findClientByNicknameOrThrow(param_.at(0));
     client.appendToSendBuffer(
         RPL_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
     return;
+  } catch (std::out_of_range& e) {
+    ;  // The nickname is not in use
   }
 
   client.setNickname(param_.at(0));
@@ -308,73 +311,7 @@ void Command::actionQuit(Client& client) {
   client.setWantDisconnect();
 }
 
-void Command::actionPrivmsg(Client& client) {
-  LOG_DEBUG("CMD::PRIVMSG _____ START _____");
-  size_t amountParameters = param_.size();
-  if (amountParameters == 0) {
-    client.appendToSendBuffer(
-        RPL_ERR_NORECIPIENT_411(serverHostname_g, "privmsg"));
-    LOG_DEBUG("CMD::PRIVMSG::NO RECIPIENT and NO MESSAGE");
-    return;
-  }
-  if (amountParameters > 2) {
-    client.appendToSendBuffer(RPL_ERR_TOOMANYTARGETS_407(
-        serverHostname_g, param_.at(1), std::to_string(param_.size() - 1),
-        "Only one target per message."));
-    LOG_DEBUG("CMD::PRIVMSG::TOO MANY TARGETS");
-    return;
-  }
-  if (amountParameters == 1) {
-    client.appendToSendBuffer(RPL_ERR_NOTEXTTOSEND_412(serverHostname_g));
-    LOG_DEBUG("CMD::PRIVMSG::NO TEXT (1 param only)");
-    return;
-  }
-
-  if (param_.at(1).front() != ':') {
-    client.appendToSendBuffer(RPL_ERR_NOTEXTTOSEND_412(serverHostname_g));
-    LOG_DEBUG("CMD::PRIVMSG::NO TEXT (2nd param missing colon)");
-    return;
-  }
-
-  // else if (
-  //     // Message contains  only the trailing parameter colon ':' delimiter
-  //     param_.at(1).front() == ':' && param_.at(1).length() == 1) {
-  //   RPL_ERR_NOTEXTTOSEND_412(serverHostname_g);
-  //   return;
-  // }
-  // if (param_.at(0).find(
-  //         CHANNEL_PREFIXES)) {  // checks if target is containing a prefix character
-  //   if (validateChannel() == FALSE) {  // TODO: implementation
-  //     RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g);
-  //     return;
-  //   } else if (senderAllowedToMsg() == FALSE) {  // TODO: implementation
-  //     RPL_ERR_CANNOTSENDTOCHAN_404(serverHostname_g, param_.at(0));
-  //     return;
-  //   }
-  // } else {
-
-  std::string messageWithoutColon = param_.at(1).erase(0, 1);
-  int target = findClientByNickname(param_.at(0));
-  std::string targetRecipient = param_.at(0);
-  if (target == 0) {
-    client.appendToSendBuffer(
-        RPL_ERR_NOSUCHNICK_401(serverHostname_g, targetRecipient));
-    LOG_DEBUG("CMD::PRIVMSG::findClientByNickname: USER NOT FOUND");
-    return;
-  }
-  LOG_DEBUG("CMD::PRIVMSG: Message is :" + messageWithoutColon + " from " +
-            client.getNickname() + " to " + targetRecipient);
-
-  std::string formattedSender =
-      FORMAT_NICK_USER_HOST(client.getNickname(), client.getUserName(),
-                            serverHostname_g);  // TODO: fix in channel branch
-  std::string privmsg =
-      PRIVMSG_FORMAT(formattedSender, targetRecipient, messageWithoutColon);
-  allClients_.find(target)->second.appendToSendBuffer(privmsg);
-  LOG_DEBUG("CMD::PRIVMSG _____ END _____");
-}
-
-int Command::findClientByNickname(const std::string& nickname) {
+Client& Command::findClientByNicknameOrThrow(const std::string& nickname) {
   std::string lowerNickname =
       nickname;  //here we just put everything in lowercase
   std::transform(lowerNickname.begin(), lowerNickname.end(),
@@ -398,12 +335,15 @@ int Command::findClientByNickname(const std::string& nickname) {
       LOG_DEBUG(
           "CMD::findClientByNickname: Found client with the same nickname: "
           << nickname);
-      return it->second
-          .getFd();  // Return the file descriptor of the found client
+      return allClients_.at(it->first);
     }
   }
-  LOG_DEBUG("CMD::findClientByNickname: " + nickname + " not found");
-  return 0;
+
+  LOG_DEBUG(std::string("Command::findClientByNicknameOrThrow: ") + nickname +
+            " not found");
+  throw std::out_of_range(
+      std::string("Command::findClientByNicknameOrThrow: ") + nickname +
+      " not found");
 }
 
 bool Command::isValidNickname(std::string& nickname) {
