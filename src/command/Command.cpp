@@ -161,12 +161,24 @@ void Command::actionNick(Client& client) {
   client.setNickname(param_.at(0));
   if (isAlreadyAuthenticated == false && client.isAuthenticated()) {
     sendAuthReplies_(client);
-    return;
+    return;  // Early return to avoid sending the NICK message for a just authenticated client IRCv3
   }
 
-  // TODO: Send a NICK message to all channels the client is in, advertising the new nickname
-  // TODO: if not part of any channel, send a NICK message to the client
-  
+  // Send the NICK message to the client
+  std::string nickMessage =
+      COM_MESSAGE(client.getOldNickname(), client.getUserName(),
+                  client.getHost(), "NICK", client.getNickname());
+  client.appendToSendBuffer(nickMessage);
+
+  // Send the NICK message to all shared channels (do not resend to client)
+  std::vector<std::string> channelNames = client.getMyChannels();
+  if (channelNames.size() == 0) {
+    return;
+  }
+  for (std::string channelName : channelNames) {
+    Channel& channel = allChannels_.at(channelName);
+    channel.sendMessageToMembersExcluding(nickMessage, client);
+  }
 }
 
 void Command::actionUser(Client& client) {
