@@ -40,11 +40,11 @@ std::map<std::string, std::function<void(Command*, Client&)>>
                           }}};
 
 Command::Command(const Message& commandString, Client& client,
-                 std::map<int, Client>& myClients, std::string& password,
+                 std::map<int, Client>& allClients, std::string& password,
                  time_t& serverStartTime,
                  std::map<std::string, Channel>& allChannels)
     : client_(client),
-      allClients_(myClients),
+      allClients_(allClients),
       allChannels_(allChannels),
       pass_(password),
       serverStartTime_(serverStartTime) {
@@ -355,7 +355,7 @@ void Command::actionPrivmsg(Client& client) {
                             serverHostname_g);  // TODO: fix in channel branch
   std::string privmsg =
       PRIVMSG_FORMAT(formattedSender, targetRecipient, messageWithoutColon);
-  myClients_.find(target)->second.appendToSendBuffer(privmsg);
+  allClients_.find(target)->second.appendToSendBuffer(privmsg);
   LOG_DEBUG("CMD::PRIVMSG _____ END _____");
 }
 
