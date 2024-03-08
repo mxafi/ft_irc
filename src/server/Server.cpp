@@ -143,7 +143,7 @@ int Server::start() {
 
   if (bind(server_socket_fd_, srvinfo_->ai_addr, srvinfo_->ai_addrlen) ==
       BIND_FAILURE) {
-    LOG_ERROR("Server::start: bind failed");
+    LOG_ERROR("Server::start: bind failed: " << strerror(errno));
     return FAILURE;
   }
   LOG_DEBUG("Server::start: bind success");
