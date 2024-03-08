@@ -19,6 +19,8 @@ class Channel {
 
   std::string getName() const;
   void sendMessageToMembers(const std::string& message);
+  void sendMessageToMembersExcluding(const std::string& message,
+                                     const Client& excludedClient);
   void setTopic(const std::string& topic);
   std::string getTopic() const;
   void setKey(const std::string& key);
