@@ -111,6 +111,7 @@ int Channel::partMember(Client& client) {
         setOperatorStatus(client, false);
         LOG_DEBUG("Channel::partMember: client "
                   << client.getNickname() << " was an operator, removing");
+        // TODO: If the client is the last operator, set the next member as op if any
       }
       members_.erase(it);
       LOG_DEBUG("Channel::partMember: client "
@@ -122,6 +123,7 @@ int Channel::partMember(Client& client) {
           "Channel::partMember: no members left, the channel should be "
           "deleted: "
           << name_);
+      // TODO: Delete the channel in this or the caller function
       return static_cast<int>(members_.size());
     }
   }
@@ -143,6 +145,7 @@ bool Channel::isMember(Client& client) {
 void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
   int clientFd = client.getFd();
 
+  // If the client is not a member, do not set operator status
   if (!isMember(client)) {
     LOG_WARNING(
         "Channel::setOperatorStatus: client is not a member, not setting "
@@ -150,20 +153,49 @@ void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
     return;
   }
 
-  if (setOperatorStatusTo && !isOperator(client)) {
+  bool isOp = isOperator(client);
+  // Setting operator status to true
+  if (setOperatorStatusTo) {
+    // Client is an operator, do not add to operators_
+    if (isOp) {
+      LOG_WARNING(
+          "Channel::setOperatorStatus: client is already an operator, not "
+          "setting operator status for "
+          << client.getNickname() << " in " << name_);
+      return;
+    }
+
+    // Client is not an operator, add to operators_
     operators_.push_back(client);
     LOG_DEBUG("Channel::setOperatorStatus: operator status added to "
               << client.getNickname() << " in channel " << name_);
-  } else {
-    for (auto it = operators_.begin(); it != operators_.end(); it++) {
-      if (it->getFd() == clientFd) {
-        operators_.erase(it);
-        LOG_DEBUG("Channel::setOperatorStatus: operator status removed from "
-                  << client.getNickname() << " in channel " << name_);
-        return;
-      }
+    return;
+  }
+
+  // Setting operator status to false
+  // Client is not not an operator, do not remove from operators_
+  if (!isOp) {
+    LOG_WARNING(
+        "Channel::setOperatorStatus: client is not an operator, not removing "
+        "operator status for "
+        << client.getNickname() << " in " << name_);
+    return;
+  }
+
+  // Client is an operator, remove from operators_
+  for (auto it = operators_.begin(); it != operators_.end(); it++) {
+    if (it->getFd() == clientFd) {
+      operators_.erase(it);
+      LOG_DEBUG("Channel::setOperatorStatus: operator status removed from "
+                << client.getNickname() << " in channel " << name_);
+      return;
     }
   }
+
+  LOG_ERROR(
+      "Channel::setOperatorStatus: client is an operator, but not "
+      "found in operators_, nick: "
+      << client.getNickname() << " in " << name_);
 }
 
 bool Channel::isOperator(Client& client) {
