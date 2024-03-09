@@ -73,12 +73,13 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
   random.setUserName("randomU");
   random.setNickname("randomN");
   std::map<int, Client> myClients = {{1, sender}, {2, receiver}, {3, random}};
+  std::map<std::string, Channel> myChannels;
 
   SECTION("PRIVMSG - Valid") {
     std::string response = ":senderN!senderU@" + serverHostname_g + " PRIVMSG receiverN :A valid message!\r\n";
     std::string msgWithoutParameters = "PRIVMSG receiverN :A valid message!";
     Message msg(msgWithoutParameters);
-    Command cmd(msg, sender, myClients, password, serverStartTime);
+    Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
     std::vector<std::string>  param_ = msg.getParameters(); 
     REQUIRE(myClients.find(2)->second.getSendBuffer() == response);
     REQUIRE(sender.getSendBuffer() == "");
@@ -88,7 +89,7 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     std::string response = ": 411 :No recipient given (privmsg)\r\n";
     std::string msgWithoutParameters = "PRIVMSG";
     Message msg(msgWithoutParameters);
-    Command cmd(msg, sender, myClients, password, serverStartTime);
+    Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
     REQUIRE(sender.getSendBuffer() == response);
   }
 
@@ -96,7 +97,7 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     std::string response = ": 407 client2 :3 recipients. Only one target per message.\r\n";
     std::string msgWithTooManyTargets = "PRIVMSG client1 client2 client3 :message";
     Message msg(msgWithTooManyTargets);
-    Command cmd(msg, sender, myClients, password, serverStartTime);
+    Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
     REQUIRE(sender.getSendBuffer() == response);
   }
 
@@ -104,7 +105,7 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     std::string response = ": 412 :No text to send\r\n";
     std::string msgWithNoTextToSend = "PRIVMSG client";
     Message msg(msgWithNoTextToSend);
-    Command cmd(msg, sender, myClients, password, serverStartTime);
+    Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
     REQUIRE(sender.getSendBuffer() == response);
   }
 
@@ -112,7 +113,7 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     std::string response = ": 412 :No text to send\r\n";
     std::string msgWithNoTextToSend = "PRIVMSG sender message";
     Message msg(msgWithNoTextToSend);
-    Command cmd(msg, sender, myClients, password, serverStartTime);
+    Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
     REQUIRE(sender.getSendBuffer() == response);
   }
 
@@ -120,7 +121,7 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     std::string response = ": 401 blah :No such nick/channel\r\n";
     std::string msgWithNonExistingNickname = "PRIVMSG blah :a message";
     Message msg(msgWithNonExistingNickname);
-    Command cmd(msg, sender, myClients, password, serverStartTime);
+    Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
     REQUIRE(sender.getSendBuffer() == response);
   }
 
