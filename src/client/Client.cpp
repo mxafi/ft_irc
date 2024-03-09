@@ -168,6 +168,16 @@ void Client::setDisconnectReason(const std::string& reason) {
   disconnectReason_ = reason;
 }
 
+std::string Client::getDisconnectErrorReason() const {
+  return disconnectErrorReason_;
+}
+
+void Client::setDisconnectErrorReason(const std::string& reason) {
+  LOG_DEBUG("Client::setDisconnectErrorReason: nick"
+            << nickname_ << " set disconnectErrorReason: " << reason);
+  disconnectErrorReason_ = reason;
+}
+
 void Client::recordMyChannel(std::string& channelName) {
   myChannelsByName_.push_back(channelName);
   LOG_DEBUG("Client::recordMyChannel: nick "
@@ -189,6 +199,13 @@ void Client::unrecordMyChannel(std::string& channelName) {
 
 std::vector<std::string>& Client::getMyChannels() {
   return myChannelsByName_;
+}
+
+void Client::processErrorMessage() {
+  if (disconnectErrorReason_.empty() == false) {
+    sendBuffer_ += ERR_MESSAGE(disconnectErrorReason_);
+    disconnectErrorReason_.clear();
+  }
 }
 
 }  // namespace irc

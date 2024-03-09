@@ -49,7 +49,12 @@ Command::Command(const Message& commandString, Client& client,
       pass_(password),
       serverStartTime_(serverStartTime) {
   numeric_ = 0;
-  parseCommand(commandString, client);
+  commandName_ = commandString.getCommand();
+  prefix_ = commandString.getPrefix();
+  param_ = commandString.getParameters();
+  numeric_ = commandString.getNumeric();
+
+  execute(client);
 }
 
 Command::~Command() {}
@@ -86,14 +91,6 @@ void Command::execute(Client& client) {
 
   // If the client is sending a command before being authenticated
   client.appendToSendBuffer(RPL_ERR_NOTREGISTERED_451(serverHostname_g));
-}
-
-void Command::parseCommand(const Message& commandString, Client& client) {
-  commandName_ = commandString.getCommand();
-  prefix_ = commandString.getPrefix();
-  param_ = commandString.getParameters();
-  numeric_ = commandString.getNumeric();
-  execute(client);
 }
 
 void Command::actionPing(Client& client) {
@@ -270,31 +267,21 @@ void Command::actionKick(Client& client) {
  *          :nick!user@servername QUIT :Gone to have lunch  // Relayed to other Clients on shared channels
  */
 void Command::actionQuit(Client& client) {
-  // Find out the reason for quitting
-  std::string quitReason;
+  std::string reason;
   if (param_.size() != 0) {
-    quitReason = param_.at(0);
+    if (param_.at(0).length() > 0 && param_.at(0).front() == ':') {
+      reason = param_.at(0).substr(1);
+    }
+    reason = std::string("Quit: ") + std::string(reason);
   } else {
-    quitReason = "Client quit";
-  }
-  if (quitReason.length() > 1 && quitReason[0] == ':') {
-    quitReason = quitReason.substr(1);
+    reason = "Quit: ";
   }
   if (client.getDisconnectReason().empty()) {
-    client.setDisconnectReason(quitReason);
+    client.setDisconnectReason(reason);
   }
-
-  // Send the QUIT message to all shared channels with the reason
-  std::vector<std::string> channelNames = client.getMyChannels();
-  for (std::string channelName : channelNames) {
-    Channel& channel = allChannels_.at(channelName);
-    channel.sendMessageToMembers(
-        COM_MESSAGE(client.getNickname(), client.getUserName(),
-                    client.getHost(), "QUIT", ":" + quitReason));
+  if (client.getDisconnectErrorReason().empty()) {
+    client.setDisconnectErrorReason(reason);
   }
-
-  // Send the ERROR message to the client and disconnect
-  client.appendToSendBuffer(ERR_MESSAGE("Bye, see you soon!"));
   client.setWantDisconnect();
 }
 
