@@ -290,7 +290,7 @@ void Command::actionQuit(Client& client) {
     Channel& channel = allChannels_.at(channelName);
     channel.sendMessageToMembers(
         COM_MESSAGE(client.getNickname(), client.getUserName(),
-                    client.getHost(), "QUIT", quitReason));
+                    client.getHost(), "QUIT", ":" + quitReason));
   }
 
   // Send the ERROR message to the client and disconnect
