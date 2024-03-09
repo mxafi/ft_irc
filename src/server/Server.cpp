@@ -220,8 +220,9 @@ void Server::loop() {
               }
               LOG_DEBUG("Server::loop: received message from client on fd "
                         << client.getFd() << ": " << messageString);
-              Command command(message, client, clients_, password_,
-                              start_time_, channels_);
+              Command command(message, client, clients_, password_, start_time_,
+                              channels_);
+              client.processErrorMessage();
             }
           } catch (std::out_of_range& e) {
             LOG_ERROR("Server::loop: out of range exception for fd "
@@ -303,19 +304,25 @@ int Server::acceptClient_(std::vector<pollfd>& pollfds) {
  */
 int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
                               std::vector<pollfd>::iterator& it) {
-  // Close client file descriptor
   int client_fd = it->fd;
   Client client = clients_.at(client_fd);
+
+  // Close client file descriptor
   LOG_DEBUG("Server::disconnectClient_: disconnecting client on fd "
             << client_fd);
   close(client_fd);
 
-  // Remove client from all channels
+  // Remove client from it's channels, and send QUIT messages
   std::vector<std::string> channelNames = client.getMyChannels();
+  std::string reason = client.getDisconnectReason();
   for (std::string channelName : channelNames) {
     Channel& channel = channels_.at(channelName);
     channel.partMember(client);
+    channel.sendMessageToMembers(
+        COM_MESSAGE(client.getNickname(), client.getUserName(),
+                    client.getHost(), "QUIT", ":" + reason));
   }
+
   unsigned long clients_erased = clients_.erase(client_fd);
   if (clients_erased == 0) {
     LOG_WARNING("Server::disconnectClient_: client not found at fd "
@@ -376,7 +383,10 @@ long long Server::recvToBuffer_(Client& client) {
     return RECV_FAILURE;
   }
   if (recv_ret == RECV_ORDERLY_SHUTDOWN) {
+    LOG_DEBUG("Server::recvToBuffer_: client on fd "
+              << client.getFd() << " disconnected gracefully");
     LOG_INFO("Client on fd " << client.getFd() << " disconnected gracefully");
+    client.setDisconnectReason("Client closed connection");
     client.setWantDisconnect();
     return RECV_ORDERLY_SHUTDOWN;
   }

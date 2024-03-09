@@ -10,6 +10,7 @@
 
 #include "../common/log.h"
 #include "../common/magicNumber.h"
+#include "../common/reply.h"
 
 namespace irc {
 
@@ -43,10 +44,13 @@ class Client {
   bool getWantDisconnect() const;
   std::string getDisconnectReason() const;
   void setDisconnectReason(const std::string& reason);
+  std::string getDisconnectErrorReason() const;
+  void setDisconnectErrorReason(const std::string& reason);
   void recordMyChannel(std::string& channel);
   void unrecordMyChannel(std::string& channel);
   std::vector<std::string>& getMyChannels();
   std::string& getHost();
+  void processErrorMessage();
 
  private:
   void setOldNickname_(const std::string& oldNickname);
@@ -61,6 +65,7 @@ class Client {
   std::string recvBuffer_;
   std::string password_;
   std::string disconnectReason_;
+  std::string disconnectErrorReason_;
   std::string ipAddr_;
 
   std::vector<std::string> myChannelsByName_;

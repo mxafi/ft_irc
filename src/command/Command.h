@@ -55,7 +55,6 @@ class Command {
   time_t serverStartTime_;
 
   Client& findClientByNicknameOrThrow(const std::string& nickname);
-  void parseCommand(const Message& commandString, Client& client);
   void sendAuthReplies_(Client& client);
   static std::map<std::string, std::function<void(Command*, Client&)>> commands;
   bool isValidNickname(std::string& nickname);
