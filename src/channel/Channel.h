@@ -40,7 +40,7 @@ class Channel {
   void uninvite(Client& client);
   bool isInvited(Client& client);
   unsigned long getMemberCount() const;
-  std::vector<Client>& getMembers();
+  std::vector<Client*>& getMembers();
   std::string getNamesList();
   static bool isChannelNameValid(const std::string& name);
   static bool isChannelNameFree(const std::string& name,
@@ -48,9 +48,9 @@ class Channel {
 
  private:
   std::string name_;
-  std::vector<Client> invited_;
-  std::vector<Client> members_;
-  std::vector<Client> operators_;
+  std::vector<Client*> invited_;
+  std::vector<Client*> members_;
+  std::vector<Client*> operators_;
   std::string topic_;
   std::string key_;
   bool isInviteOnly_;
