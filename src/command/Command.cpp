@@ -230,7 +230,7 @@ void Command::actionPart(Client& client) {
       continue;
     }
 
-    Channel currentChannel = allChannels_.at(channelName);
+    Channel& currentChannel = allChannels_.at(channelName);
     if (currentChannel.isMember(client) == false) {
       client.appendToSendBuffer(
           RPL_ERR_NOTONCHANNEL_442(serverHostname_g, channelName));

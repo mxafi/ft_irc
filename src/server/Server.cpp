@@ -313,7 +313,7 @@ int Server::disconnectClient_(std::vector<pollfd>& poll_fds,
   // Remove client from all channels
   std::vector<std::string> channelNames = client.getMyChannels();
   for (std::string channelName : channelNames) {
-    Channel channel = channels_.at(channelName);
+    Channel& channel = channels_.at(channelName);
     channel.partMember(client);
   }
   unsigned long clients_erased = clients_.erase(client_fd);
