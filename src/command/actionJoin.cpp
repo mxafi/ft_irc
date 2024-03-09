@@ -21,7 +21,7 @@ void Command::actionJoin(Client& client) {
         continue;
       }
 
-      Channel currentChannel = allChannels_.at(channelName);
+      Channel& currentChannel = allChannels_.at(channelName);
       if (currentChannel.isMember(client) == false) {
         LOG_ERROR(
             "Command::actionJoin: Client is not a member of the channel that "
@@ -77,7 +77,7 @@ void Command::actionJoin(Client& client) {
     }
 
     if (Channel::isChannelNameFree(channelName, allChannels_) == false) {
-      Channel existingChannel = allChannels_.at(channelName);
+      Channel& existingChannel = allChannels_.at(channelName);
       if (channelKey != existingChannel.getKey()) {
         client.appendToSendBuffer(
             RPL_ERR_BADCHANNELKEY_475(serverHostname_g, channelName));
@@ -102,7 +102,7 @@ void Command::actionJoin(Client& client) {
           channelName, Channel(client, channelName, allChannels_)));
     }
 
-    Channel currentChannel = allChannels_.at(channelName);
+    Channel& currentChannel = allChannels_.at(channelName);
     // Join message for the channel, and as a reply to the client
     currentChannel.sendMessageToMembers(
         COM_MESSAGE(client.getNickname(), client.getUserName(),
