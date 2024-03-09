@@ -16,8 +16,8 @@ Channel::Channel(Client& creatorClient, const std::string& name,
   if (!isChannelNameValid(name) || !isChannelNameFree(name, allChannels_)) {
     throw std::invalid_argument("Channel name is invalid or taken");
   }
-  members_.push_back(creatorClient);
-  operators_.push_back(creatorClient);
+  members_.push_back(&creatorClient);
+  operators_.push_back(&creatorClient);
   creatorClient.recordMyChannel(name_);
 }
 
@@ -26,16 +26,16 @@ std::string Channel::getName() const {
 }
 
 void Channel::sendMessageToMembers(const std::string& message) {
-  for (Client member : members_) {
-    member.appendToSendBuffer(message);
+  for (Client* member : members_) {
+    member->appendToSendBuffer(message);
   }
 }
 
 void Channel::sendMessageToMembersExcluding(const std::string& message,
                                             const Client& excludedClient) {
-  for (Client member : members_) {
-    if (member.getFd() != excludedClient.getFd()) {
-      member.appendToSendBuffer(message);
+  for (Client* member : members_) {
+    if (member->getFd() != excludedClient.getFd()) {
+      member->appendToSendBuffer(message);
     }
   }
 }
@@ -90,7 +90,7 @@ void Channel::joinMember(Client& client) {
     LOG_WARNING("Channel::joinMember: user limit reached, not joining")
     return;
   }
-  members_.push_back(client);
+  members_.push_back(&client);
   client.recordMyChannel(name_);
 }
 
@@ -105,7 +105,7 @@ void Channel::joinMember(Client& client) {
 int Channel::partMember(Client& client) {
   int clientFd = client.getFd();
   for (auto it = members_.begin(); it != members_.end(); it++) {
-    if (it->getFd() == clientFd) {
+    if ((*it)->getFd() == clientFd) {
       client.unrecordMyChannel(name_);
       if (isOperator(client)) {
         setOperatorStatus(client, false);
@@ -134,8 +134,8 @@ int Channel::partMember(Client& client) {
 
 bool Channel::isMember(Client& client) {
   int clientFd = client.getFd();
-  for (Client member : members_) {
-    if (member.getFd() == clientFd) {
+  for (Client* member : members_) {
+    if (member->getFd() == clientFd) {
       return true;
     }
   }
@@ -166,7 +166,7 @@ void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
     }
 
     // Client is not an operator, add to operators_
-    operators_.push_back(client);
+    operators_.push_back(&client);
     LOG_DEBUG("Channel::setOperatorStatus: operator status added to "
               << client.getNickname() << " in channel " << name_);
     return;
@@ -184,7 +184,7 @@ void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
 
   // Client is an operator, remove from operators_
   for (auto it = operators_.begin(); it != operators_.end(); it++) {
-    if (it->getFd() == clientFd) {
+    if ((*it)->getFd() == clientFd) {
       operators_.erase(it);
       LOG_DEBUG("Channel::setOperatorStatus: operator status removed from "
                 << client.getNickname() << " in channel " << name_);
@@ -200,8 +200,8 @@ void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
 
 bool Channel::isOperator(Client& client) {
   int clientFd = client.getFd();
-  for (Client operator_ : operators_) {
-    if (operator_.getFd() == clientFd) {
+  for (Client* operator_ : operators_) {
+    if (operator_->getFd() == clientFd) {
       return true;
     }
   }
@@ -215,13 +215,13 @@ void Channel::invite(Client& client) {
   }
   LOG_DEBUG("Channel::invite: inviting client " << client.getNickname()
                                                 << " to channel " << name_);
-  invited_.push_back(client);
+  invited_.push_back(&client);
 }
 
 void Channel::uninvite(Client& client) {
   int clientFd = client.getFd();
   for (auto it = invited_.begin(); it != invited_.end(); it++) {
-    if (it->getFd() == clientFd) {
+    if ((*it)->getFd() == clientFd) {
       LOG_DEBUG("Channel::uninvite: uninviting client "
                 << client.getNickname() << " from channel " << name_);
       invited_.erase(it);
@@ -233,8 +233,8 @@ void Channel::uninvite(Client& client) {
 
 bool Channel::isInvited(Client& client) {
   int clientFd = client.getFd();
-  for (Client invited : invited_) {
-    if (invited.getFd() == clientFd) {
+  for (Client* invited : invited_) {
+    if (invited->getFd() == clientFd) {
       return true;
     }
   }
@@ -274,17 +274,17 @@ unsigned long Channel::getMemberCount() const {
   return members_.size();
 }
 
-std::vector<Client>& Channel::getMembers() {
+std::vector<Client*>& Channel::getMembers() {
   return members_;
 }
 
 std::string Channel::getNamesList() {
   std::string namesList;
-  for (Client member : members_) {
-    if (isOperator(member)) {
+  for (Client* member : members_) {
+    if (isOperator(*member)) {
       namesList.append(CHANNEL_OPERATOR_SYMBOL);
     }
-    namesList.append(member.getNickname() + " ");
+    namesList.append(member->getNickname() + " ");
   }
   // get rid of the trailing space
   namesList.pop_back();
