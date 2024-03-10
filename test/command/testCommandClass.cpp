@@ -76,7 +76,7 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
   std::map<std::string, Channel> myChannels;
 
   SECTION("PRIVMSG - Valid") {
-    std::string response = ":senderN!senderU@" + serverHostname_g + " PRIVMSG receiverN :A valid message!\r\n";
+    std::string response = ":senderN!senderU@" + sender.getHost() + " PRIVMSG receiverN :A valid message!\r\n";
     std::string msgWithoutParameters = "PRIVMSG receiverN :A valid message!";
     Message msg(msgWithoutParameters);
     Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
