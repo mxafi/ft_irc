@@ -6,6 +6,7 @@
 #include "../../src/common/magicNumber.h"
 
 TEST_CASE("server is started properly", "[server]") {
+  errno = 0;
   char port[] = "6667";
   std::string password = "horse";
   irc::Server server(port, password);
