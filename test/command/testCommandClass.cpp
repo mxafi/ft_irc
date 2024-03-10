@@ -76,11 +76,12 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
   std::map<std::string, Channel> myChannels;
 
   SECTION("PRIVMSG - Valid") {
-    std::string response = ":senderN!senderU@" + sender.getHost() + " PRIVMSG receiverN :A valid message!\r\n";
+    std::string response = ":senderN!senderU@" + sender.getHost() +
+                           " PRIVMSG receiverN :A valid message!\r\n";
     std::string msgWithoutParameters = "PRIVMSG receiverN :A valid message!";
     Message msg(msgWithoutParameters);
     Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
-    std::vector<std::string>  param_ = msg.getParameters(); 
+    std::vector<std::string> param_ = msg.getParameters();
     REQUIRE(myClients.find(2)->second.getSendBuffer() == response);
     REQUIRE(sender.getSendBuffer() == "");
   }
@@ -94,8 +95,10 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
   }
 
   SECTION("PRIVMSG - too many parameters -> 407 TOOMANYTARGETS") {
-    std::string response = ": 407 client2 :3 recipients. Only one target per message.\r\n";
-    std::string msgWithTooManyTargets = "PRIVMSG client1 client2 client3 :message";
+    std::string response =
+        ": 407 client2 :3 recipients. Only one target per message.\r\n";
+    std::string msgWithTooManyTargets =
+        "PRIVMSG client1 client2 client3 :message";
     Message msg(msgWithTooManyTargets);
     Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
     REQUIRE(sender.getSendBuffer() == response);
@@ -124,5 +127,4 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     Command cmd(msg, sender, myClients, password, serverStartTime, myChannels);
     REQUIRE(sender.getSendBuffer() == response);
   }
-
 }
