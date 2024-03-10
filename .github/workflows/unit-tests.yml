@@ -1,4 +1,4 @@
-name: ft_irc tests
+name: ft_irc unit tests
 
 on:
   push:
