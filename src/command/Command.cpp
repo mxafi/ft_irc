@@ -288,7 +288,7 @@ Client& Command::findClientByNicknameOrThrow(const std::string& nickname) {
 
 bool Command::isValidNickname(std::string& nickname) {
     std::regex pattern(R"(^[a-zA-Z\[\]\\`_^{|}])");
-    std::regex pattern1(R"(^[a-zA-Z0-9\[\]\\,`_^{|}-]*$)");
+    std::regex pattern1(R"(^[a-zA-Z0-9\[\]\\`_^{|}-]*$)");
     if (!std::regex_match(nickname.substr(0, 1), pattern)) {
         return false;
     }
