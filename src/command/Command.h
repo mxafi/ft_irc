@@ -40,6 +40,7 @@ class Command {
     void actionPrivmsg(Client& client);
     void actionJoin(Client& client);
     void actionPass(Client& client);
+    void actionTopic(Client& client);
     ~Command();
 
    private:

@@ -18,7 +18,8 @@
     (RPL_META_MESSAGE(servername, "004", nick + " " + servername + " " + version + " " + user_modes + " " + channel_modes))
 
 #define RPL_NOTOPIC_331(servername, channel) (RPL_META_MESSAGE(servername, "331", channel + " :No topic is set"))
-#define RPL_TOPIC_332(servername, channel, topic) (RPL_META_MESSAGE(servername, "332", channel + " :" + topic))
+#define RPL_TOPIC_332(nick, user, servername, channel, topic) \
+    (RPL_META_MESSAGE(nick + "!" + user + "@" + servername, "332 TOPIC", channel + " " + topic))
 #define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) \
     (RPL_META_MESSAGE(servername, "353", client + " " + symbol + " " + channel + " :" + namelist))
 

@@ -34,8 +34,12 @@ std::map<std::string, std::function<void(Command*, Client&)>> Command::commands 
                                                                                     [](Command* cmd, Client& client) {
                                                                                         cmd->actionPrivmsg(client);
                                                                                     }},
-                                                                                   {"JOIN", [](Command* cmd, Client& client) {
+                                                                                   {"JOIN",
+                                                                                    [](Command* cmd, Client& client) {
                                                                                         cmd->actionJoin(client);
+                                                                                    }},
+                                                                                   {"TOPIC", [](Command* cmd, Client& client) {
+                                                                                        cmd->actionTopic(client);
                                                                                     }}};
 
 Command::Command(const Message& commandString, Client& client, std::map<int, Client>& allClients, std::string& password,
@@ -219,6 +223,47 @@ void Command::actionPart(Client& client) {
     }
 }
 
+void Command::actionTopic(Client& client) {
+    if (param_.size() == 0) {
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
+        return;
+    }
+    std::vector<std::string> myChannels = client.getMyChannels();
+    auto it = allChannels_.find(param_.at(0));
+    if (it == allChannels_.end()) {
+        client.appendToSendBuffer(RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, param_.at(0)));
+        return;
+    }
+    if (param_.size() == 1) {
+        if (it != allChannels_.end()) {
+            if (it->second.getTopic().empty()) {
+                client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, param_.at(0)));
+            }
+            client.appendToSendBuffer(
+                RPL_TOPIC_332(client.getNickname(), client.getUserName(), serverHostname_g, param_.at(0), it->second.getTopic()));
+            return;
+        }
+    }
+    if (param_.size() > 1) {
+        if (it->second.isMember(client) == false) {
+            LOG_ERROR("Command::actionTopic: the Client : " << client.getNickname() << "not a member of the channel"
+                                                            << " " << param_.at(0))
+            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, param_.at(0)));
+            return;
+        }
+        std::string topic = param_.back();
+        if (topic[0] == ':') {
+            it->second.setTopic(param_.back());
+            LOG_DEBUG(topic);
+            it->second.sendMessageToMembers(
+                RPL_TOPIC_332(client.getNickname(), client.getUserName(), serverHostname_g, param_.at(0), it->second.getTopic()));
+            return;
+        }
+        //client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
+        return;
+    }
+}
+
 void Command::actionMode(Client& client) {
     std::string response = ":" + serverHostname_g + " #newchannel " + serverHostname_g + " :" + client.getNickname();
 
@@ -288,7 +333,7 @@ Client& Command::findClientByNicknameOrThrow(const std::string& nickname) {
 
 bool Command::isValidNickname(std::string& nickname) {
     std::regex pattern(R"(^[a-zA-Z\[\]\\`_^{|}])");
-    std::regex pattern1(R"(^[a-zA-Z0-9\[\]\\,`_^{|}-]*$)");
+    std::regex pattern1(R"(^[a-zA-Z0-9\[\]\\`_^{|}-]*$)");
     if (!std::regex_match(nickname.substr(0, 1), pattern)) {
         return false;
     }
