@@ -101,11 +101,16 @@ int Channel::partMember(Client& client) {
         if ((*it)->getFd() == clientFd) {
             client.unrecordMyChannel(name_);
             if (isOperator(client)) {
-                setOperatorStatus(client, false);
                 LOG_DEBUG("Channel::partMember: client " << client.getNickname() << " was an operator, removing");
-                // TODO: If the client is the last operator, set the next member as op if any
+                setOperatorStatus(client, false);
             }
             members_.erase(it);
+            if (operators_.empty()) {
+                LOG_DEBUG("Channel::partMember: no operators left, a new operator should be assigned: " << name_);
+                if (!members_.empty()) {
+                    setOperatorStatus(*members_.front(), true);
+                }
+            }
             LOG_DEBUG("Channel::partMember: client " << client.getNickname() << " parted from channel " << name_);
             return static_cast<int>(members_.size());
         }
