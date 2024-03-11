@@ -14,6 +14,7 @@ Channel::Channel(Client& creatorClient, const std::string& name, std::map<std::s
     members_.push_back(&creatorClient);
     operators_.push_back(&creatorClient);
     creatorClient.recordMyChannel(name_);
+    LOG_DEBUG("Channel::Channel: channel " << name_ << " created by " << creatorClient.getNickname());
 }
 
 std::string Channel::getName() const {
@@ -85,6 +86,7 @@ void Channel::joinMember(Client& client) {
     }
     members_.push_back(&client);
     client.recordMyChannel(name_);
+    LOG_DEBUG("Channel::joinMember: client " << client.getNickname() << " joined channel " << name_);
 }
 
 /**
@@ -142,9 +144,7 @@ void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
 
     // If the client is not a member, do not set operator status
     if (!isMember(client)) {
-        LOG_WARNING(
-            "Channel::setOperatorStatus: client is not a member, not setting "
-            "operator status")
+        LOG_WARNING("Channel::setOperatorStatus: client is not a member, not setting operator status");
         return;
     }
 
@@ -153,10 +153,8 @@ void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
     if (setOperatorStatusTo) {
         // Client is an operator, do not add to operators_
         if (isOp) {
-            LOG_WARNING(
-                "Channel::setOperatorStatus: client is already an operator, not "
-                "setting operator status for "
-                << client.getNickname() << " in " << name_);
+            LOG_WARNING("Channel::setOperatorStatus: client is already an operator, not setting operator status for "
+                        << client.getNickname() << " in " << name_);
             return;
         }
 
@@ -169,10 +167,8 @@ void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
     // Setting operator status to false
     // Client is not not an operator, do not remove from operators_
     if (!isOp) {
-        LOG_WARNING(
-            "Channel::setOperatorStatus: client is not an operator, not removing "
-            "operator status for "
-            << client.getNickname() << " in " << name_);
+        LOG_WARNING("Channel::setOperatorStatus: client is not an operator, not removing operator status for " << client.getNickname()
+                                                                                                               << " in " << name_);
         return;
     }
 
@@ -185,10 +181,8 @@ void Channel::setOperatorStatus(Client& client, bool setOperatorStatusTo) {
         }
     }
 
-    LOG_ERROR(
-        "Channel::setOperatorStatus: client is an operator, but not "
-        "found in operators_, nick: "
-        << client.getNickname() << " in " << name_);
+    LOG_ERROR("Channel::setOperatorStatus: client is an operator, but not found in operators_, nick: " << client.getNickname() << " in "
+                                                                                                       << name_);
 }
 
 bool Channel::isOperator(Client& client) {
