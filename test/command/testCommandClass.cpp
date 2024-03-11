@@ -50,10 +50,79 @@ using namespace irc;
 //   }
 
 // }
+
+TEST_CASE("Nick", "[command][nick]") {
+    int errno_before = errno;
+    REQUIRE(errno == errno_before);
+    time_t serverStartTime = time(NULL);
+    std::string password = "password";
+    struct sockaddr sockaddr;
+    std::map<std::string, Channel> myChannels;
+
+    std::string msgNick = "NICK "; //sets message's commmand to NICK
+    //valid according to IRCv3
+    std::string validNick = "nick";
+    std::string truncateNick = "longerThanNineNick";
+    std::string containsSpace = "a nick"; // Dalnet accepts this, it is against RFC.
+    //invalid according to IRCv3
+    std::string emptyNick = "";
+    std::string containsComma = "a,nick";
+    std::string containsAnAsterisk = "a*nick";
+    std::string containsAQuestionMark = "a?Nick";
+    std::string containsAnExclamationMark = "a!nick";
+    std::string containsAnAtSign = "@nick";
+    std::string containsADot = "ni.ck";
+    std::string startsWithADollar = "$nick";
+    std::string startsWithAColon = ":nick";
+    std::string startsWithAnAmpersand = "&nick";
+
+    Client client1(1, sockaddr);
+    client1.setPassword("client1P");
+    client1.setUserName("client1U");
+    client1.setNickname("client1N");
+
+    Client client2(2, sockaddr);
+    client2.setPassword("client2P");
+    client2.setUserName("client2U");
+    client2.setNickname("client2N");
+    std::map<int, Client> myClients = {{1, client1}, {2, client2}};
+
+    SECTION("Nick-Valid") {
+        Command cmd_1(msgNick + validNick, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == validNick);
+        Command cmd_2(msgNick + truncateNick, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "longerTha");
+        Command cmd_3(msgNick + containsSpace, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "a");
+    }
+
+    SECTION("Nick-Invalid") {
+        Command cmd_1(msgNick + emptyNick, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+        Command cmd_3(msgNick + containsComma, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+        Command cmd_4(msgNick + containsAnAsterisk, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+        Command cmd_5(msgNick + containsAQuestionMark, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+        Command cmd_6(msgNick + containsAnExclamationMark, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+        Command cmd_7(msgNick + containsAnAtSign, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+        Command cmd_8(msgNick + containsADot, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+        Command cmd_9(msgNick + startsWithADollar, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+        Command cmd_10(msgNick + startsWithAColon, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+        Command cmd_11(msgNick + startsWithAnAmpersand, client1, myClients, password, serverStartTime, myChannels);
+        REQUIRE(client1.getNickname() == "client1N");
+    }
+}
+
 TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     int errno_before = errno;
     REQUIRE(errno == errno_before);
-    std::string serverHostname = serverHostname_g;
     time_t serverStartTime = time(NULL);
     std::string password = "password";
     struct sockaddr sockaddr;
