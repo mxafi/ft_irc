@@ -297,8 +297,9 @@ int Server::disconnectClient_(std::vector<pollfd>& poll_fds, std::vector<pollfd>
     std::string reason = client.getDisconnectReason();
     for (std::string channelName : channelNames) {
         Channel& channel = channels_.at(channelName);
+        channel.sendMessageToMembersExcluding(
+            COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "QUIT", ":" + reason), client);
         channel.partMember(client);
-        channel.sendMessageToMembers(COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "QUIT", ":" + reason));
     }
 
     unsigned long clients_erased = clients_.erase(client_fd);
