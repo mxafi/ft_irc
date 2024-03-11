@@ -38,19 +38,19 @@ std::string serverHostname_g;
  * @param signum The signal number.
  */
 void signalHandler(int signum) {
-  if (signum == SIGINT) {
-    LOG_INFO("Server received SIGINT (Ctrl+C)");
-  }
-  if (signum == SIGTERM) {
-    LOG_INFO("Server received SIGTERM (kill)");
-  }
-  if (signum == SIGQUIT) {
-    LOG_INFO("Server received SIGQUIT (Ctrl+Backslash)");
-  }
-  if (signum == SIGHUP) {
-    LOG_INFO("Server received SIGHUP (parent died)");
-  }
-  isServerRunning_g = false;
+    if (signum == SIGINT) {
+        LOG_INFO("Server received SIGINT (Ctrl+C)");
+    }
+    if (signum == SIGTERM) {
+        LOG_INFO("Server received SIGTERM (kill)");
+    }
+    if (signum == SIGQUIT) {
+        LOG_INFO("Server received SIGQUIT (Ctrl+Backslash)");
+    }
+    if (signum == SIGHUP) {
+        LOG_INFO("Server received SIGHUP (parent died)");
+    }
+    isServerRunning_g = false;
 }
 
 /**
@@ -64,37 +64,37 @@ void signalHandler(int signum) {
  * @return int The exit status of the program.
  */
 int main(int argc, char** argv) {
-  if (argc != 3) {
-    LOG_ERROR("main: wrong number of arguments");
-    PRINT_USAGE;
-    return EXIT_FAILURE;
-  }
+    if (argc != 3) {
+        LOG_ERROR("main: wrong number of arguments");
+        PRINT_USAGE;
+        return EXIT_FAILURE;
+    }
 
-  try {
-    std::stoi(argv[1]);
-  } catch (std::exception& e) {
-    LOG_ERROR("main: invalid port");
-    PRINT_USAGE;
-    return EXIT_FAILURE;
-  }
-  LOG_INFO(GREEN << "Server starting on port " << argv[1]);
-  LOG_DEBUG("with password \"" << argv[2] << "\"");
+    try {
+        std::stoi(argv[1]);
+    } catch (std::exception& e) {
+        LOG_ERROR("main: invalid port");
+        PRINT_USAGE;
+        return EXIT_FAILURE;
+    }
+    LOG_INFO(GREEN << "Server starting on port " << argv[1]);
+    LOG_DEBUG("with password \"" << argv[2] << "\"");
 
-  signal(SIGINT, signalHandler);   // Ctrl+C
-  signal(SIGTERM, signalHandler);  // kill
-  signal(SIGQUIT, signalHandler);  // Ctrl+Backslash
-  signal(SIGHUP, signalHandler);   // parent dead
+    signal(SIGINT, signalHandler);   // Ctrl+C
+    signal(SIGTERM, signalHandler);  // kill
+    signal(SIGQUIT, signalHandler);  // Ctrl+Backslash
+    signal(SIGHUP, signalHandler);   // parent dead
 
-  irc::Server server(argv[1], argv[2]);
-  if (server.start() != SUCCESS)
-    return EXIT_FAILURE;
-  try {
-    server.loop();
-  } catch (std::exception& e) {
-    LOG_ERROR("main: Exception: " << e.what());
-    return EXIT_FAILURE;
-  }
+    irc::Server server(argv[1], argv[2]);
+    if (server.start() != SUCCESS)
+        return EXIT_FAILURE;
+    try {
+        server.loop();
+    } catch (std::exception& e) {
+        LOG_ERROR("main: Exception: " << e.what());
+        return EXIT_FAILURE;
+    }
 
-  LOG_INFO("Server shutting down, goodbye!");
-  return EXIT_SUCCESS;
+    LOG_INFO("Server shutting down, goodbye!");
+    return EXIT_SUCCESS;
 }
