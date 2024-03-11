@@ -4,26 +4,34 @@
 // Meta definitions
 #define RPL_META_MESSAGE(servername, numeric, message) (std::string(":") + servername + " " + numeric + " " + message + "\r\n")
 #define ERR_MESSAGE(message) (std::string("ERROR :") + message + "\r\n")
-#define COM_MESSAGE(nick, user, host, command, params) (std::string(":") + nick + "!" + user + "@" + host + " " + command + " " + params + "\r\n")
+#define COM_MESSAGE(nick, user, host, command, params) \
+    (std::string(":") + nick + "!" + user + "@" + host + " " + command + " " + params + "\r\n")
 #define RPL_MESSAGE(message) (std::string(message) + "\r\n")
 
 // Numeric replies in order
-#define RPL_WELCOME_001(servername, nick, user, host) (RPL_META_MESSAGE(servername, "001", nick + " :Welcome to the Internet Relay Network " + nick + "!" + user + "@" + host))
-#define RPL_YOURHOST_002(servername, nick, version) (RPL_META_MESSAGE(servername, "002", nick + " :Your host is " + servername + ", running version " + version))
+#define RPL_WELCOME_001(servername, nick, user, host) \
+    (RPL_META_MESSAGE(servername, "001", nick + " :Welcome to the Internet Relay Network " + nick + "!" + user + "@" + host))
+#define RPL_YOURHOST_002(servername, nick, version) \
+    (RPL_META_MESSAGE(servername, "002", nick + " :Your host is " + servername + ", running version " + version))
 #define RPL_CREATED_003(servername, nick, date) (RPL_META_MESSAGE(servername, "003", nick + " :This server was created " + date))
-#define RPL_MYINFO_004(servername, nick, version, user_modes, channel_modes) (RPL_META_MESSAGE(servername, "004", nick + " " + servername + " " + version + " " + user_modes + " " + channel_modes))
+#define RPL_MYINFO_004(servername, nick, version, user_modes, channel_modes) \
+    (RPL_META_MESSAGE(servername, "004", nick + " " + servername + " " + version + " " + user_modes + " " + channel_modes))
 
 #define RPL_NOTOPIC_331(servername, channel) (RPL_META_MESSAGE(servername, "331", channel + " :No topic is set"))
 #define RPL_TOPIC_332(servername, channel, topic) (RPL_META_MESSAGE(servername, "332", channel + " :" + topic))
-#define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) (RPL_META_MESSAGE(servername, "353", client + " " + symbol + " " + channel + " :" + namelist))
+#define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) \
+    (RPL_META_MESSAGE(servername, "353", client + " " + symbol + " " + channel + " :" + namelist))
 
-#define RPL_ERR_NOSUCHNICK_401(servername, nick_or_channel) (RPL_META_MESSAGE(servername, "401", nick_or_channel + " :No such nick/channel"))
+#define RPL_ERR_NOSUCHNICK_401(servername, nick_or_channel) \
+    (RPL_META_MESSAGE(servername, "401", nick_or_channel + " :No such nick/channel"))
 #define RPL_ERR_NOSUCHCHANNEL_403(servername, channelName) (RPL_META_MESSAGE(servername, "403", channelName + ":No such channel"))
 #define RPL_ERR_CANNOTSENDTOCHAN_404(servername, channelName) (RPL_META_MESSAGE(servername, "404", channelName + ":Cannot send to channel"))
-#define RPL_ERR_TOOMANYCHANNELS_405(servername, channel) (RPL_META_MESSAGE(servername, "405", channel + " :You have joined too many channels"))
-#define RPL_ERR_TOOMANYTARGETS_407(servername, target, errorcode, abortmessage) (RPL_META_MESSAGE(servername, "407", target + " :" + errorcode + " recipients. " + abortmessage))
-#define RPL_ERR_NORECIPIENT_411(servername, command) (RPL_META_MESSAGE(servername, "411", + ":No recipient given (" + command + ")"))
-#define RPL_ERR_NOTEXTTOSEND_412(servername) (RPL_META_MESSAGE(servername, "412", + ":No text to send"))
+#define RPL_ERR_TOOMANYCHANNELS_405(servername, channel) \
+    (RPL_META_MESSAGE(servername, "405", channel + " :You have joined too many channels"))
+#define RPL_ERR_TOOMANYTARGETS_407(servername, target, errorcode, abortmessage) \
+    (RPL_META_MESSAGE(servername, "407", target + " :" + errorcode + " recipients. " + abortmessage))
+#define RPL_ERR_NORECIPIENT_411(servername, command) (RPL_META_MESSAGE(servername, "411", +":No recipient given (" + command + ")"))
+#define RPL_ERR_NOTEXTTOSEND_412(servername) (RPL_META_MESSAGE(servername, "412", +":No text to send"))
 
 #define RPL_ERR_UNKNOWNCOMMAND_421(servername, command) (RPL_META_MESSAGE(servername, "421", command + " :Unknown command"))
 #define RPL_ERR_NONICKNAMEGIVEN_431(servername) (RPL_META_MESSAGE(servername, "431", ":No nickname given"))

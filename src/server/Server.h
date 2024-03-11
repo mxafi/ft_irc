@@ -39,40 +39,39 @@ namespace irc {
  * about the server's hostname, port, password, and other configuration details.
  */
 class Server {
- private:
-  int setServerHostname_();
-  int acceptClient_(std::vector<pollfd>& pollfds);
-  int disconnectClient_(std::vector<pollfd>& poll_fds,
-                        std::vector<pollfd>::iterator& it);
-  long long sendFromBuffer_(Client& client);
-  long long recvToBuffer_(Client& client);
-  int extractMessageString_(std::string& message, Client& client);
-  void handleMalformedMessage_(Client& client, Message& message);
-  char* port_;
-  std::string password_;
-  int server_socket_fd_;
-  int server_socket_domain_ = AF_INET;
-  int server_socket_type_ = SOCK_STREAM;
-  int server_socket_protocol_ = DEFAULT_SOCKET_PROTOCOL;
-  struct addrinfo hints_;
-  struct addrinfo* srvinfo_;
-  std::map<int, Client> clients_;
-  std::map<std::string, Channel> channels_;
-  time_t start_time_;
+   private:
+    int setServerHostname_();
+    int acceptClient_(std::vector<pollfd>& pollfds);
+    int disconnectClient_(std::vector<pollfd>& poll_fds, std::vector<pollfd>::iterator& it);
+    long long sendFromBuffer_(Client& client);
+    long long recvToBuffer_(Client& client);
+    int extractMessageString_(std::string& message, Client& client);
+    void handleMalformedMessage_(Client& client, Message& message);
+    char* port_;
+    std::string password_;
+    int server_socket_fd_;
+    int server_socket_domain_ = AF_INET;
+    int server_socket_type_ = SOCK_STREAM;
+    int server_socket_protocol_ = DEFAULT_SOCKET_PROTOCOL;
+    struct addrinfo hints_;
+    struct addrinfo* srvinfo_;
+    std::map<int, Client> clients_;
+    std::map<std::string, Channel> channels_;
+    time_t start_time_;
 
- public:
-  ~Server();
-  Server(char* port, std::string password);
-  int start();
-  void loop();
-  char* getPort();
-  std::string getPassword();
-  int getServerSocketFd();
-  int getServerSocketDomain();
-  int getServerSocketType();
-  int getServerSocketProtocol();
-  struct addrinfo& getServerInfo();
-  std::string getStartTimeString();
+   public:
+    ~Server();
+    Server(char* port, std::string password);
+    int start();
+    void loop();
+    char* getPort();
+    std::string getPassword();
+    int getServerSocketFd();
+    int getServerSocketDomain();
+    int getServerSocketType();
+    int getServerSocketProtocol();
+    struct addrinfo& getServerInfo();
+    std::string getStartTimeString();
 };
 
 }  // namespace irc

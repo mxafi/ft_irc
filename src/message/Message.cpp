@@ -6,27 +6,27 @@ namespace irc {
     * and initializes its prefix (OPTIONAL), command and parameters.
     */
 Message::Message(const std::string serializedMessage) : numeric_(0) {
-  checkNulChar(serializedMessage);
-  checkMessageLength(serializedMessage);
-  deserialize_(serializedMessage);
+    checkNulChar(serializedMessage);
+    checkMessageLength(serializedMessage);
+    deserialize_(serializedMessage);
 }
 
 Message::~Message(){};
 
 std::string Message::getPrefix() const {
-  return prefix_;
+    return prefix_;
 }
 
 std::string Message::getCommand() const {
-  return command_;
+    return command_;
 }
 
 std::vector<std::string> Message::getParameters() const {
-  return parameters_;
+    return parameters_;
 }
 
 int Message::getNumeric() const {
-  return numeric_;
+    return numeric_;
 }
 
 /****
@@ -36,10 +36,10 @@ int Message::getNumeric() const {
     * is not allowed within messages.
     */
 void Message::checkNulChar(const std::string& serializedMessage) {
-  if (serializedMessage.find('\0') != std::string::npos) {
-    LOG_DEBUG("Message::checkNulChar: message contains illegal NUL Character");
-    numeric_ = ERR_CUSTOM_ILLEGALNUL;
-  }
+    if (serializedMessage.find('\0') != std::string::npos) {
+        LOG_DEBUG("Message::checkNulChar: message contains illegal NUL Character");
+        numeric_ = ERR_CUSTOM_ILLEGALNUL;
+    }
 }
 
 /****
@@ -51,11 +51,10 @@ void Message::checkNulChar(const std::string& serializedMessage) {
     * continuation of message lines. 
     */
 void Message::checkMessageLength(const std::string& serializedMessage) {
-  if (serializedMessage.length() > MAX_MSG_LENGTH) {
-    LOG_DEBUG("Message::checkMessageLength: message was too long, "
-              << serializedMessage.length() << " instead of 512");
-    numeric_ = ERR_INPUTTOOLONG;
-  }
+    if (serializedMessage.length() > MAX_MSG_LENGTH) {
+        LOG_DEBUG("Message::checkMessageLength: message was too long, " << serializedMessage.length() << " instead of 512");
+        numeric_ = ERR_INPUTTOOLONG;
+    }
 }
 
 /****
@@ -72,11 +71,11 @@ void Message::checkMessageLength(const std::string& serializedMessage) {
     * prefix =  servername / ( nickname [ [ "!" user ] "@" host ] )
     */
 void Message::setPrefix_(std::istringstream& serializedStream) {
-  // Sneak peek into the first char of stream for a semicolon ":"
-  if (serializedStream.peek() == ':') {
-    serializedStream >> prefix_;
-    LOG_DEBUG("Message::setPrefix_: got prefix_: " + prefix_);
-  }
+    // Sneak peek into the first char of stream for a semicolon ":"
+    if (serializedStream.peek() == ':') {
+        serializedStream >> prefix_;
+        LOG_DEBUG("Message::setPrefix_: got prefix_: " + prefix_);
+    }
 }
 
 /****
@@ -86,8 +85,8 @@ void Message::setPrefix_(std::istringstream& serializedStream) {
     * command =  1*letter / 3digit
     */
 void Message::setCommand_(std::istringstream& serializedMessage) {
-  serializedMessage >> command_;
-  LOG_DEBUG("Message::setCommand_: got command_: " + command_);
+    serializedMessage >> command_;
+    LOG_DEBUG("Message::setCommand_: got command_: " + command_);
 }
 
 /****
@@ -98,30 +97,30 @@ void Message::setCommand_(std::istringstream& serializedMessage) {
     *        =/ 14( SPACE middle ) [ SPACE [ ":" ] trailing ]
     */
 void Message::setParameters_(std::istringstream& serializedMessage) {
-  std::string parameter;
-  serializedMessage >> std::ws;  // Discards leading whitespaces
-  while (std::getline(serializedMessage, parameter, ' ')) {
-    // If the parameter starts with a colon, it's a trailing parameter
-    if (parameter[0] == ':') {
-      // Add the rest of the line as a single trailing parameter
-      std::string trailingParameter;
-      std::getline(serializedMessage, trailingParameter);
-      if (!trailingParameter.empty()) {
-        LOG_DEBUG("last parameter was not empty: " << trailingParameter);
-        parameters_.push_back(parameter + " " + trailingParameter);
-      } else {
-        LOG_DEBUG("last parameter was empty");
+    std::string parameter;
+    serializedMessage >> std::ws;  // Discards leading whitespaces
+    while (std::getline(serializedMessage, parameter, ' ')) {
+        // If the parameter starts with a colon, it's a trailing parameter
+        if (parameter[0] == ':') {
+            // Add the rest of the line as a single trailing parameter
+            std::string trailingParameter;
+            std::getline(serializedMessage, trailingParameter);
+            if (!trailingParameter.empty()) {
+                LOG_DEBUG("last parameter was not empty: " << trailingParameter);
+                parameters_.push_back(parameter + " " + trailingParameter);
+            } else {
+                LOG_DEBUG("last parameter was empty");
+                parameters_.push_back(parameter);
+            }
+            break;  // No more parameters after a trailing parameter
+        }
+        // If the parameter does not start with a colon, it's a regular parameter
         parameters_.push_back(parameter);
-      }
-      break;  // No more parameters after a trailing parameter
     }
-    // If the parameter does not start with a colon, it's a regular parameter
-    parameters_.push_back(parameter);
-  }
-  if (parameters_.size() > MESSAGE_MAX_AMOUNT_PARAMETERS) {
-    LOG_DEBUG("Message::setParameters_: too many parameters in message");
-    numeric_ = ERR_CUSTOM_TOOMANYPARAMS;
-  }
+    if (parameters_.size() > MESSAGE_MAX_AMOUNT_PARAMETERS) {
+        LOG_DEBUG("Message::setParameters_: too many parameters in message");
+        numeric_ = ERR_CUSTOM_TOOMANYPARAMS;
+    }
 }
 
 /****
@@ -144,13 +143,13 @@ void Message::setParameters_(std::istringstream& serializedMessage) {
     * crlf       =  %x0D %x0A   ; "carriage return" "linefeed"
     */
 void Message::deserialize_(const std::string& serializedMessage) {
-  std::istringstream iss(serializedMessage);
+    std::istringstream iss(serializedMessage);
 
-  setPrefix_(iss);
-  LOG_DEBUG("Message::deserialize_: got prefix_: " + prefix_);
-  setCommand_(iss);
-  LOG_DEBUG("Message::deserialize_: got command_: " + command_);
-  setParameters_(iss);
+    setPrefix_(iss);
+    LOG_DEBUG("Message::deserialize_: got prefix_: " + prefix_);
+    setCommand_(iss);
+    LOG_DEBUG("Message::deserialize_: got command_: " + command_);
+    setParameters_(iss);
 }
 
 }  // namespace irc
