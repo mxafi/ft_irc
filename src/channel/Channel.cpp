@@ -99,6 +99,12 @@ void Channel::joinMember(Client& client) {
  */
 int Channel::partMember(Client& client) {
     int clientFd = client.getFd();
+
+    if (!isMember(client)) {
+        LOG_WARNING("Channel::partMember: client is not a member, not parting nick " << client.getNickname() << " from channel " << name_);
+        return CHANNEL_PART_FAILURE;
+    }
+
     for (auto it = members_.begin(); it != members_.end(); it++) {
         if ((*it)->getFd() == clientFd) {
             client.unrecordMyChannel(name_);
@@ -114,19 +120,15 @@ int Channel::partMember(Client& client) {
                 }
             }
             LOG_DEBUG("Channel::partMember: client " << client.getNickname() << " parted from channel " << name_);
-            return static_cast<int>(members_.size());
-        }
-        if (members_.empty()) {
-            LOG_DEBUG(
-                "Channel::partMember: no members left, the channel should be "
-                "deleted: "
-                << name_);
-            // TODO: Delete the channel in this or the caller function
-            return static_cast<int>(members_.size());
+            break;
         }
     }
-    LOG_WARNING("Channel::partMember: client is not a member, not parting nick " << name_);
-    return CHANNEL_PART_FAILURE;
+    int membersLeft = static_cast<int>(members_.size());
+    if (members_.empty()) {
+        LOG_DEBUG("Channel::partMember: no members left, deleted channel: " << name_);
+        allChannels_.erase(name_);
+    }
+    return membersLeft;
 }
 
 bool Channel::isMember(Client& client) {
