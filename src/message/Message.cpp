@@ -86,7 +86,6 @@ void Message::setPrefix_(std::istringstream& serializedStream) {
     */
 void Message::setCommand_(std::istringstream& serializedMessage) {
     serializedMessage >> command_;
-    LOG_DEBUG("Message::setCommand_: got command_: " + command_);
 }
 
 /****
