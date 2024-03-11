@@ -117,12 +117,14 @@ bool Client::isGotPassword() const {
 }
 
 void Client::appendToSendBuffer(const std::string& packet) {
-    LOG_DEBUG("Client::appendToSendBuffer: appending message to sendBuffer for nick: " << nickname_ << ": " << packet)
+    LOG_DEBUG("Client::appendToSendBuffer: appending message to sendBuffer for nick "
+              << nickname_ << " (excl.CRLF): " << packet.substr(0, packet.length() - 2));
     sendBuffer_ += packet;
 }
 
 void Client::appendToRecvBuffer(const std::string& packet) {
-    LOG_DEBUG("Client::appendToRecvBuffer: appending message to recvBuffer for nick: " << nickname_ << ": " << packet)
+    LOG_DEBUG("Client::appendToRecvBuffer: appending message to recvBuffer for nick "
+              << nickname_ << " (excl.CRLF): " << packet.substr(0, packet.length() - 2));
     recvBuffer_ += packet;
 }
 
@@ -150,7 +152,7 @@ std::string Client::getDisconnectReason() const {
 }
 
 void Client::setDisconnectReason(const std::string& reason) {
-    LOG_DEBUG("Client::setDisconnectReason: nick" << nickname_ << " set disconnectReason: " << reason);
+    LOG_DEBUG("Client::setDisconnectReason: nick " << nickname_ << " set disconnectReason: " << reason);
     disconnectReason_ = reason;
 }
 
