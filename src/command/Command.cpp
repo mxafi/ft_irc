@@ -105,12 +105,23 @@ void Command::actionPass(Client& client) {
     client.setPassword(pass_);
 }
 
+/**
+ * @brief Handles the NICK command, changing a client's nickname.
+ *
+ * This function checks if the client has sent a valid authentication password, if a nickname was provided,
+ * and if the nickname is valid. It also checks if the nickname is already in use.
+ * If all conditions are met, it changes the client's nickname and sends the appropriate
+ * messages to the client and other clients in shared channels.
+ *
+ * @param client The client whose nickname is to be changed.
+ */
 void Command::actionNick(Client& client) {
     bool isAlreadyAuthenticated = client.isAuthenticated();
 
     if (client.isGotPassword() == false) {
         client.appendToSendBuffer(ERR_MESSAGE("You must send a password first"));
         client.setWantDisconnect();
+
         return;
     }
     if (param_.size() == 0) {
@@ -131,7 +142,7 @@ void Command::actionNick(Client& client) {
     } catch (std::out_of_range& e) {
         ;  // The nickname is not in use
     }
-
+    LOG_DEBUG_HL("enter to this part it should not come here");
     client.setNickname(param_.at(0));
     if (isAlreadyAuthenticated == false && client.isAuthenticated()) {
         sendAuthReplies_(client);
@@ -261,6 +272,18 @@ void Command::actionQuit(Client& client) {
     client.setWantDisconnect();
 }
 
+/**
+ * @brief Finds a client by their nickname, throwing an exception if not found.
+ *
+ * This function searches for a client with the specified nickname. It converts the
+ * nickname and the client nicknames to lowercase and replaces certain characters to
+ * match the IRC specification. If the client is found, it returns a reference to the
+ * client. If not, it throws an std::out_of_range exception.
+ *
+ * @param nickname The nickname to search for.
+ * @return A reference to the client with the matching nickname.
+ * @throws std::out_of_range if the client is not found.
+ */
 Client& Command::findClientByNicknameOrThrow(const std::string& nickname) {
     std::string lowerNickname = nickname;  //here we just put everything in lowercase
     std::transform(lowerNickname.begin(), lowerNickname.end(), lowerNickname.begin(), ::tolower);
@@ -287,16 +310,21 @@ Client& Command::findClientByNicknameOrThrow(const std::string& nickname) {
 }
 
 /**
-*   Nick name validity is checked according to RFC2812 p. 7:
-*   nickname   =  ( letter / special ) *8( letter / digit / special / "-" )
-*   where,
-*
-*       special = %x5B-60 / %x7B-7D 
-*       ; "[", "]", "\", "‘", "_", "^", "{", "|", "}"
-*   
-*   Exception is made for spaces which we accept as DALnet does, i.e. using the 
-*   space as a delimiter setting the nick to the first delimited word.
-*/
+ *   @brief Checks if a given nickname is valid according to RFC2812.
+ *
+ *   nickname   =  ( letter / special ) *8( letter / digit / special / "-" )
+ *   where,
+ *       special = %x5B-60 / %x7B-7D 
+ *       ; "[", "]", "\", "‘", "_", "^", "{", "|", "}"
+ *   
+ *   Exception is made for spaces which we accept as DALnet does, i.e. using the 
+ *   space as a delimiter setting the nick to the first delimited word.
+ *   
+ *   A nickname can be of maximum 9 characters long
+ *    
+ *   @param  The nickname to validate.
+ *   @return true if the nickname is valid, false otherwise.
+ */
 bool Command::isValidNickname(std::string& nickname) {
     std::regex pattern(R"(^[a-zA-Z\[\]\\`_^{|}])");
     std::regex pattern1(R"(^[a-zA-Z0-9\[\]\\`_^{|}-]*$)");
@@ -306,8 +334,8 @@ bool Command::isValidNickname(std::string& nickname) {
     if (!std::regex_match(nickname, pattern1)) {
         return false;
     }
-    if (nickname.size() > 9) {
-        nickname = nickname.substr(0, 9);
+    if (nickname.size() > NICK_MAX_LENGTH_RFC2812) {
+        nickname = nickname.substr(0, NICK_MAX_LENGTH_RFC2812);
         LOG_DEBUG("Command::isValidNickname: nick was too long, shortened to: " << nickname);
     }
     return true;
