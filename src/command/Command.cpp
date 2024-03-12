@@ -240,11 +240,11 @@ void Command::actionTopic(Client& client) {
                 return;
             }
             client.appendToSendBuffer(
-                RPL_TOPIC_332(client.getNickname(), client.getUserName(), serverHostname_g, param_.at(0), it->second.getTopic()));
+                RPL_TOPIC_332(serverHostname_g, it->first, it->second.getTopic()));
             return;
         }
     }
-    if (param_.size() > 1) {
+    if (param_.size() == 2) {
         if (it->second.isMember(client) == false) {
             LOG_ERROR("Command::actionTopic: the Client : " << client.getNickname() << "not a member of the channel"
                                                             << " " << param_.at(0))
@@ -255,13 +255,14 @@ void Command::actionTopic(Client& client) {
         if (topic[0] == ':') {
             it->second.setTopic(param_.back());
             LOG_DEBUG(topic);
-            it->second.sendMessageToMembers(
-                RPL_TOPIC_332(client.getNickname(), client.getUserName(), serverHostname_g, param_.at(0), it->second.getTopic()));
+            it->second.sendMessageToMembers(RPL_TOPIC_332(serverHostname_g, it->first, it->second.getTopic()));
             return;
         }
-        //client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
         return;
     }
+    client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
+    return;
 }
 
 void Command::actionMode(Client& client) {
