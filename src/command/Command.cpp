@@ -228,7 +228,6 @@ void Command::actionTopic(Client& client) {
         client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
         return;
     }
-    std::vector<std::string> myChannels = client.getMyChannels();
     auto it = allChannels_.find(param_.at(0));
     if (it == allChannels_.end()) {
         client.appendToSendBuffer(RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, param_.at(0)));
@@ -238,6 +237,7 @@ void Command::actionTopic(Client& client) {
         if (it != allChannels_.end()) {
             if (it->second.getTopic().empty()) {
                 client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, param_.at(0)));
+                return;
             }
             client.appendToSendBuffer(
                 RPL_TOPIC_332(client.getNickname(), client.getUserName(), serverHostname_g, param_.at(0), it->second.getTopic()));
