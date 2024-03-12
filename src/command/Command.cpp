@@ -121,7 +121,6 @@ void Command::actionNick(Client& client) {
     if (client.isGotPassword() == false) {
         client.appendToSendBuffer(ERR_MESSAGE("You must send a password first"));
         client.setWantDisconnect();
-
         return;
     }
     if (param_.size() == 0) {
@@ -142,7 +141,6 @@ void Command::actionNick(Client& client) {
     } catch (std::out_of_range& e) {
         ;  // The nickname is not in use
     }
-    LOG_DEBUG_HL("enter to this part it should not come here");
     client.setNickname(param_.at(0));
     if (isAlreadyAuthenticated == false && client.isAuthenticated()) {
         sendAuthReplies_(client);
@@ -280,7 +278,7 @@ void Command::actionQuit(Client& client) {
  * match the IRC specification. If the client is found, it returns a reference to the
  * client. If not, it throws an std::out_of_range exception.
  *
- * @param nickname The nickname to search for.
+ * @param  The nickname to search for.
  * @return A reference to the client with the matching nickname.
  * @throws std::out_of_range if the client is not found.
  */
