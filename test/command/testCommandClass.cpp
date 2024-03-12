@@ -50,7 +50,32 @@ using namespace irc;
 //   }
 
 // }
+struct NicknameTestData {
+    std::string description;
+    std::string nickname;
+    bool isValid;
+};
 
+std::vector<NicknameTestData> nicknameTestData = {
+    {"Valid Nickname", "nick", true},         {"Truncated Nickname", "longerThanNineNick", true},
+    {"Contains a space ' '", "a nick", true}, {"Empty Nickname", "", false},
+    {"Contains ','", "a,nick", false},        {"Contains Asterisk", "a*nick", false},
+    {"Contains '?'", "a?Nick", false},        {"contains '!' ", "a!nick", false},
+    {"Contains '@'", "a@nick", false},        {"Contains a '.'", "a.nick", false},
+    {"Contains '$'", "a$nick", false},        {"Contains a ':'", "a:nick", false},
+    {"Contains '&'", "a&nick", false}};
+
+/**
+*   Nick name validity is checked according to RFC2812 p. 7:
+*   nickname   =  ( letter / special ) *8( letter / digit / special / "-" )
+*   where,
+*
+*       special = %x5B-60 / %x7B-7D 
+*       ; "[", "]", "\", "‘", "_", "^", "{", "|", "}"
+*   
+*   Exception is made for spaces which we accept as DALnet does, i.e. using the 
+*   space as a delimiter setting the nick to the first delimited word.
+*/
 TEST_CASE("Nick", "[command][nick]") {
     int errno_before = errno;
     REQUIRE(errno == errno_before);
@@ -58,23 +83,6 @@ TEST_CASE("Nick", "[command][nick]") {
     std::string password = "password";
     struct sockaddr sockaddr;
     std::map<std::string, Channel> myChannels;
-
-    std::string msgNick = "NICK "; //sets message's commmand to NICK
-    //valid according to IRCv3
-    std::string validNick = "nick";
-    std::string truncateNick = "longerThanNineNick";
-    std::string containsSpace = "a nick"; // Dalnet accepts this, it is against RFC.
-    //invalid according to IRCv3
-    std::string emptyNick = "";
-    std::string containsComma = "a,nick";
-    std::string containsAnAsterisk = "a*nick";
-    std::string containsAQuestionMark = "a?Nick";
-    std::string containsAnExclamationMark = "a!nick";
-    std::string containsAnAtSign = "@nick";
-    std::string containsADot = "ni.ck";
-    std::string startsWithADollar = "$nick";
-    std::string startsWithAColon = ":nick";
-    std::string startsWithAnAmpersand = "&nick";
 
     Client client1(1, sockaddr);
     client1.setPassword("client1P");
@@ -87,36 +95,36 @@ TEST_CASE("Nick", "[command][nick]") {
     client2.setNickname("client2N");
     std::map<int, Client> myClients = {{1, client1}, {2, client2}};
 
-    SECTION("Nick-Valid") {
-        Command cmd_1(msgNick + validNick, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == validNick);
-        Command cmd_2(msgNick + truncateNick, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "longerTha");
-        Command cmd_3(msgNick + containsSpace, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "a");
-    }
+    GIVEN("A client with a nickname") {
+        WHEN("Setting a valid nickname") {
+            for (const auto& data : nicknameTestData) {
+                if (data.isValid) {
+                    std::string msg = "NICK " + data.nickname;
+                    std::string truncatedNick = data.nickname.substr(0, 9);  // Truncate nick to autorized max nick length = 9 characters
+                    size_t pos = truncatedNick.find_first_of(
+                        " ");  // We decided to accept space as a delimiter as DalNet does, hence the two following functions
+                    std::string expectedNick = truncatedNick.substr(0, pos);  // Split from white space
 
-    SECTION("Nick-Invalid") {
-        Command cmd_1(msgNick + emptyNick, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
-        Command cmd_3(msgNick + containsComma, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
-        Command cmd_4(msgNick + containsAnAsterisk, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
-        Command cmd_5(msgNick + containsAQuestionMark, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
-        Command cmd_6(msgNick + containsAnExclamationMark, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
-        Command cmd_7(msgNick + containsAnAtSign, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
-        Command cmd_8(msgNick + containsADot, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
-        Command cmd_9(msgNick + startsWithADollar, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
-        Command cmd_10(msgNick + startsWithAColon, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
-        Command cmd_11(msgNick + startsWithAnAmpersand, client1, myClients, password, serverStartTime, myChannels);
-        REQUIRE(client1.getNickname() == "client1N");
+                    std::string originalNick = client1.getNickname();
+                    Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
+                    INFO(data.description + " failed to set nickname to: \"" + expectedNick + "\"");
+                    REQUIRE(client1.getNickname() == expectedNick);
+                }
+            }
+        }
+
+        WHEN("Setting an invalid nickname") {
+            for (const auto& data : nicknameTestData) {
+                if (!data.isValid) {
+                    std::string msg = "NICK " + data.nickname;
+                    std::string truncatedNick = data.nickname.substr(0, 9);
+                    std::string originalNick = client1.getNickname();
+                    Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
+                    INFO(data.description + " nickname should remained unchanged to: " + client1.getNickname());
+                    REQUIRE(client1.getNickname() == originalNick);
+                }
+            }
+        }
     }
 }
 

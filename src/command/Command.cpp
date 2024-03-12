@@ -286,6 +286,17 @@ Client& Command::findClientByNicknameOrThrow(const std::string& nickname) {
     throw std::out_of_range(std::string("Command::findClientByNicknameOrThrow: ") + nickname + " not found");
 }
 
+/**
+*   Nick name validity is checked according to RFC2812 p. 7:
+*   nickname   =  ( letter / special ) *8( letter / digit / special / "-" )
+*   where,
+*
+*       special = %x5B-60 / %x7B-7D 
+*       ; "[", "]", "\", "‘", "_", "^", "{", "|", "}"
+*   
+*   Exception is made for spaces which we accept as DALnet does, i.e. using the 
+*   space as a delimiter setting the nick to the first delimited word.
+*/
 bool Command::isValidNickname(std::string& nickname) {
     std::regex pattern(R"(^[a-zA-Z\[\]\\`_^{|}])");
     std::regex pattern1(R"(^[a-zA-Z0-9\[\]\\`_^{|}-]*$)");
