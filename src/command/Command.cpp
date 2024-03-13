@@ -223,46 +223,77 @@ void Command::actionPart(Client& client) {
     }
 }
 
+// TOPIC #channel :desiredTopic
 void Command::actionTopic(Client& client) {
+    std::string topicParam;
+    // Check parameters
+    // 0: reply ERR_NEEDMOREPARAMS
     if (param_.size() == 0) {
         client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
         return;
     }
-    auto it = allChannels_.find(param_.at(0));
-    if (it == allChannels_.end()) {
-        client.appendToSendBuffer(RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, param_.at(0)));
-        return;
-    }
-    if (param_.size() == 1) {
-        if (it != allChannels_.end()) {
-            if (it->second.getTopic().empty()) {
-                client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, param_.at(0)));
-                return;
+    if (param_.size() >= 2) {
+        // Case 1: p1 has :topic --> topicParam = "topic"
+        // Case 2: p1 has topic --> topicParam = "topic"
+        // Case 3: p1 has : --> topicParam = ""
+        if (param_.at(1).front() == ':') {
+            if (param_.at(1).length() > 1) {
+                topicParam = param_.at(1).substr(1);
+            } else {
+                topicParam = "";  // indicates the desire to remove the topic
             }
-            client.appendToSendBuffer(
-                RPL_TOPIC_332(serverHostname_g, it->first, it->second.getTopic()));
-            return;
+        } else {
+            topicParam = param_.at(1);
         }
     }
-    if (param_.size() == 2) {
-        if (it->second.isMember(client) == false) {
-            LOG_ERROR("Command::actionTopic: the Client : " << client.getNickname() << "not a member of the channel"
-                                                            << " " << param_.at(0))
+
+    // validate client and channel for getting the topic
+    std::vector<std::string> clientChannels = client.getMyChannels();
+    bool isMember = false;
+    for (std::string clientChannel : clientChannels) {
+        if (clientChannel == param_.at(0)) {
+            isMember = true;
+            break;
+        }
+    }
+    if (isMember == false) {
+        try {
+            Channel& channel = allChannels_.at(param_.at(0));
             client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, param_.at(0)));
             return;
-        }
-        std::string topic = param_.back();
-        if (topic[0] == ':') {
-            it->second.setTopic(param_.back());
-            LOG_DEBUG(topic);
-            it->second.sendMessageToMembers(RPL_TOPIC_332(serverHostname_g, it->first, it->second.getTopic()));
+        } catch (std::out_of_range& e) {
+            client.appendToSendBuffer(RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, param_.at(0)));
             return;
         }
-        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
+    }
+
+    // at this point, the client is a member of the channel and it exists
+    Channel& channel = allChannels_.at(param_.at(0));
+
+    // get the topic
+    if (param_.size() == 1) {
+        if (channel.getTopic().empty()) {
+            client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, param_.at(0)));
+            return;
+        }
+        client.appendToSendBuffer(RPL_TOPIC_332(serverHostname_g, param_.at(0), channel.getTopic()));
         return;
     }
-    client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
-    return;
+
+    // at this point, the client wants to set the topic
+
+    // check if the client has the right to set the topic
+    if (channel.isTopicProtected() && !channel.isOperator(client)) {
+        client.appendToSendBuffer(RPL_ERR_CHANOPRIVSNEEDED_482(serverHostname_g, param_.at(0)));
+        return;
+    }
+
+    // set the topic
+    channel.setTopic(topicParam);
+
+    // send the topic to all members, should the client be exluded and rpl_topic_332 be sent? TODO
+    channel.sendMessageToMembers(
+        COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "TOPIC", channel.getName() + " :" + topicParam));
 }
 
 void Command::actionMode(Client& client) {
