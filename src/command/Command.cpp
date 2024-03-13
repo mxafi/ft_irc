@@ -259,6 +259,7 @@ void Command::actionTopic(Client& client) {
     if (isMember == false) {
         try {
             Channel& channel = allChannels_.at(param_.at(0));
+            (void)channel;  // suppress warning about unused variable
             client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, param_.at(0)));
             return;
         } catch (std::out_of_range& e) {
