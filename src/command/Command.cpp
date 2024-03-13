@@ -38,11 +38,17 @@ std::map<std::string, std::function<void(Command*, Client&)>> Command::commands 
                                                                                     [](Command* cmd, Client& client) {
                                                                                         cmd->actionJoin(client);
                                                                                     }},
-                                                                                   {"TOPIC", [](Command* cmd, Client& client) {
+                                                                                   {"TOPIC",
+                                                                                    [](Command* cmd, Client& client) {
                                                                                         cmd->actionTopic(client);
                                                                                     }},
+<<<<<<< HEAD
                                                                                    {"KICK", [](Command* cmd, Client& client) {
                                                                                         cmd->actionKick(client);
+=======
+                                                                                   {"MODE", [](Command* cmd, Client& client) {
+                                                                                        cmd->actionMode(client);
+>>>>>>> init actionMode
                                                                                     }}};
 
 Command::Command(const Message& commandString, Client& client, std::map<int, Client>& allClients, std::string& password,
@@ -308,13 +314,6 @@ void Command::actionTopic(Client& client) {
     // send the topic to all members, should the client be exluded and rpl_topic_332 be sent? TODO
     channel.sendMessageToMembers(
         COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "TOPIC", channel.getName() + " :" + topicParam));
-}
-
-void Command::actionMode(Client& client) {
-    std::string response = ":" + serverHostname_g + " #newchannel " + serverHostname_g + " :" + client.getNickname();
-
-    // here we need to put the four parts
-    LOG_DEBUG(response);
 }
 
 /**

@@ -3,7 +3,7 @@
 
 #define IRC_SERVER_VERSION "ft_irc-v1.0"
 #define SUPPORTED_USER_MODES "io"
-#define SUPPORTED_CHANNEL_MODES "kost"
+#define SUPPORTED_CHANNEL_MODES "oitkl"
 #define CHANNEL_PREFIXES "#&"
 #define CHANNEL_SYMBOL_PUBLIC "="
 #define CHANNEL_OPERATOR_SYMBOL "@"
