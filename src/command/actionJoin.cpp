@@ -96,7 +96,8 @@ void Command::actionJoin(Client& client) {
         currentChannel.sendMessageToMembers(COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "JOIN", channelName));
 
         if (currentChannel.getTopic() != "") {
-            client.appendToSendBuffer(RPL_TOPIC_332(serverHostname_g, channelName, currentChannel.getTopic()));
+            client.appendToSendBuffer(
+                RPL_TOPIC_332(serverHostname_g, channelName, currentChannel.getTopic()));
         } else {
             client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, channelName));
         }

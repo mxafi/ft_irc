@@ -18,7 +18,7 @@
     (RPL_META_MESSAGE(servername, "004", nick + " " + servername + " " + version + " " + user_modes + " " + channel_modes))
 
 #define RPL_NOTOPIC_331(servername, channel) (RPL_META_MESSAGE(servername, "331", channel + " :No topic is set"))
-#define RPL_TOPIC_332(servername, channel, topic) (RPL_META_MESSAGE(servername, "332", channel + " :" + topic))
+#define RPL_TOPIC_332(servername, channel, topic) (RPL_META_MESSAGE(servername, "332 TOPIC", channel + " " + topic))
 #define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) \
     (RPL_META_MESSAGE(servername, "353", client + " " + symbol + " " + channel + " :" + namelist))
 
@@ -44,6 +44,8 @@
 #define RPL_ERR_CHANNELISFULL_471(servername, channel) (RPL_META_MESSAGE(servername, "471", channel + " :Cannot join channel (+l)"))
 #define RPL_ERR_INVITEONLYCHAN_473(servername, channel) (RPL_META_MESSAGE(servername, "473", channel + " :Cannot join channel (+i)"))
 #define RPL_ERR_BADCHANNELKEY_475(servername, channel) (RPL_META_MESSAGE(servername, "475", channel + " :Cannot join channel (+k)"))
+#define RPL_ERR_CHANOPRIVSNEEDED_482(servername, channel) (RPL_META_MESSAGE(servername, "482", channel + " :You're not channel operator"))
+
 
 //User format
 #define FORMAT_NICK_USER_HOST(nickname, username, hostname) (std::string(":") + nickname + "!" + username + "@" + hostname)
