@@ -227,7 +227,8 @@ void Command::actionPart(Client& client) {
             continue;
         }
 
-        currentChannel.sendMessageToMembers(COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "PART", partMessage));
+        currentChannel.sendMessageToMembers(COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "PART",
+                                                        currentChannel.getName() + " :" + partMessage));
         currentChannel.partMember(client);
     }
 }
