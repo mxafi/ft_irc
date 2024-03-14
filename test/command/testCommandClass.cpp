@@ -7,6 +7,8 @@
 #include "../../src/message/Message.h"
 
 extern std::string serverHostname_g;
+std::string password = "password";
+
 using namespace irc;
 
 // TEST_CASE("Command class works as expected", "[command]") {
@@ -50,12 +52,113 @@ using namespace irc;
 //   }
 
 // }
+struct NicknameTestData {
+    std::string description;
+    std::string nickname;
+    bool isValid;
+};
+
+std::vector<NicknameTestData> nicknameTestData = {{"Valid Nickname", "nick", true},
+                                                  {"Truncated Nickname", "longerThanNineNick", true},
+                                                  {"Contains a space ' '", "a nick", true},
+                                                  {"Contains ','", "a,nick", false},
+                                                  {"Empty ", "", false},
+                                                  {"Contains Asterisk", "a*nick", false},
+                                                  {"Contains '?'", "a?Nick", false},
+                                                  {"contains '!' ", "a!nick", false},
+                                                  {"Contains '@'", "a@nick", false},
+                                                  {"Contains a '.'", "a.nick", false},
+                                                  {"Contains '$'", "a$nick", false},
+                                                  {"Contains a ':'", "a:nick", false},
+                                                  {"Contains '&'", "a&nick", false}};
+
+/**
+*   Nick name validity is checked according to RFC2812 p. 7:
+*   nickname   =  ( letter / special ) *8( letter / digit / special / "-" )
+*   where,
+*
+*       special = %x5B-60 / %x7B-7D 
+*       ; "[", "]", "\", "‘", "_", "^", "{", "|", "}"
+*   
+*   Exception is made for spaces which we accept as DALnet does, i.e. using the 
+*   space as a delimiter setting the nick to the first delimited word.
+*
+*   A nickname can be of maximum 9 characters long
+*/
+TEST_CASE("Nick", "[command][nick]") {
+    int errno_before = errno;
+    REQUIRE(errno == errno_before);
+    time_t serverStartTime = time(NULL);
+    struct sockaddr sockaddr;
+    std::map<std::string, Channel> myChannels;
+    std::string response;
+
+    Client client1(1, sockaddr);
+    client1.setPassword("client1P");
+    client1.setUserName("client1U");
+    client1.setNickname("client1N");
+
+    Client client2(2, sockaddr);
+    client2.setPassword("client2P");
+    client2.setUserName("client2U");
+    client2.setNickname("client2N");
+    std::map<int, Client> myClients = {{1, client1}, {2, client2}};
+
+    GIVEN("A client with a nickname") {
+        WHEN("Setting a valid nickname") {
+            for (const auto& data : nicknameTestData) {
+                if (data.isValid) {
+                    std::string msg = "NICK " + data.nickname;
+                    std::string truncatedNick =
+                        data.nickname.substr(0, NICK_MAX_LENGTH_RFC2812);  // Truncate nick to autorized max nick length = 9 characters
+                    size_t pos = truncatedNick.find_first_of(
+                        " ");  // We decided to accept space as a delimiter as DalNet does, hence the two following functions
+                    std::string expectedNick = truncatedNick.substr(0, pos);  // Split from white space
+
+                    std::string originalNick = client1.getNickname();
+                    Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
+                    INFO(data.description + " failed to set nickname to: \"" + expectedNick + "\"");
+                    REQUIRE(client1.getNickname() == expectedNick);
+                    REQUIRE(client1.getNickname().length() <= NICK_MAX_LENGTH_RFC2812);
+                }
+            }
+        }
+        WHEN("Setting an invalid nickname") {
+            for (const auto& data : nicknameTestData) {
+                if (!data.isValid) {
+                    if (data.nickname.length() == 0) {
+                        response = ": 431 :No nickname given\r\n";
+                    } else {
+                        response = ": 432 " + data.nickname + " :Erroneous nickname\r\n";
+                    }
+                    std::string msg = "NICK " + data.nickname;
+                    std::string truncatedNick = data.nickname.substr(0, NICK_MAX_LENGTH_RFC2812);
+                    std::string originalNick = client1.getNickname();
+                    client1.clearSendBuffer();
+                    Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
+                    INFO(data.description + " nickname should remained unchanged to: " + client1.getNickname());
+                    REQUIRE(client1.getSendBuffer() == response);
+                    REQUIRE(client1.getNickname() == originalNick);
+                    REQUIRE(client1.getNickname().length() <= NICK_MAX_LENGTH_RFC2812);
+                }
+            }
+        }
+        WHEN("Setting a nickname that is already in use") {
+            std::string originalNick = client1.getNickname();
+            std::string existingNick = client2.getNickname();
+            std::string msg = "NICK " + existingNick;
+            response = ": 433 " + existingNick + " :Nickname is already in use\r\n";
+            Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
+            REQUIRE(client1.getSendBuffer() == response);
+            REQUIRE(client1.getNickname() == originalNick);
+        }
+    }
+}
+
 TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
     int errno_before = errno;
     REQUIRE(errno == errno_before);
-    std::string serverHostname = serverHostname_g;
     time_t serverStartTime = time(NULL);
-    std::string password = "password";
     struct sockaddr sockaddr;
 
     Client sender(1, sockaddr);
