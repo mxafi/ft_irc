@@ -11,47 +11,6 @@ std::string password = "password";
 
 using namespace irc;
 
-// TEST_CASE("Command class works as expected", "[command]") {
-//   int errno_before = errno;
-//   REQUIRE(errno == errno_before);
-//   struct sockaddr sockaddr;
-//   Client diego(1, sockaddr);
-//   Client pedro(2, sockaddr);
-//   Client jesus(3, sockaddr);
-//   diego.setUserName("djames");
-//   diego.setPassword("horse");
-//   std::string password = "horse";
-//   time_t serverStartTime = time(NULL);
-//   std::map<int, Client> myClients = {{1, diego}, {2, pedro}, {3, jesus}};
-
-//   SECTION("Valid message command nick") {
-//     std::string message = "NICK hola";
-//     diego.setNickname("hola");
-//     std::string response = ":" + diego.getOldNickname() + "!" +
-//                            diego.getUserName() + "@" + serverHostname_g +
-//                            " NICK :" + diego.getNickname() + "\n";
-//     Message msg(message);
-//     Command nick(msg, diego, myClients, password, serverStartTime);
-//     REQUIRE(diego.getSendBuffer() == response);
-//   }
-//   SECTION("if it doesnt have a nick") {
-//     std::string message = "NICK";
-//     std::string response = ":No nickname given\n";
-//     Message msg(message);
-//     Command nick(msg, diego, myClients, password, serverStartTime);
-//     REQUIRE(diego.getSendBuffer() == response);
-//     REQUIRE(errno == errno_before);
-//   }
-//   SECTION("if there is the same nickname") {
-//     std::string message = "NICK papa";
-//     std::string response = ":No nickname given\n";
-//     Message msg(message);
-//     Command nick(msg, diego, myClients, password, serverStartTime);
-//     REQUIRE(diego.getSendBuffer() == response);
-//     REQUIRE(errno == errno_before);
-//   }
-
-// }
 struct NicknameTestData {
     std::string description;
     std::string nickname;
@@ -59,14 +18,20 @@ struct NicknameTestData {
 };
 
 std::vector<NicknameTestData> nicknameTestData = {
+    //valid nicknames
     {"Valid Nickname", "nick", true},
-    {"Truncated Nickname", "longerThanNineNick", true},
+    {"Truncated Nickname", "longerThanNineCharNick", true},
     {"Contains a space ' '", "a nick", true},
     {"Contains a mix of valid and invalid characters with spaces", "a *nick?!@. ", true},
-    {"Trailing whitespace", "nick ", true},
-    {"Leading and trailing whitespace", " nick ", true},
+    {"Trailing whitespace", "nick   ", true},
+    {"Leading and trailing whitespace", "   nick    ", true},
+    {"Leading whitespace", "     nick", true},
     {"Very long string", std::string(10000, 'a'), true},
-    {"Leading whitespace", " nick", true},
+    {"Contains multiple words delimited by whitespaces", R"(abc\rb\nc\td )", true},
+    {"Contains multiple words delimited by whitespaces", R"(a\tb\nc\rd )", true},
+    {"Contains multiple words delimited by spaces", " a b c d e f g h i j k l m n o p q r s t u v w x y z ", true},
+    //invalid nicknames
+    {"Very long string of spaces", std::string(10000, ' '), false},
     {"Contains ','", "a,nick", false},
     {"Contains only spaces and tab", " \t ", false},
     {"Contains form feed", "\f", false},
@@ -133,30 +98,26 @@ TEST_CASE("Nick", "[command][nick]") {
                     std::string msg = "NICK " + data.nickname;
                     std::string truncatedNick =
                         data.nickname.substr(0, NICK_MAX_LENGTH_RFC2812);  // Truncate nick to autorized max nick length = 9 characters
+                    // Trim leading and trailing spaces
+                    size_t start = truncatedNick.find_first_not_of(" ");
+                    size_t end = truncatedNick.find_last_not_of(" ");
+                    std::string trimmedNick = (start == std::string::npos) ? "" : truncatedNick.substr(start, end - start + 1);
 
-                    // Find the first space
-                    size_t pos = truncatedNick.find_first_of(" ");
+                    // Find the first whitespace character in the trimmed string
+                    size_t pos = trimmedNick.find_first_of(" ");
                     std::string expectedNick;
 
-                    // If pos is 0, trim leading whitespace
-                    if (pos == 1) {
-                        // Find the first non-whitespace character
-                        size_t start = truncatedNick.find_first_not_of(" \t\n\r\f\v");
-                        if (start != std::string::npos) {
-                            // Use the substring from the first non-whitespace character to the end
-                            expectedNick = truncatedNick.substr(start);
-                        } else {
-                            // If there are no non-whitespace characters, set expectedNick to an empty string
-                            expectedNick = "";
-                        }
+                    // If a whitespace character is found, extract the substring from the start to the first whitespace character
+                    if (pos != std::string::npos) {
+                        expectedNick = trimmedNick.substr(0, pos);
                     } else {
-                        // If pos is not 0, use the current logic
-                        expectedNick = (pos == std::string::npos) ? truncatedNick : truncatedNick.substr(0, pos);
-                    }
-
+                        // If no whitespace character is found, set expectedNick to the entire trimmed string
+                        expectedNick = trimmedNick;
+                    }                    
                     std::string originalNick = client1.getNickname();
+                    client1.clearSendBuffer();
                     Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
-                    INFO(data.description + " failed to set nickname to: \"" + expectedNick + "\"");
+                    INFO(data.description + " failed to set nickname to: \"" + expectedNick + "\" trimmed nick: \"" + trimmedNick + "\"");
                     REQUIRE(client1.getNickname() == expectedNick);
                     REQUIRE(client1.getNickname().length() <= NICK_MAX_LENGTH_RFC2812);
                 }
