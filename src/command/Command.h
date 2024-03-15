@@ -41,6 +41,7 @@ class Command {
     void actionJoin(Client& client);
     void actionPass(Client& client);
     void actionTopic(Client& client);
+    void actionInvite(Client& client);
     ~Command();
 
    private:

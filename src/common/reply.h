@@ -23,6 +23,7 @@
 
 #define RPL_NOTOPIC_331(servername, channel) (RPL_META_MESSAGE(servername, "331", channel + " :No topic is set"))
 #define RPL_TOPIC_332(servername, channel, topic) (RPL_META_MESSAGE(servername, "332", channel + " :" + topic))
+#define RPL_INVITING_341(servername, inviter, invitee, channel) (RPL_META_MESSAGE(servername, "341", inviter + " " + invitee + " " + channel + " :" + inviter + " has invited you"))
 #define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) \
     (RPL_META_MESSAGE(servername, "353", client + " " + symbol + " " + channel + " :" + namelist))
 
@@ -43,6 +44,7 @@
 #define RPL_ERR_NICKNAMEINUSE_433(servername, nick) (RPL_META_MESSAGE(servername, "433", nick + " :Nickname is already in use"))
 #define RPL_ERR_USERNOTINCHANNEL_441(servername, nick, channel) (RPL_META_MESSAGE(servername, "441", nick + " " + channel + " :They aren't on that channel"))
 #define RPL_ERR_NOTONCHANNEL_442(servername, channel) (RPL_META_MESSAGE(servername, "442", channel + " :You're not on that channel"))
+#define RPL_ERR_USERONCHANNEL_443(servername, nick, channel) (RPL_META_MESSAGE(servername, "443", channel + " " + nick + " :is already on channel"))
 #define RPL_ERR_NOTREGISTERED_451(servername) (RPL_META_MESSAGE(servername, "451", ":You have not registered"))
 #define RPL_ERR_NEEDMOREPARAMS_461(servername, command) (RPL_META_MESSAGE(servername, "461", command + " :Not enough parameters"))
 #define RPL_ERR_ALREADYREGISTRED_462(servername) (RPL_META_MESSAGE(servername, "462", ":Unauthorized command (already registered)"))
