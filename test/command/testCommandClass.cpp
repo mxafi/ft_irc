@@ -58,19 +58,41 @@ struct NicknameTestData {
     bool isValid;
 };
 
-std::vector<NicknameTestData> nicknameTestData = {{"Valid Nickname", "nick", true},
-                                                  {"Truncated Nickname", "longerThanNineNick", true},
-                                                  {"Contains a space ' '", "a nick", true},
-                                                  {"Contains ','", "a,nick", false},
-                                                  {"Empty ", "", false},
-                                                  {"Contains Asterisk", "a*nick", false},
-                                                  {"Contains '?'", "a?Nick", false},
-                                                  {"contains '!' ", "a!nick", false},
-                                                  {"Contains '@'", "a@nick", false},
-                                                  {"Contains a '.'", "a.nick", false},
-                                                  {"Contains '$'", "a$nick", false},
-                                                  {"Contains a ':'", "a:nick", false},
-                                                  {"Contains '&'", "a&nick", false}};
+std::vector<NicknameTestData> nicknameTestData = {
+    {"Valid Nickname", "nick", true},
+    {"Truncated Nickname", "longerThanNineNick", true},
+    {"Contains a space ' '", "a nick", true},
+    {"Contains a mix of valid and invalid characters with spaces", "a *nick?!@. ", true},
+    {"Trailing whitespace", "nick ", true},
+    {"Leading and trailing whitespace", " nick ", true},
+    {"Very long string", std::string(10000, 'a'), true},
+    {"Leading whitespace", " nick", true},
+    {"Contains ','", "a,nick", false},
+    {"Contains only spaces and tab", " \t ", false},
+    {"Contains form feed", "\f", false},
+    {"Contains line feed", "\n", false},
+    {"Contains carriage return", "\r", false},
+    {"Contains horizontal tab", "\t", false},
+    {"Contains vertical tab", "\v", false},
+    {"Empty", "", false},
+    {"Contains Asterisk", "a*nick", false},
+    {"Contains '?'", "a?Nick", false},
+    {"contains '!'", "a!nick", false},
+    {"Contains '@'", "a@nick", false},
+    {"Contains a '.'", "a.nick", false},
+    {"Contains '$'", "a$nick", false},
+    {"Contains a ':'", "a:nick", false},
+    {"Contains '&'", "a&nick", false},
+    {"Contains a mix of valid and invalid characters", "a*nick?!@.", false},
+    {"Contains a mix of valid and invalid characters with line feeds", "a\n*nick?!@.\n", false},
+    {"Contains a mix of valid and invalid characters with carriage returns", "a\r*nick?!@.\r", false},
+    {"Contains a mix of valid and invalid characters with tabs", "a\t*nick?!@.\t", false},
+    {"Contains null character", std::string("a\0nick", 6), false},
+    {"Contains Unicode character", "a\u00E9nick", false},       // Example with a Unicode character (é)
+    {"Contains extended ASCII character", "a\x80nick", false},  // Example with an extended ASCII character
+    {"Contains non-printable character", "a\001nick", false},   // Example with a non-printable character (ASCII SOH)
+    {"Contains invisible character", "a\u200Bnick", false},     // Example with an invisible character (zero-width space)
+};
 
 /**
 *   Nick name validity is checked according to RFC2812 p. 7:
@@ -111,9 +133,26 @@ TEST_CASE("Nick", "[command][nick]") {
                     std::string msg = "NICK " + data.nickname;
                     std::string truncatedNick =
                         data.nickname.substr(0, NICK_MAX_LENGTH_RFC2812);  // Truncate nick to autorized max nick length = 9 characters
-                    size_t pos = truncatedNick.find_first_of(
-                        " ");  // We decided to accept space as a delimiter as DalNet does, hence the two following functions
-                    std::string expectedNick = truncatedNick.substr(0, pos);  // Split from white space
+
+                    // Find the first space
+                    size_t pos = truncatedNick.find_first_of(" ");
+                    std::string expectedNick;
+
+                    // If pos is 0, trim leading whitespace
+                    if (pos == 1) {
+                        // Find the first non-whitespace character
+                        size_t start = truncatedNick.find_first_not_of(" \t\n\r\f\v");
+                        if (start != std::string::npos) {
+                            // Use the substring from the first non-whitespace character to the end
+                            expectedNick = truncatedNick.substr(start);
+                        } else {
+                            // If there are no non-whitespace characters, set expectedNick to an empty string
+                            expectedNick = "";
+                        }
+                    } else {
+                        // If pos is not 0, use the current logic
+                        expectedNick = (pos == std::string::npos) ? truncatedNick : truncatedNick.substr(0, pos);
+                    }
 
                     std::string originalNick = client1.getNickname();
                     Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
@@ -126,7 +165,7 @@ TEST_CASE("Nick", "[command][nick]") {
         WHEN("Setting an invalid nickname") {
             for (const auto& data : nicknameTestData) {
                 if (!data.isValid) {
-                    if (data.nickname.length() == 0) {
+                    if (data.nickname.length() == 0 || std::all_of(data.nickname.begin(), data.nickname.end(), ::isspace)) {
                         response = ": 431 :No nickname given\r\n";
                     } else {
                         response = ": 432 " + data.nickname + " :Erroneous nickname\r\n";
@@ -136,7 +175,8 @@ TEST_CASE("Nick", "[command][nick]") {
                     std::string originalNick = client1.getNickname();
                     client1.clearSendBuffer();
                     Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
-                    INFO(data.description + " nickname should remained unchanged to: " + client1.getNickname());
+                    INFO(data.description + " nickname should remained unchanged to: \"" + originalNick + "\" but got: \"" +
+                         client1.getNickname() + "\" instead");
                     REQUIRE(client1.getSendBuffer() == response);
                     REQUIRE(client1.getNickname() == originalNick);
                     REQUIRE(client1.getNickname().length() <= NICK_MAX_LENGTH_RFC2812);
@@ -228,3 +268,4 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
         REQUIRE(sender.getSendBuffer() == response);
     }
 }
+
