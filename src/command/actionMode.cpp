@@ -1,5 +1,9 @@
 #include "Command.h"
 
+static bool isNextParamExist(unsigned int currentParamIndex, unsigned long numberOfParams) {
+    return currentParamIndex < numberOfParams;
+}
+
 namespace irc {
 
 // The MODE command is provided so that users may query and change the
@@ -60,12 +64,32 @@ void Command::actionMode(Client& client) {
     // Now we know that the client is a channel operator
 
     // Supported modes: i, t, k, l
-    // i: invite-only
-    // t: topic-protected
-    // k: key
-    // l: user-limit
+    // i: invite-only (no parameters)
+    // t: topic-protected (no parameters)
+    // k: key (parameter: key)
+    // l: user-limit (parameter: limit)
 
-    // TODO: Finish the implementation of the MODE command
+    // We will get something like: MODE #mychannel +ik key +tl 10
+
+    int modeChangesWithParam = 0; // max is 3
+    unsigned int currentParamIndex = 1; // max is numberOfParams - 1
+    while (currentParamIndex < numberOfParams) {
+        std::string& requestedModes = param_.at(currentParamIndex);
+        char modifier = requestedModes[0];
+        if (modifier != '+' && modifier != '-') {
+            client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE")); // TODO: figure out correct reply
+            return;
+        }
+        if (modifier == '+') {
+            // TODO: enable the modes that are requested, only the last one can have a parameter, increment modeChangesWithParam (increment currentParamIndex if it has a parameter, use isNextParamExist)
+        }
+        if (modifier == '-') {
+            // TODO: disable the modes that are requested, no parameters for now
+        }
+
+        currentParamIndex++;
+    }
+
     // Missing: parsing and checking the modes and mode parameters (max 3 modes that take a parameter)
     // Missing: sending the mode changes to the channel members
 }
