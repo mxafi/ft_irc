@@ -105,10 +105,8 @@ void Message::setParameters_(std::istringstream& serializedMessage) {
             std::string trailingParameter;
             std::getline(serializedMessage, trailingParameter);
             if (!trailingParameter.empty()) {
-                LOG_DEBUG("last parameter was not empty: " << trailingParameter);
                 parameters_.push_back(parameter + " " + trailingParameter);
             } else {
-                LOG_DEBUG("last parameter was empty");
                 parameters_.push_back(parameter);
             }
             break;  // No more parameters after a trailing parameter
@@ -120,6 +118,7 @@ void Message::setParameters_(std::istringstream& serializedMessage) {
         LOG_DEBUG("Message::setParameters_: too many parameters in message");
         numeric_ = ERR_CUSTOM_TOOMANYPARAMS;
     }
+    LOG_DEBUG("Message::setParameters_: got parameters_ (count): " + std::to_string(parameters_.size()));
 }
 
 /****
