@@ -168,6 +168,12 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
         REQUIRE(actual_rpl_err_notonchannel_442 == expected_rpl_err_notonchannel_442);
     }
 
+    SECTION("numeric replies 443") {
+        const std::string actual_rpl_err_useronchannel_443 = RPL_ERR_USERONCHANNEL_443(server_name, client_nick, "oogabooga", channel);
+        const std::string expected_rpl_err_useronchannel_443 = ":irc.example.com 443 xuffy oogabooga #test :is already on channel\r\n";
+        REQUIRE(actual_rpl_err_useronchannel_443 == expected_rpl_err_useronchannel_443);
+    }
+
     SECTION("numeric replies 451") {
         const std::string actual_rpl_err_notregistered_451 = RPL_ERR_NOTREGISTERED_451(server_name);
         const std::string expected_rpl_err_notregistered_451 = ":irc.example.com 451 :You have not registered\r\n";
