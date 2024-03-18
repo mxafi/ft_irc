@@ -74,16 +74,16 @@ void Command::actionJoin(Client& client) {
         if (Channel::isChannelNameFree(channelName, allChannels_) == false) {
             Channel& existingChannel = allChannels_.at(channelName);
             if (channelKey != existingChannel.getKey()) {
-                client.appendToSendBuffer(RPL_ERR_BADCHANNELKEY_475(serverHostname_g, channelName));
+                client.appendToSendBuffer(RPL_ERR_BADCHANNELKEY_475(serverHostname_g, client.getNickname(), channelName));
                 continue;
             }
             if (existingChannel.getUserLimit() != CHANNEL_USER_LIMIT_DISABLED &&
                 static_cast<long long>(existingChannel.getMemberCount()) >= existingChannel.getUserLimit()) {
-                client.appendToSendBuffer(RPL_ERR_CHANNELISFULL_471(serverHostname_g, channelName));
+                client.appendToSendBuffer(RPL_ERR_CHANNELISFULL_471(serverHostname_g, client.getNickname(), channelName));
                 continue;
             }
             if (existingChannel.isInviteOnly() && existingChannel.isInvited(client) == false) {
-                client.appendToSendBuffer(RPL_ERR_INVITEONLYCHAN_473(serverHostname_g, channelName));
+                client.appendToSendBuffer(RPL_ERR_INVITEONLYCHAN_473(serverHostname_g, client.getNickname(), channelName));
                 continue;
             }
             existingChannel.joinMember(client);

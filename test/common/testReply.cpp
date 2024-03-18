@@ -172,22 +172,22 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
     }
 
     SECTION("numeric replies 471-473") {
-        const std::string actual_rpl_err_channelisfull_471 = RPL_ERR_CHANNELISFULL_471(server_name, channel);
-        const std::string expected_rpl_err_channelisfull_471 = ":irc.example.com 471 #test :Cannot join channel (+l)\r\n";
+        const std::string actual_rpl_err_channelisfull_471 = RPL_ERR_CHANNELISFULL_471(server_name, client_nick, channel);
+        const std::string expected_rpl_err_channelisfull_471 = ":irc.example.com 471 xuffy #test :Cannot join channel (+l)\r\n";
         REQUIRE(actual_rpl_err_channelisfull_471 == expected_rpl_err_channelisfull_471);
 
-        const std::string actual_rpl_err_unknownmode_472 = RPL_ERR_UNKNOWNMODE_472(server_name, "l", channel);
-        const std::string expected_rpl_err_unknownmode_472 = ":irc.example.com 472 l :is unknown mode char to me for #test\r\n";
+        const std::string actual_rpl_err_unknownmode_472 = RPL_ERR_UNKNOWNMODE_472(server_name, client_nick, "l", channel);
+        const std::string expected_rpl_err_unknownmode_472 = ":irc.example.com 472 xuffy l :is unknown mode char to me for #test\r\n";
         REQUIRE(actual_rpl_err_unknownmode_472 == expected_rpl_err_unknownmode_472);
 
-        const std::string actual_rpl_err_inviteonlychan_473 = RPL_ERR_INVITEONLYCHAN_473(server_name, channel);
-        const std::string expected_rpl_err_inviteonlychan_473 = ":irc.example.com 473 #test :Cannot join channel (+i)\r\n";
+        const std::string actual_rpl_err_inviteonlychan_473 = RPL_ERR_INVITEONLYCHAN_473(server_name, client_nick, channel);
+        const std::string expected_rpl_err_inviteonlychan_473 = ":irc.example.com 473 xuffy #test :Cannot join channel (+i)\r\n";
         REQUIRE(actual_rpl_err_inviteonlychan_473 == expected_rpl_err_inviteonlychan_473);
     }
 
     SECTION("numeric replies 475") {
-        const std::string actual_rpl_err_badchannelkey_475 = RPL_ERR_BADCHANNELKEY_475(server_name, channel);
-        const std::string expected_rpl_err_badchannelkey_475 = ":irc.example.com 475 #test :Cannot join channel (+k)\r\n";
+        const std::string actual_rpl_err_badchannelkey_475 = RPL_ERR_BADCHANNELKEY_475(server_name, client_nick, channel);
+        const std::string expected_rpl_err_badchannelkey_475 = ":irc.example.com 475 xuffy #test :Cannot join channel (+k)\r\n";
         REQUIRE(actual_rpl_err_badchannelkey_475 == expected_rpl_err_badchannelkey_475);
     }
 

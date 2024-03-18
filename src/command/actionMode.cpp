@@ -106,7 +106,7 @@ void Command::actionMode(Client& client) {
         }
         for (char mode : currentParamString.substr(1)) {
             if (isModeSupported(mode) == false) {
-                client.appendToSendBuffer(RPL_ERR_UNKNOWNMODE_472(serverHostname_g, mode, channel.getName()));
+                client.appendToSendBuffer(RPL_ERR_UNKNOWNMODE_472(serverHostname_g, client.getNickname(), mode, channel.getName()));
                 return;
             }
             currentMode.modifier = currentModifier;
