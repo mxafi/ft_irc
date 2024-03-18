@@ -1,5 +1,13 @@
 #include "Command.h"
 
+static bool isModeSupported(char mode) {
+    return std::string(SUPPORTED_CHANNEL_MODES).find(mode) != std::string::npos;
+}
+
+static bool isModeWithParam(char mode) {
+    return std::string(SUPPORTED_CHANNEL_MODES_WITH_PARAM).find(mode) != std::string::npos;
+}
+
 static bool isNextParamExist(unsigned int currentParamIndex, unsigned long numberOfParams) {
     return currentParamIndex < numberOfParams;
 }
@@ -63,35 +71,58 @@ void Command::actionMode(Client& client) {
 
     // Now we know that the client is a channel operator
 
-    // Supported modes: i, t, k, l
-    // i: invite-only (no parameters)
-    // t: topic-protected (no parameters)
+    // Supported modes: i, t, k, o, l
+    // i: invite-only (no parameter)
+    // t: topic-protected (no parameter)
     // k: key (parameter: key)
+    // o: operator (parameter: nickname)
     // l: user-limit (parameter: limit)
 
     // We will get something like: MODE #mychannel +ik key +tl 10
+    // We will parse it into a vector of modestructs like this:
+    // vector[0]: {modifier: '+', mode: 'i', param: ""}
+    // vector[1]: {modifier: '+', mode: 'k', param: "key"}
+    // vector[2]: {modifier: '+', mode: 't', param: ""}
+    // vector[3]: {modifier: '+', mode: 'l', param: "10"}
 
-    int modeChangesWithParam = 0; // max is 3
-    unsigned int currentParamIndex = 1; // max is numberOfParams - 1
+    std::vector<Channel::modestruct> modeRequests;
+    int modeChangesWithParam = 0;        // max is 3
+    unsigned int currentParamIndex = 1;  // max is numberOfParams - 1
     while (currentParamIndex < numberOfParams) {
-        std::string& requestedModes = param_.at(currentParamIndex);
-        char modifier = requestedModes[0];
-        if (modifier != '+' && modifier != '-') {
-            client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE")); // TODO: figure out correct reply
+        Channel::modestruct currentMode;
+        std::string& currentParamString = param_.at(currentParamIndex);
+        char currentModifier = currentParamString[0];
+        if (currentModifier != '+' && currentModifier != '-') {
+            client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));  // TODO: figure out correct reply
             return;
         }
-        if (modifier == '+') {
-            // TODO: enable the modes that are requested, only the last one can have a parameter, increment modeChangesWithParam (increment currentParamIndex if it has a parameter, use isNextParamExist)
+        for (char mode : currentParamString.substr(1)) {
+            if (isModeSupported(mode) == false) {
+                client.appendToSendBuffer(RPL_ERR_UNKNOWNMODE_472(serverHostname_g, mode, channel.getName()));
+                return;
+            }
+            currentMode.modifier = currentModifier;
+            currentMode.mode = mode;
+            modeRequests.push_back(currentMode);
         }
-        if (modifier == '-') {
-            // TODO: disable the modes that are requested, no parameters for now
+        if (isNextParamExist(currentParamIndex, numberOfParams) && isModeWithParam(modeRequests.back().mode)) {
+            modeChangesWithParam++;
+            currentParamIndex++;
+            modeRequests.back().param = param_.at(currentParamIndex);
         }
-
         currentParamIndex++;
     }
+    if (modeChangesWithParam > 3) {
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));  // TODO: figure out correct reply
+        return;
+    }
 
-    // Missing: parsing and checking the modes and mode parameters (max 3 modes that take a parameter)
-    // Missing: sending the mode changes to the channel members
+    // Now we have a vector of modeRequests, with valid modes but possibly invalid parameters
+
+    // Actually go through the modeRequests, check parameters, change the modes, and send the changes to the channel members
+    for (Channel::modestruct& modeRequest : modeRequests) {
+        channel.handleModeChange(client, modeRequest);
+    }
 }
 
 }  // namespace irc
