@@ -50,6 +50,8 @@
 #define RPL_ERR_CHANNELISFULL_471(servername, channel) (RPL_META_MESSAGE(servername, "471", channel + " :Cannot join channel (+l)"))
 #define RPL_ERR_INVITEONLYCHAN_473(servername, channel) (RPL_META_MESSAGE(servername, "473", channel + " :Cannot join channel (+i)"))
 #define RPL_ERR_BADCHANNELKEY_475(servername, channel) (RPL_META_MESSAGE(servername, "475", channel + " :Cannot join channel (+k)"))
+#define RPL_ERR_KEYSET_467(servername, channel) (RPL_META_MESSAGE(servername, "467", channel + " :Channel key already set"))
+#define RPL_ERR_UNKNOWNMODE_472(servername, mode, channel) (RPL_META_MESSAGE(servername, "472", mode + " :is unknown mode char to me for " + channel))
 #define RPL_ERR_CHANOPRIVSNEEDED_482(servername, channel) (RPL_META_MESSAGE(servername, "482", channel + " :You're not channel operator"))
 
 #endif
