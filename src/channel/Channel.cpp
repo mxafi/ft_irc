@@ -292,7 +292,7 @@ int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
             // i: invite-only (no parameter)
             if (!modeStruct.param.empty()) {
                 LOG_DEBUG("Channel::handleModeChange: i: mode has a parameter (when it shouldn't), not setting");
-                allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                 return FAILURE;
             }
             if (modeStruct.modifier == '+') {
@@ -314,7 +314,7 @@ int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
             // t: topic-protected (no parameter)
             if (!modeStruct.param.empty()) {
                 LOG_DEBUG("Channel::handleModeChange: t: mode has a parameter (when it shouldn't), not setting");
-                allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                 return FAILURE;
             }
             if (modeStruct.modifier == '+') {
@@ -336,7 +336,7 @@ int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
             if (modeStruct.modifier == '+') {
                 if (modeStruct.param.empty()) {
                     LOG_DEBUG("Channel::handleModeChange: k: +k without a parameter, not setting");
-                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                     return FAILURE;
                 }
                 if (getKey().empty() == false) {
@@ -352,7 +352,7 @@ int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
             if (modeStruct.modifier == '-') {
                 if (!modeStruct.param.empty()) {
                     LOG_DEBUG("Channel::handleModeChange: k: -k with a parameter, not setting");
-                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                     return FAILURE;
                 }
                 // key mode is being unset even if it's already unset
@@ -366,7 +366,7 @@ int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
             // o: operator (parameter: nickname)
             if (modeStruct.param.empty()) {
                 LOG_DEBUG("Channel::handleModeChange: o: mode has no parameter even though it is required, not setting");
-                allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                 return FAILURE;
             }
             // try to find the client by nickname
@@ -396,19 +396,19 @@ int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
             if (modeStruct.modifier == '+') {
                 if (modeStruct.param.empty()) {
                     LOG_DEBUG("Channel::handleModeChange: l: +l without a parameter, not setting");
-                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                     return FAILURE;
                 }
                 try {
                     userLimit = std::stoi(modeStruct.param);
                     if (userLimit < 0) {
                         LOG_DEBUG("Channel::handleModeChange: l: +l with a negative int parameter, not setting");
-                        allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                        allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                         return FAILURE;
                     }
                 } catch (std::out_of_range& e) {
                     LOG_DEBUG("Channel::handleModeChange: l: +l with a non-int parameter, not setting");
-                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                     return FAILURE;
                 }
                 setUserLimit(userLimit);
@@ -419,7 +419,7 @@ int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
             if (modeStruct.modifier == '-') {
                 if (!modeStruct.param.empty()) {
                     LOG_DEBUG("Channel::handleModeChange: l: -l with a parameter, not setting");
-                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                     return FAILURE;
                 }
                 // user-limit mode is being unset even if it's already unset

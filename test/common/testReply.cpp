@@ -150,8 +150,8 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
         const std::string expected_rpl_err_usernotinchannel_441 = ":irc.example.com 441 xuffy #test :They aren't on that channel\r\n";
         REQUIRE(actual_rpl_err_usernotinchannel_441 == expected_rpl_err_usernotinchannel_441);
 
-        const std::string actual_rpl_err_notonchannel_442 = RPL_ERR_NOTONCHANNEL_442(server_name, channel);
-        const std::string expected_rpl_err_notonchannel_442 = ":irc.example.com 442 #test :You're not on that channel\r\n";
+        const std::string actual_rpl_err_notonchannel_442 = RPL_ERR_NOTONCHANNEL_442(server_name, client_nick, channel);
+        const std::string expected_rpl_err_notonchannel_442 = ":irc.example.com 442 xuffy #test :You're not on that channel\r\n";
         REQUIRE(actual_rpl_err_notonchannel_442 == expected_rpl_err_notonchannel_442);
     }
 
@@ -162,12 +162,12 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
     }
 
     SECTION("numeric replies 461-462") {
-        const std::string actual_rpl_err_needmoreparams_461 = RPL_ERR_NEEDMOREPARAMS_461(server_name, "PRIVMSG");
-        const std::string expected_rpl_err_needmoreparams_461 = ":irc.example.com 461 PRIVMSG :Not enough parameters\r\n";
+        const std::string actual_rpl_err_needmoreparams_461 = RPL_ERR_NEEDMOREPARAMS_461(server_name, client_nick, "PRIVMSG");
+        const std::string expected_rpl_err_needmoreparams_461 = ":irc.example.com 461 xuffy PRIVMSG :Not enough parameters\r\n";
         REQUIRE(actual_rpl_err_needmoreparams_461 == expected_rpl_err_needmoreparams_461);
 
-        const std::string actual_rpl_err_alreadyregistred_462 = RPL_ERR_ALREADYREGISTRED_462(server_name);
-        const std::string expected_rpl_err_alreadyregistred_462 = ":irc.example.com 462 :Unauthorized command (already registered)\r\n";
+        const std::string actual_rpl_err_alreadyregistred_462 = RPL_ERR_ALREADYREGISTRED_462(server_name, client_nick);
+        const std::string expected_rpl_err_alreadyregistred_462 = ":irc.example.com 462 xuffy :You may not reregister\r\n";
         REQUIRE(actual_rpl_err_alreadyregistred_462 == expected_rpl_err_alreadyregistred_462);
     }
 
@@ -198,14 +198,14 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
     }
 
     SECTION("numeric replies 482") {
-        const std::string actual_rpl_err_chanoprivsneeded_482 = RPL_ERR_CHANOPRIVSNEEDED_482(server_name, channel);
-        const std::string expected_rpl_err_chanoprivsneeded_482 = ":irc.example.com 482 #test :You're not channel operator\r\n";
+        const std::string actual_rpl_err_chanoprivsneeded_482 = RPL_ERR_CHANOPRIVSNEEDED_482(server_name, client_nick, channel);
+        const std::string expected_rpl_err_chanoprivsneeded_482 = ":irc.example.com 482 xuffy #test :You're not channel operator\r\n";
         REQUIRE(actual_rpl_err_chanoprivsneeded_482 == expected_rpl_err_chanoprivsneeded_482);
     }
 
     SECTION("numeric replies 501") {
-        const std::string actual_rpl_err_umodeunknownflag_501 = RPL_ERR_UMODEUNKNOWNFLAG_501(server_name);
-        const std::string expected_rpl_err_umodeunknownflag_501 = ":irc.example.com 501 :Unknown MODE flag\r\n";
+        const std::string actual_rpl_err_umodeunknownflag_501 = RPL_ERR_UMODEUNKNOWNFLAG_501(server_name, client_nick);
+        const std::string expected_rpl_err_umodeunknownflag_501 = ":irc.example.com 501 xuffy :Unknown MODE flag\r\n";
         REQUIRE(actual_rpl_err_umodeunknownflag_501 == expected_rpl_err_umodeunknownflag_501);
     }
 }
