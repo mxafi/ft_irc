@@ -38,10 +38,12 @@ void Command::actionPrivmsg(Client& client) {
         LOG_DEBUG("CMD::PRIVMSG: targetParam is a channel");
         try {
             Channel& channel = allChannels_.at(targetParam);
+            LOG_DEBUG("Command::actionPrivmsg: Channel found " + targetParam);
             if (channel.isMember(client) == false) {
                 client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, targetParam));
                 return;
             }
+            LOG_DEBUG("Command::actionPrivmsg: nick " + client.getNickname() + " is a member of " + targetParam);
             channel.sendMessageToMembersExcluding(COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "PRIVMSG",
                                                               targetParam + " :" + messageParamWithoutColon),
                                                   client);
