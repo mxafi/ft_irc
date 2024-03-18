@@ -67,12 +67,12 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
     }
 
     SECTION("numeric replies 331-332") {
-        const std::string actual_rpl_notopic_331 = RPL_NOTOPIC_331(server_name, channel);
-        const std::string expected_rpl_notopic_331 = ":irc.example.com 331 #test :No topic is set\r\n";
+        const std::string actual_rpl_notopic_331 = RPL_NOTOPIC_331(server_name, client_nick, channel);
+        const std::string expected_rpl_notopic_331 = ":irc.example.com 331 xuffy #test :No topic is set\r\n";
         REQUIRE(actual_rpl_notopic_331 == expected_rpl_notopic_331);
 
-        const std::string actual_rpl_topic_332 = RPL_TOPIC_332(server_name, channel, "Hello, world!");
-        const std::string expected_rpl_topic_332 = ":irc.example.com 332 #test :Hello, world!\r\n";
+        const std::string actual_rpl_topic_332 = RPL_TOPIC_332(server_name, client_nick, channel, "Hello, world!");
+        const std::string expected_rpl_topic_332 = ":irc.example.com 332 xuffy #test :Hello, world!\r\n";
         REQUIRE(actual_rpl_topic_332 == expected_rpl_topic_332);
     }
 

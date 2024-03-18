@@ -291,10 +291,10 @@ void Command::actionTopic(Client& client) {
     // get the topic
     if (param_.size() == 1) {
         if (channel.getTopic().empty()) {
-            client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, param_.at(0)));
+            client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, client.getNickname(), param_.at(0)));
             return;
         }
-        client.appendToSendBuffer(RPL_TOPIC_332(serverHostname_g, param_.at(0), channel.getTopic()));
+        client.appendToSendBuffer(RPL_TOPIC_332(serverHostname_g, client.getNickname(), param_.at(0), channel.getTopic()));
         return;
     }
 
