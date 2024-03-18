@@ -240,7 +240,7 @@ void Command::actionInvite(Client& client) {
         }
     }
     client.appendToSendBuffer(RPL_INVITING_341(serverHostname_g, client.getNickname(), nickname, channelName));
-    invitee.appendToSendBuffer(INVITE(serverHostname_g, client.getNickname(), client.getUserName(), nickname, channelName));
+    invitee.appendToSendBuffer(INVITE(client.getNickname(), client.getUserName(), client.getHost(), nickname, channelName));
 }
 
 void Command::actionPart(Client& client) {
