@@ -24,7 +24,7 @@
 
 #define RPL_ERR_NOSUCHNICK_401(servername, nick_or_channel) \
     (RPL_META_MESSAGE(servername, "401", nick_or_channel + " :No such nick/channel"))
-#define RPL_ERR_NOSUCHCHANNEL_403(servername, channelName) (RPL_META_MESSAGE(servername, "403", channelName + ":No such channel"))
+#define RPL_ERR_NOSUCHCHANNEL_403(servername, channelName) (RPL_META_MESSAGE(servername, "403", channelName + " :No such channel"))
 #define RPL_ERR_CANNOTSENDTOCHAN_404(servername, channelName) (RPL_META_MESSAGE(servername, "404", channelName + ":Cannot send to channel"))
 #define RPL_ERR_TOOMANYCHANNELS_405(servername, channel) \
     (RPL_META_MESSAGE(servername, "405", channel + " :You have joined too many channels"))
