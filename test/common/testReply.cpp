@@ -47,6 +47,13 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
         REQUIRE(actual_privmsg_format == expected_privmsg_format);
     }
 
+    SECTION("INVITE specific definitions") {
+        const std::string invitee = "oogabooga";
+        const std::string actual_invite = INVITE(client_nick, client_user, client_host, invitee, channel);
+        const std::string expected_invite = ":xuffy!markus@123.123.123.123 INVITE oogabooga :#test\r\n";
+        REQUIRE(actual_invite == expected_invite);
+    }
+
     SECTION("numeric replies 001-004") {
         const std::string actual_rpl_welcome_001 = RPL_WELCOME_001(server_name, client_nick, client_user, client_host);
         const std::string expected_rpl_welcome_001 =
@@ -80,6 +87,12 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
         const std::string actual_rpl_topic_332 = RPL_TOPIC_332(server_name, client_nick, channel, "Hello, world!");
         const std::string expected_rpl_topic_332 = ":irc.example.com 332 xuffy #test :Hello, world!\r\n";
         REQUIRE(actual_rpl_topic_332 == expected_rpl_topic_332);
+    }
+
+    SECTION("numeric replies 341") {
+        const std::string actual_rpl_inviting_341 = RPL_INVITING_341(server_name, client_nick, "oogabooga", channel);
+        const std::string expected_rpl_inviting_341 = ":irc.example.com 341 xuffy oogabooga #test\r\n";
+        REQUIRE(actual_rpl_inviting_341 == expected_rpl_inviting_341);
     }
 
     SECTION("numeric replies 353") {
