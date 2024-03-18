@@ -11,7 +11,7 @@
 //User format
 #define FORMAT_NICK_USER_HOST(nickname, username, hostname) (std::string(":") + nickname + "!" + username + "@" + hostname)
 #define PRIVMSG_FORMAT(formattedSender, target, text) (RPL_MESSAGE(std::string(formattedSender) + " PRIVMSG " + target + " :" + text))
-#define INVITE(servername, nickname, username, invitee, channel) (RPL_MESSAGE(std::string(":") + nickname + "!" + username + "@" + servername + " INVITE " + invitee + " :" + channel))
+#define INVITE(nickname, username, hostname, invitee, channel) (RPL_MESSAGE(std::string(":") + nickname + "!" + username + "@" + hostname + " INVITE " + invitee + " :" + channel))
 
 // Numeric replies in order
 #define RPL_WELCOME_001(servername, nick, user, host) \
