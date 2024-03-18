@@ -232,7 +232,7 @@ void Command::actionInvite(Client& client) {
             }
         }
         if (channel.isMember(invitee)) {
-            client.appendToSendBuffer(RPL_ERR_USERONCHANNEL_443(serverHostname_g, nickname, channelName));
+            client.appendToSendBuffer(RPL_ERR_USERONCHANNEL_443(serverHostname_g, client.getNickname(), nickname, channelName));
             return;
         }
         if (!channel.isInvited(invitee)) {
