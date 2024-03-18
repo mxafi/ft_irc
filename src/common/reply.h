@@ -21,7 +21,7 @@
 #define RPL_MYINFO_004(servername, nick, version, user_modes, channel_modes) \
     (RPL_META_MESSAGE(servername, "004", nick + " " + servername + " " + version + " " + user_modes + " " + channel_modes))
 
-#define RPL_CHANNELMODEIS_324(servername, channel, enabled_modes) (RPL_META_MESSAGE(servername, "324", channel + " +" + enabled_modes))
+#define RPL_CHANNELMODEIS_324(servername, client, channel, enabled_modes) (RPL_META_MESSAGE(servername, "324", client + " " + channel + " +" + enabled_modes))
 #define RPL_NOTOPIC_331(servername, client, channel) (RPL_META_MESSAGE(servername, "331", client + " " + channel + " :No topic is set"))
 #define RPL_TOPIC_332(servername, client, channel, topic) (RPL_META_MESSAGE(servername, "332", client + " " + channel + " :" + topic))
 #define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) \

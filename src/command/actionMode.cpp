@@ -65,7 +65,7 @@ void Command::actionMode(Client& client) {
         if (channel.getUserLimit() != CHANNEL_USER_LIMIT_DISABLED) {
             enabledModes += "l";
         }
-        client.appendToSendBuffer(RPL_CHANNELMODEIS_324(serverHostname_g, channel.getName(), enabledModes));
+        client.appendToSendBuffer(RPL_CHANNELMODEIS_324(serverHostname_g, client.getNickname(), channel.getName(), enabledModes));
         return;
     }
 

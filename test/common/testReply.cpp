@@ -66,6 +66,12 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
         REQUIRE(actual_rpl_myinfo_004 == expected_rpl_myinfo_004);
     }
 
+    SECTION("numeric replies 324") {
+        const std::string actual_rpl_channelmodeis_324 = RPL_CHANNELMODEIS_324(server_name, client_nick, channel, "b");
+        const std::string expected_rpl_channelmodeis_324 = ":irc.example.com 324 xuffy #test +b\r\n";
+        REQUIRE(actual_rpl_channelmodeis_324 == expected_rpl_channelmodeis_324);
+    }
+
     SECTION("numeric replies 331-332") {
         const std::string actual_rpl_notopic_331 = RPL_NOTOPIC_331(server_name, client_nick, channel);
         const std::string expected_rpl_notopic_331 = ":irc.example.com 331 xuffy #test :No topic is set\r\n";
