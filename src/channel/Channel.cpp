@@ -284,4 +284,155 @@ Client* Channel::getMemberByNicknameOrNull(const std::string& nickname) {
     return nullptr;
 }
 
+int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
+    Client* clientToSetOperatorStatus = nullptr;
+    int userLimit = userLimit_;
+    switch (modeStruct.mode) {
+        case 'i':
+            // i: invite-only (no parameter)
+            if (!modeStruct.param.empty()) {
+                LOG_DEBUG("Channel::handleModeChange: i: mode has a parameter (when it shouldn't), not setting");
+                allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                return FAILURE;
+            }
+            if (modeStruct.modifier == '+') {
+                // invite-only mode is being set even if it's already set
+                setInviteOnly(true);
+                sendMessageToMembers(
+                    COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE", name_ + " +i"));
+                return SUCCESS;
+            }
+            if (modeStruct.modifier == '-') {
+                // invite-only mode is being unset even if it's already unset
+                setInviteOnly(false);
+                sendMessageToMembers(
+                    COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE", name_ + " -i"));
+                return SUCCESS;
+            }
+            return FAILURE;
+        case 't':
+            // t: topic-protected (no parameter)
+            if (!modeStruct.param.empty()) {
+                LOG_DEBUG("Channel::handleModeChange: t: mode has a parameter (when it shouldn't), not setting");
+                allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                return FAILURE;
+            }
+            if (modeStruct.modifier == '+') {
+                // topic-protected mode is being set even if it's already set
+                setTopicProtected(true);
+                sendMessageToMembers(
+                    COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE", name_ + " +t"));
+                return SUCCESS;
+            }
+            if (modeStruct.modifier == '-') {
+                // topic-protected mode is being unset even if it's already unset
+                setTopicProtected(false);
+                sendMessageToMembers(
+                    COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE", name_ + " -t"));
+                return SUCCESS;
+            }
+            return FAILURE;
+        case 'k':
+            if (modeStruct.modifier == '+') {
+                if (modeStruct.param.empty()) {
+                    LOG_DEBUG("Channel::handleModeChange: k: +k without a parameter, not setting");
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    return FAILURE;
+                }
+                if (getKey().empty() == false) {
+                    LOG_DEBUG("Channel::handleModeChange: k: +k with a parameter, but key is already set, not setting");
+                    allowedClient.appendToSendBuffer(RPL_ERR_KEYSET_467(serverHostname_g, name_));
+                    return FAILURE;
+                }
+                setKey(modeStruct.param);
+                sendMessageToMembers(
+                    COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE", name_ + " +k"));
+                return SUCCESS;
+            }
+            if (modeStruct.modifier == '-') {
+                if (!modeStruct.param.empty()) {
+                    LOG_DEBUG("Channel::handleModeChange: k: -k with a parameter, not setting");
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    return FAILURE;
+                }
+                // key mode is being unset even if it's already unset
+                setKey("");
+                sendMessageToMembers(
+                    COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE", name_ + " -k"));
+                return SUCCESS;
+            }
+            return FAILURE;
+        case 'o':
+            // o: operator (parameter: nickname)
+            if (modeStruct.param.empty()) {
+                LOG_DEBUG("Channel::handleModeChange: o: mode has no parameter even though it is required, not setting");
+                allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                return FAILURE;
+            }
+            // try to find the client by nickname
+            clientToSetOperatorStatus = getMemberByNicknameOrNull(modeStruct.param);
+            if (clientToSetOperatorStatus == nullptr) {
+                LOG_DEBUG("Channel::handleModeChange: o: client not found, not setting operator status");
+                allowedClient.appendToSendBuffer(RPL_ERR_USERNOTINCHANNEL_441(serverHostname_g, modeStruct.param, name_));
+                return FAILURE;
+            }
+            if (modeStruct.modifier == '+') {
+                // operator mode is being set even if it's already set
+                setOperatorStatus(*clientToSetOperatorStatus, true);
+                sendMessageToMembers(COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE",
+                                                 name_ + " +o " + modeStruct.param));
+                return SUCCESS;
+            }
+            if (modeStruct.modifier == '-') {
+                // operator mode is being unset even if it's already unset
+                setOperatorStatus(*clientToSetOperatorStatus, false);
+                sendMessageToMembers(COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE",
+                                                 name_ + " -o " + modeStruct.param));
+                return SUCCESS;
+            }
+            return FAILURE;
+        case 'l':
+            // l: user-limit (parameter: limit)
+            if (modeStruct.modifier == '+') {
+                if (modeStruct.param.empty()) {
+                    LOG_DEBUG("Channel::handleModeChange: l: +l without a parameter, not setting");
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    return FAILURE;
+                }
+                try {
+                    userLimit = std::stoi(modeStruct.param);
+                    if (userLimit < 0) {
+                        LOG_DEBUG("Channel::handleModeChange: l: +l with a negative int parameter, not setting");
+                        allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                        return FAILURE;
+                    }
+                } catch (std::out_of_range& e) {
+                    LOG_DEBUG("Channel::handleModeChange: l: +l with a non-int parameter, not setting");
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    return FAILURE;
+                }
+                setUserLimit(userLimit);
+                sendMessageToMembers(COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE",
+                                                 name_ + " +l " + std::to_string(userLimit)));
+                return SUCCESS;
+            }
+            if (modeStruct.modifier == '-') {
+                if (!modeStruct.param.empty()) {
+                    LOG_DEBUG("Channel::handleModeChange: l: -l with a parameter, not setting");
+                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "MODE"));
+                    return FAILURE;
+                }
+                // user-limit mode is being unset even if it's already unset
+                setUserLimit(CHANNEL_USER_LIMIT_DISABLED);
+                sendMessageToMembers(
+                    COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE", name_ + " -l"));
+                return SUCCESS;
+            }
+            return FAILURE;
+        default:
+            LOG_WARNING("Channel::handleModeChange: ->" << modeStruct.mode << "<-: unknown mode char, default case reached");
+            return FAILURE;
+    }
+}
+
 }  // namespace irc
