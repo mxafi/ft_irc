@@ -8,6 +8,7 @@
 
 extern std::string serverHostname_g;
 std::string password = "password";
+const int test_nick_max_length_rfc2812 = 9; // Define the maximum nickname length locally
 
 using namespace irc;
 
@@ -97,7 +98,7 @@ TEST_CASE("Nick", "[command][nick]") {
                 if (data.isValid) {
                     std::string msg = "NICK " + data.nickname;
                     std::string truncatedNick =
-                        data.nickname.substr(0, NICK_MAX_LENGTH_RFC2812);  // Truncate nick to autorized max nick length = 9 characters
+                        data.nickname.substr(0, test_nick_max_length_rfc2812);  // Truncate nick to autorized max nick length = 9 characters
                     // Trim leading and trailing spaces
                     size_t start = truncatedNick.find_first_not_of(" ");
                     size_t end = truncatedNick.find_last_not_of(" ");
@@ -113,13 +114,13 @@ TEST_CASE("Nick", "[command][nick]") {
                     } else {
                         // If no whitespace character is found, set expectedNick to the entire trimmed string
                         expectedNick = trimmedNick;
-                    }                    
+                    }
                     std::string originalNick = client1.getNickname();
                     client1.clearSendBuffer();
                     Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
                     INFO(data.description + " failed to set nickname to: \"" + expectedNick + "\" trimmed nick: \"" + trimmedNick + "\"");
                     REQUIRE(client1.getNickname() == expectedNick);
-                    REQUIRE(client1.getNickname().length() <= NICK_MAX_LENGTH_RFC2812);
+                    REQUIRE(client1.getNickname().length() <= test_nick_max_length_rfc2812);
                 }
             }
         }
@@ -132,7 +133,7 @@ TEST_CASE("Nick", "[command][nick]") {
                         response = ": 432 " + data.nickname + " :Erroneous nickname\r\n";
                     }
                     std::string msg = "NICK " + data.nickname;
-                    std::string truncatedNick = data.nickname.substr(0, NICK_MAX_LENGTH_RFC2812);
+                    std::string truncatedNick = data.nickname.substr(0, test_nick_max_length_rfc2812);
                     std::string originalNick = client1.getNickname();
                     client1.clearSendBuffer();
                     Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
@@ -140,7 +141,7 @@ TEST_CASE("Nick", "[command][nick]") {
                          client1.getNickname() + "\" instead");
                     REQUIRE(client1.getSendBuffer() == response);
                     REQUIRE(client1.getNickname() == originalNick);
-                    REQUIRE(client1.getNickname().length() <= NICK_MAX_LENGTH_RFC2812);
+                    REQUIRE(client1.getNickname().length() <= test_nick_max_length_rfc2812);
                 }
             }
         }
@@ -229,4 +230,3 @@ TEST_CASE("Command PRIVMSG action", "[command][privmsg]") {
         REQUIRE(sender.getSendBuffer() == response);
     }
 }
-
