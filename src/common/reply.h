@@ -11,6 +11,7 @@
 //User format
 #define FORMAT_NICK_USER_HOST(nickname, username, hostname) (std::string(":") + nickname + "!" + username + "@" + hostname)
 #define PRIVMSG_FORMAT(formattedSender, target, text) (RPL_MESSAGE(std::string(formattedSender) + " PRIVMSG " + target + " :" + text))
+#define INVITE(servername, nickname, username, invitee, channel) (RPL_MESSAGE(std::string(":") + nickname + "!" + username + "@" + servername + " INVITE " + invitee + " :" + channel))
 
 // Numeric replies in order
 #define RPL_WELCOME_001(servername, nick, user, host) \
@@ -24,6 +25,7 @@
 #define RPL_CHANNELMODEIS_324(servername, client, channel, enabled_modes) (RPL_META_MESSAGE(servername, "324", client + " " + channel + " +" + enabled_modes))
 #define RPL_NOTOPIC_331(servername, client, channel) (RPL_META_MESSAGE(servername, "331", client + " " + channel + " :No topic is set"))
 #define RPL_TOPIC_332(servername, client, channel, topic) (RPL_META_MESSAGE(servername, "332", client + " " + channel + " :" + topic))
+#define RPL_INVITING_341(servername, inviter, invitee, channel) (RPL_META_MESSAGE(servername, "341", inviter + " " + invitee + " " + channel))
 #define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) \
     (RPL_META_MESSAGE(servername, "353", client + " " + symbol + " " + channel + " :" + namelist))
 
@@ -44,6 +46,7 @@
 #define RPL_ERR_NICKNAMEINUSE_433(servername, nick) (RPL_META_MESSAGE(servername, "433", nick + " :Nickname is already in use"))
 #define RPL_ERR_USERNOTINCHANNEL_441(servername, nick, channel) (RPL_META_MESSAGE(servername, "441", nick + " " + channel + " :They aren't on that channel"))
 #define RPL_ERR_NOTONCHANNEL_442(servername, client, channel) (RPL_META_MESSAGE(servername, "442", client + " " + channel + " :You're not on that channel"))
+#define RPL_ERR_USERONCHANNEL_443(servername, nick, channel) (RPL_META_MESSAGE(servername, "443", channel + " " + nick + " :is already on channel"))
 #define RPL_ERR_NOTREGISTERED_451(servername) (RPL_META_MESSAGE(servername, "451", ":You have not registered"))
 #define RPL_ERR_NEEDMOREPARAMS_461(servername, client, command) (RPL_META_MESSAGE(servername, "461", client + " " + command + " :Not enough parameters"))
 #define RPL_ERR_ALREADYREGISTRED_462(servername, client) (RPL_META_MESSAGE(servername, "462", client + " :You may not reregister"))

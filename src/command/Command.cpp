@@ -42,11 +42,15 @@ std::map<std::string, std::function<void(Command*, Client&)>> Command::commands 
                                                                                     [](Command* cmd, Client& client) {
                                                                                         cmd->actionTopic(client);
                                                                                     }},
-                                                                                   {"KICK", [](Command* cmd, Client& client) {
+                                                                                   {"KICK",
+                                                                                    [](Command* cmd, Client& client) {
                                                                                         cmd->actionKick(client);
                                                                                     }},
                                                                                    {"MODE", [](Command* cmd, Client& client) {
                                                                                         cmd->actionMode(client);
+                                                                                    }},
+                                                                                   {"INVITE", [](Command* cmd, Client& client) {
+                                                                                        cmd->actionInvite(client);
                                                                                     }}};
 
 Command::Command(const Message& commandString, Client& client, std::map<int, Client>& allClients, std::string& password,
@@ -197,6 +201,46 @@ void Command::actionChannel(Client& client) {
     std::string response = ":" + serverHostname_g + " #newchannel " + serverHostname_g + " :" + client.getNickname();
 
     LOG_DEBUG(response);
+}
+
+void Command::actionInvite(Client& client) {
+    if (param_.size() < 2) {
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "INVITE"));
+        return;
+    }
+    std::string nickname = param_.at(0);
+    std::string channelName = param_.at(1);
+    try {
+        (void)findClientByNicknameOrThrow(nickname);
+    } catch (std::out_of_range& e) {
+        client.appendToSendBuffer(RPL_ERR_NOSUCHNICK_401(serverHostname_g, nickname));
+        return;
+    }
+    //it means that the nick exits
+    Client& invitee = findClientByNicknameOrThrow(nickname);
+    auto it = allChannels_.find(channelName);
+    if (it != allChannels_.end()) {
+        Channel& channel = allChannels_.at(channelName);
+        if (!channel.isMember(client)) {
+            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, channelName));
+            return;
+        }
+        if (channel.isInviteOnly() == true) {
+            if (!channel.isOperator(client)) {
+                client.appendToSendBuffer(RPL_ERR_CHANOPRIVSNEEDED_482(serverHostname_g, channelName));
+                return;
+            }
+        }
+        if (channel.isMember(invitee)) {
+            client.appendToSendBuffer(RPL_ERR_USERONCHANNEL_443(serverHostname_g, nickname, channelName));
+            return;
+        }
+        if (!channel.isInvited(invitee)) {
+            channel.invite(invitee);
+        }
+    }
+    client.appendToSendBuffer(RPL_INVITING_341(serverHostname_g, client.getNickname(), nickname, channelName));
+    invitee.appendToSendBuffer(INVITE(serverHostname_g, client.getNickname(), client.getUserName(), nickname, channelName));
 }
 
 void Command::actionPart(Client& client) {
