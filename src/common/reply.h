@@ -54,4 +54,6 @@
 #define RPL_ERR_UNKNOWNMODE_472(servername, mode, channel) (RPL_META_MESSAGE(servername, "472", mode + " :is unknown mode char to me for " + channel))
 #define RPL_ERR_CHANOPRIVSNEEDED_482(servername, channel) (RPL_META_MESSAGE(servername, "482", channel + " :You're not channel operator"))
 
+#define RPL_ERR_UMODEUNKNOWNFLAG_501(servername) (RPL_META_MESSAGE(servername, "501", ":Unknown MODE flag"))
+
 #endif

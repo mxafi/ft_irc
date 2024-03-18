@@ -196,4 +196,10 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
         const std::string expected_rpl_err_chanoprivsneeded_482 = ":irc.example.com 482 #test :You're not channel operator\r\n";
         REQUIRE(actual_rpl_err_chanoprivsneeded_482 == expected_rpl_err_chanoprivsneeded_482);
     }
+
+    SECTION("numeric replies 501") {
+        const std::string actual_rpl_err_umodeunknownflag_501 = RPL_ERR_UMODEUNKNOWNFLAG_501(server_name);
+        const std::string expected_rpl_err_umodeunknownflag_501 = ":irc.example.com 501 :Unknown MODE flag\r\n";
+        REQUIRE(actual_rpl_err_umodeunknownflag_501 == expected_rpl_err_umodeunknownflag_501);
+    }
 }

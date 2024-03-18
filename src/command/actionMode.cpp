@@ -30,6 +30,14 @@ void Command::actionMode(Client& client) {
 
     // Now we know that we have at least one parameter
 
+    // Handle actionMode for a user
+    if (std::string(CHANNEL_PREFIXES).find(param_.at(0).front()) == std::string::npos) {
+        // We know that the first parameter is not a channel
+        client.appendToSendBuffer(RPL_ERR_UMODEUNKNOWNFLAG_501(serverHostname_g));  // TODO: placeholder
+        // TODO: implement user mode changes
+        return;
+    }
+
     // Check if the channel exists
     try {
         Channel& channel = allChannels_.at(param_.at(0));
