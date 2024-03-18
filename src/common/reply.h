@@ -22,8 +22,9 @@
 #define RPL_MYINFO_004(servername, nick, version, user_modes, channel_modes) \
     (RPL_META_MESSAGE(servername, "004", nick + " " + servername + " " + version + " " + user_modes + " " + channel_modes))
 
-#define RPL_NOTOPIC_331(servername, channel) (RPL_META_MESSAGE(servername, "331", channel + " :No topic is set"))
-#define RPL_TOPIC_332(servername, channel, topic) (RPL_META_MESSAGE(servername, "332", channel + " :" + topic))
+#define RPL_CHANNELMODEIS_324(servername, client, channel, enabled_modes) (RPL_META_MESSAGE(servername, "324", client + " " + channel + " +" + enabled_modes))
+#define RPL_NOTOPIC_331(servername, client, channel) (RPL_META_MESSAGE(servername, "331", client + " " + channel + " :No topic is set"))
+#define RPL_TOPIC_332(servername, client, channel, topic) (RPL_META_MESSAGE(servername, "332", client + " " + channel + " :" + topic))
 #define RPL_INVITING_341(servername, inviter, invitee, channel) (RPL_META_MESSAGE(servername, "341", inviter + " " + invitee + " " + channel))
 #define RPL_NAMREPLY_353(servername, client, symbol, channel, namelist) \
     (RPL_META_MESSAGE(servername, "353", client + " " + symbol + " " + channel + " :" + namelist))
@@ -44,14 +45,18 @@
 #define RPL_ERR_ERRONEUSNICKNAME_432(servername, nick) (RPL_META_MESSAGE(servername, "432", nick + " :Erroneous nickname"))
 #define RPL_ERR_NICKNAMEINUSE_433(servername, nick) (RPL_META_MESSAGE(servername, "433", nick + " :Nickname is already in use"))
 #define RPL_ERR_USERNOTINCHANNEL_441(servername, nick, channel) (RPL_META_MESSAGE(servername, "441", nick + " " + channel + " :They aren't on that channel"))
-#define RPL_ERR_NOTONCHANNEL_442(servername, channel) (RPL_META_MESSAGE(servername, "442", channel + " :You're not on that channel"))
+#define RPL_ERR_NOTONCHANNEL_442(servername, client, channel) (RPL_META_MESSAGE(servername, "442", client + " " + channel + " :You're not on that channel"))
 #define RPL_ERR_USERONCHANNEL_443(servername, nick, channel) (RPL_META_MESSAGE(servername, "443", channel + " " + nick + " :is already on channel"))
 #define RPL_ERR_NOTREGISTERED_451(servername) (RPL_META_MESSAGE(servername, "451", ":You have not registered"))
-#define RPL_ERR_NEEDMOREPARAMS_461(servername, command) (RPL_META_MESSAGE(servername, "461", command + " :Not enough parameters"))
-#define RPL_ERR_ALREADYREGISTRED_462(servername) (RPL_META_MESSAGE(servername, "462", ":Unauthorized command (already registered)"))
-#define RPL_ERR_CHANNELISFULL_471(servername, channel) (RPL_META_MESSAGE(servername, "471", channel + " :Cannot join channel (+l)"))
-#define RPL_ERR_INVITEONLYCHAN_473(servername, channel) (RPL_META_MESSAGE(servername, "473", channel + " :Cannot join channel (+i)"))
-#define RPL_ERR_BADCHANNELKEY_475(servername, channel) (RPL_META_MESSAGE(servername, "475", channel + " :Cannot join channel (+k)"))
-#define RPL_ERR_CHANOPRIVSNEEDED_482(servername, channel) (RPL_META_MESSAGE(servername, "482", channel + " :You're not channel operator"))
+#define RPL_ERR_NEEDMOREPARAMS_461(servername, client, command) (RPL_META_MESSAGE(servername, "461", client + " " + command + " :Not enough parameters"))
+#define RPL_ERR_ALREADYREGISTRED_462(servername, client) (RPL_META_MESSAGE(servername, "462", client + " :You may not reregister"))
+#define RPL_ERR_CHANNELISFULL_471(servername, client, channel) (RPL_META_MESSAGE(servername, "471", client + " " + channel + " :Cannot join channel (+l)"))
+#define RPL_ERR_INVITEONLYCHAN_473(servername, client, channel) (RPL_META_MESSAGE(servername, "473", client + " " + channel + " :Cannot join channel (+i)"))
+#define RPL_ERR_BADCHANNELKEY_475(servername, client, channel) (RPL_META_MESSAGE(servername, "475", client + " " + channel + " :Cannot join channel (+k)"))
+#define RPL_ERR_KEYSET_467(servername, channel) (RPL_META_MESSAGE(servername, "467", channel + " :Channel key already set"))
+#define RPL_ERR_UNKNOWNMODE_472(servername, client, mode, channel) (RPL_META_MESSAGE(servername, "472", client + " " + mode + " :is unknown mode char to me for " + channel))
+#define RPL_ERR_CHANOPRIVSNEEDED_482(servername, client, channel) (RPL_META_MESSAGE(servername, "482", client + " " + channel + " :You're not channel operator"))
+
+#define RPL_ERR_UMODEUNKNOWNFLAG_501(servername, client) (RPL_META_MESSAGE(servername, "501", client + " :Unknown MODE flag"))
 
 #endif

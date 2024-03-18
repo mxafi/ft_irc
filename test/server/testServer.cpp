@@ -7,7 +7,7 @@
 
 TEST_CASE("server is started properly", "[server]") {
     errno = 0;
-    char port[] = "6667";
+    char port[] = "6677"; // 6667 is the default port for IRC, this is a test port to avoid conflicts
     std::string password = "horse";
     irc::Server server(port, password);
 

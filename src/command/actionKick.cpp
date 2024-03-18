@@ -17,7 +17,7 @@ void Command::actionKick(Client& client) {
     //Check parameterrs
     // Less than 2 parameters: reply ERR_NEEDMOREPARAMS
     if (param_.size() < 2) {
-        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "KICK"));
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "KICK"));
         return;
     }
     if (param_.size() == 3) {
@@ -43,7 +43,7 @@ void Command::actionKick(Client& client) {
         try {
             Channel& channel = allChannels_.at(param_.at(0));
             (void)channel;  // suppress warning about unused variable
-            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, param_.at(0)));
+            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, client.getNickname(), param_.at(0)));
             return;
         } catch (std::out_of_range& e) {
             client.appendToSendBuffer(RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, param_.at(0)));
@@ -54,7 +54,7 @@ void Command::actionKick(Client& client) {
 
     Channel& channel = allChannels_.at(param_.at(0));
     if (channel.isOperator(client) == false) {
-        client.appendToSendBuffer(RPL_ERR_CHANOPRIVSNEEDED_482(serverHostname_g, param_.at(0)));
+        client.appendToSendBuffer(RPL_ERR_CHANOPRIVSNEEDED_482(serverHostname_g, client.getNickname(), param_.at(0)));
         return;
     }
 

@@ -5,7 +5,7 @@ namespace irc {
 void Command::actionJoin(Client& client) {
     // Check user parameters
     if (param_.size() == 0) {
-        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "JOIN"));
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "JOIN"));
         return;
     }
     // Leave all channels
@@ -74,16 +74,16 @@ void Command::actionJoin(Client& client) {
         if (Channel::isChannelNameFree(channelName, allChannels_) == false) {
             Channel& existingChannel = allChannels_.at(channelName);
             if (channelKey != existingChannel.getKey()) {
-                client.appendToSendBuffer(RPL_ERR_BADCHANNELKEY_475(serverHostname_g, channelName));
+                client.appendToSendBuffer(RPL_ERR_BADCHANNELKEY_475(serverHostname_g, client.getNickname(), channelName));
                 continue;
             }
             if (existingChannel.getUserLimit() != CHANNEL_USER_LIMIT_DISABLED &&
                 static_cast<long long>(existingChannel.getMemberCount()) >= existingChannel.getUserLimit()) {
-                client.appendToSendBuffer(RPL_ERR_CHANNELISFULL_471(serverHostname_g, channelName));
+                client.appendToSendBuffer(RPL_ERR_CHANNELISFULL_471(serverHostname_g, client.getNickname(), channelName));
                 continue;
             }
             if (existingChannel.isInviteOnly() && existingChannel.isInvited(client) == false) {
-                client.appendToSendBuffer(RPL_ERR_INVITEONLYCHAN_473(serverHostname_g, channelName));
+                client.appendToSendBuffer(RPL_ERR_INVITEONLYCHAN_473(serverHostname_g, client.getNickname(), channelName));
                 continue;
             }
             existingChannel.joinMember(client);
@@ -97,9 +97,9 @@ void Command::actionJoin(Client& client) {
 
         if (currentChannel.getTopic() != "") {
             client.appendToSendBuffer(
-                RPL_TOPIC_332(serverHostname_g, channelName, currentChannel.getTopic()));
+                RPL_TOPIC_332(serverHostname_g, client.getNickname(), channelName, currentChannel.getTopic()));
         } else {
-            client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, channelName));
+            client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, client.getNickname(), channelName));
         }
 
         client.appendToSendBuffer(

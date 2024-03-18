@@ -42,10 +42,12 @@ std::map<std::string, std::function<void(Command*, Client&)>> Command::commands 
                                                                                     [](Command* cmd, Client& client) {
                                                                                         cmd->actionTopic(client);
                                                                                     }},
-
                                                                                    {"KICK",
                                                                                     [](Command* cmd, Client& client) {
                                                                                         cmd->actionKick(client);
+                                                                                    }},
+                                                                                   {"MODE", [](Command* cmd, Client& client) {
+                                                                                        cmd->actionMode(client);
                                                                                     }},
                                                                                    {"INVITE", [](Command* cmd, Client& client) {
                                                                                         cmd->actionInvite(client);
@@ -102,11 +104,11 @@ void Command::actionPing(Client& client) {
 
 void Command::actionPass(Client& client) {
     if (client.isAuthenticated()) {
-        client.appendToSendBuffer(RPL_ERR_ALREADYREGISTRED_462(serverHostname_g));
+        client.appendToSendBuffer(RPL_ERR_ALREADYREGISTRED_462(serverHostname_g, client.getNickname()));
         return;
     }
     if (param_.size() == 0) {
-        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "PASS"));
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "PASS"));
         return;
     }
     if (param_.at(0) != pass_) {
@@ -182,11 +184,11 @@ void Command::actionUser(Client& client) {
         return;
     }
     if (client.isAuthenticated()) {
-        client.appendToSendBuffer(RPL_ERR_ALREADYREGISTRED_462(serverHostname_g));
+        client.appendToSendBuffer(RPL_ERR_ALREADYREGISTRED_462(serverHostname_g, client.getNickname()));
         return;
     }
     if (param_.size() < 1) {
-        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "USER"));
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "USER"));
         return;
     }
     client.setUserName(param_.at(0));  // Note: We do not save the real name
@@ -244,7 +246,7 @@ void Command::actionInvite(Client& client) {
 void Command::actionPart(Client& client) {
     std::string partMessage = client.getNickname();
     if (param_.size() == 0) {
-        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "PART"));
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "PART"));
         return;
     }
     if (param_.size() >= 2) {
@@ -272,7 +274,7 @@ void Command::actionPart(Client& client) {
 
         Channel& currentChannel = allChannels_.at(channelName);
         if (currentChannel.isMember(client) == false) {
-            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, channelName));
+            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, client.getNickname(), channelName));
             continue;
         }
 
@@ -288,7 +290,7 @@ void Command::actionTopic(Client& client) {
     // Check parameters
     // 0: reply ERR_NEEDMOREPARAMS
     if (param_.size() == 0) {
-        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "TOPIC"));
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "TOPIC"));
         return;
     }
     if (param_.size() >= 2) {
@@ -319,7 +321,7 @@ void Command::actionTopic(Client& client) {
         try {
             Channel& channel = allChannels_.at(param_.at(0));
             (void)channel;  // suppress warning about unused variable
-            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, param_.at(0)));
+            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, client.getNickname(), param_.at(0)));
             return;
         } catch (std::out_of_range& e) {
             client.appendToSendBuffer(RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, param_.at(0)));
@@ -333,10 +335,10 @@ void Command::actionTopic(Client& client) {
     // get the topic
     if (param_.size() == 1) {
         if (channel.getTopic().empty()) {
-            client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, param_.at(0)));
+            client.appendToSendBuffer(RPL_NOTOPIC_331(serverHostname_g, client.getNickname(), param_.at(0)));
             return;
         }
-        client.appendToSendBuffer(RPL_TOPIC_332(serverHostname_g, param_.at(0), channel.getTopic()));
+        client.appendToSendBuffer(RPL_TOPIC_332(serverHostname_g, client.getNickname(), param_.at(0), channel.getTopic()));
         return;
     }
 
@@ -344,7 +346,7 @@ void Command::actionTopic(Client& client) {
 
     // check if the client has the right to set the topic
     if (channel.isTopicProtected() && !channel.isOperator(client)) {
-        client.appendToSendBuffer(RPL_ERR_CHANOPRIVSNEEDED_482(serverHostname_g, param_.at(0)));
+        client.appendToSendBuffer(RPL_ERR_CHANOPRIVSNEEDED_482(serverHostname_g, client.getNickname(), param_.at(0)));
         return;
     }
 
@@ -354,13 +356,6 @@ void Command::actionTopic(Client& client) {
     // send the topic to all members, should the client be exluded and rpl_topic_332 be sent? TODO
     channel.sendMessageToMembers(
         COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "TOPIC", channel.getName() + " :" + topicParam));
-}
-
-void Command::actionMode(Client& client) {
-    std::string response = ":" + serverHostname_g + " #newchannel " + serverHostname_g + " :" + client.getNickname();
-
-    // here we need to put the four parts
-    LOG_DEBUG(response);
 }
 
 /**

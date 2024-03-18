@@ -9,12 +9,20 @@
 
 #include "../client/Client.h"
 
+extern std::string serverHostname_g;
+
 namespace irc {
 
 class Channel {
    public:
     ~Channel();
     Channel(Client& creatorClient, const std::string& name, std::map<std::string, Channel>& allChannels);
+
+    struct modestruct {
+        char modifier;
+        char mode;
+        std::string param;
+    };
 
     std::string getName() const;
     void sendMessageToMembers(const std::string& message);
@@ -42,6 +50,8 @@ class Channel {
     std::string getNamesList();
     static bool isChannelNameValid(const std::string& name);
     static bool isChannelNameFree(const std::string& name, std::map<std::string, Channel>& allChannels);
+    int handleModeChange(Client& allowedClient, modestruct& modeStruct);
+    Client* getMemberByNicknameOrNull(const std::string& nickname);
 
    private:
     std::string name_;
