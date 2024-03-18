@@ -40,6 +40,9 @@ std::map<std::string, std::function<void(Command*, Client&)>> Command::commands 
                                                                                     }},
                                                                                    {"TOPIC", [](Command* cmd, Client& client) {
                                                                                         cmd->actionTopic(client);
+                                                                                    }},
+                                                                                   {"KICK", [](Command* cmd, Client& client) {
+                                                                                        cmd->actionKick(client);
                                                                                     }}};
 
 Command::Command(const Message& commandString, Client& client, std::map<int, Client>& allClients, std::string& password,
@@ -311,12 +314,6 @@ void Command::actionMode(Client& client) {
     std::string response = ":" + serverHostname_g + " #newchannel " + serverHostname_g + " :" + client.getNickname();
 
     // here we need to put the four parts
-    LOG_DEBUG(response);
-}
-
-void Command::actionKick(Client& client) {
-    std::string response = ":" + serverHostname_g + " #newchannel " + serverHostname_g + " :" + client.getNickname();
-
     LOG_DEBUG(response);
 }
 
