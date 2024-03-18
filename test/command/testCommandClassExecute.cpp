@@ -6,11 +6,9 @@
 #include "../../src/command/Command.h"
 #include "../../src/message/Message.h"
 
-
-
 using namespace irc;
 
-struct CommandTestFixture { 
+struct CommandTestFixture {
     int dummyFd = 1;                // Dummy file descriptor
     struct sockaddr dummySockaddr;  // Dummy socket address
     Client client{dummyFd, dummySockaddr};
@@ -20,18 +18,24 @@ struct CommandTestFixture {
     time_t serverStartTime = time(NULL);
 };
 
-
 TEST_CASE("Command::execute tests", "[Command][execute]") {
     int errno_before = errno;
-    REQUIRE (errno == errno_before);
+    REQUIRE(errno == errno_before);
     // Access the current test case data
+    std::string response;
     CommandTestFixture fixture;
 
     SECTION("Authenticated client executes a valid command") {
+
+        fixture.client.setPassword(fixture.password);
+        fixture.client.setUserName("UserName");
+        fixture.client.setNickname("UserNick");
         // fixture.client.isAuthenticated(true);
         Message message("NICK newNick");
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
-        cmd.execute(fixture.client);
+        response() 
+        REQUIRE()
+        // cmd.execute(fixture.client);
         // Verify that the command was executed successfully
         // This might involve checking the client's state or the send buffer
     }
