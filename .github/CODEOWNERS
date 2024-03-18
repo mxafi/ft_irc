@@ -1,0 +1,11 @@
+# Codeowners file for ft_irc
+# People defined as owners of some code matching a pattern
+# This can be used to automatically request reviews from the codeowners
+# Later matches override earlier ones
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global and default codeowners
+* @mxafi @djames9 @liocle
+
+# Protect codeowners file
+/.github/CODEOWNERS @mxafi
