@@ -9,6 +9,8 @@
 
 #include "../client/Client.h"
 
+extern std::string serverHostname_g;
+
 namespace irc {
 
 class Channel {
