@@ -42,13 +42,11 @@ std::map<std::string, std::function<void(Command*, Client&)>> Command::commands 
                                                                                     [](Command* cmd, Client& client) {
                                                                                         cmd->actionTopic(client);
                                                                                     }},
-<<<<<<< HEAD
                                                                                    {"KICK", [](Command* cmd, Client& client) {
                                                                                         cmd->actionKick(client);
-=======
+                                                                                    }},
                                                                                    {"MODE", [](Command* cmd, Client& client) {
                                                                                         cmd->actionMode(client);
->>>>>>> init actionMode
                                                                                     }}};
 
 Command::Command(const Message& commandString, Client& client, std::map<int, Client>& allClients, std::string& password,
