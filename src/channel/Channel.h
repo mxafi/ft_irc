@@ -42,6 +42,7 @@ class Channel {
     std::string getNamesList();
     static bool isChannelNameValid(const std::string& name);
     static bool isChannelNameFree(const std::string& name, std::map<std::string, Channel>& allChannels);
+    Client* getMemberByNicknameOrNull(const std::string& nickname);
 
    private:
     std::string name_;

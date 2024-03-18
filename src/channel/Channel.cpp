@@ -275,4 +275,13 @@ std::string Channel::getNamesList() {
     return namesList;
 }
 
+Client* Channel::getMemberByNicknameOrNull(const std::string& nickname) {
+    for (Client* member : members_) {
+        if (member->getNickname() == nickname) {
+            return member;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace irc
