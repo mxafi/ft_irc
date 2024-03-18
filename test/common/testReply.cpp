@@ -92,7 +92,7 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
         const std::string actual_rpl_err_nosuchchannel_403 = RPL_ERR_NOSUCHCHANNEL_403(server_name, channel);
         const std::string expected_rpl_err_nosuchchannel_403 = ":irc.example.com 403 #test :No such channel\r\n";
         REQUIRE(actual_rpl_err_nosuchchannel_403 == expected_rpl_err_nosuchchannel_403);
-    
+
         const std::string actual_rpl_err_cannotsendtochan_404 = RPL_ERR_CANNOTSENDTOCHAN_404(server_name, channel);
         const std::string expected_rpl_err_cannotsendtochan_404 = ":irc.example.com 404 #test:Cannot send to channel\r\n";
         REQUIRE(actual_rpl_err_cannotsendtochan_404 == expected_rpl_err_cannotsendtochan_404);
@@ -103,7 +103,8 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
     }
 
     SECTION("numeric replies 407") {
-        const std::string actual_rpl_err_toomanytargets_407 = RPL_ERR_TOOMANYTARGETS_407(server_name, "xuffy", "404", "Cannot send to channel");
+        const std::string actual_rpl_err_toomanytargets_407 =
+            RPL_ERR_TOOMANYTARGETS_407(server_name, "xuffy", "404", "Cannot send to channel");
         const std::string expected_rpl_err_toomanytargets_407 = ":irc.example.com 407 xuffy :404 recipients. Cannot send to channel\r\n";
         REQUIRE(actual_rpl_err_toomanytargets_407 == expected_rpl_err_toomanytargets_407);
     }
@@ -164,13 +165,21 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
         REQUIRE(actual_rpl_err_alreadyregistred_462 == expected_rpl_err_alreadyregistred_462);
     }
 
-    SECTION("numeric replies 471") {
+    SECTION("numeric replies 467") {
+        const std::string actual_rpl_err_keyset_467 = RPL_ERR_KEYSET_467(server_name, channel);
+        const std::string expected_rpl_err_keyset_467 = ":irc.example.com 467 #test :Channel key already set\r\n";
+        REQUIRE(actual_rpl_err_keyset_467 == expected_rpl_err_keyset_467);
+    }
+
+    SECTION("numeric replies 471-473") {
         const std::string actual_rpl_err_channelisfull_471 = RPL_ERR_CHANNELISFULL_471(server_name, channel);
         const std::string expected_rpl_err_channelisfull_471 = ":irc.example.com 471 #test :Cannot join channel (+l)\r\n";
         REQUIRE(actual_rpl_err_channelisfull_471 == expected_rpl_err_channelisfull_471);
-    }
 
-    SECTION("numeric replies 473") {
+        const std::string actual_rpl_err_unknownmode_472 = RPL_ERR_UNKNOWNMODE_472(server_name, "l", channel);
+        const std::string expected_rpl_err_unknownmode_472 = ":irc.example.com 472 l :is unknown mode char to me for #test\r\n";
+        REQUIRE(actual_rpl_err_unknownmode_472 == expected_rpl_err_unknownmode_472);
+
         const std::string actual_rpl_err_inviteonlychan_473 = RPL_ERR_INVITEONLYCHAN_473(server_name, channel);
         const std::string expected_rpl_err_inviteonlychan_473 = ":irc.example.com 473 #test :Cannot join channel (+i)\r\n";
         REQUIRE(actual_rpl_err_inviteonlychan_473 == expected_rpl_err_inviteonlychan_473);
