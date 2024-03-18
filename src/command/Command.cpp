@@ -205,7 +205,7 @@ void Command::actionChannel(Client& client) {
 
 void Command::actionInvite(Client& client) {
     if (param_.size() < 2) {
-        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, "INVITE"));
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "INVITE"));
         return;
     }
     std::string nickname = param_.at(0);
@@ -222,12 +222,12 @@ void Command::actionInvite(Client& client) {
     if (it != allChannels_.end()) {
         Channel& channel = allChannels_.at(channelName);
         if (!channel.isMember(client)) {
-            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, channelName));
+            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, client.getNickname(), channelName));
             return;
         }
         if (channel.isInviteOnly() == true) {
             if (!channel.isOperator(client)) {
-                client.appendToSendBuffer(RPL_ERR_CHANOPRIVSNEEDED_482(serverHostname_g, channelName));
+                client.appendToSendBuffer(RPL_ERR_CHANOPRIVSNEEDED_482(serverHostname_g, client.getNickname(), channelName));
                 return;
             }
         }
