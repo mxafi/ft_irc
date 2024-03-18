@@ -50,11 +50,11 @@
 #define RPL_ERR_NOTREGISTERED_451(servername) (RPL_META_MESSAGE(servername, "451", ":You have not registered"))
 #define RPL_ERR_NEEDMOREPARAMS_461(servername, client, command) (RPL_META_MESSAGE(servername, "461", client + " " + command + " :Not enough parameters"))
 #define RPL_ERR_ALREADYREGISTRED_462(servername, client) (RPL_META_MESSAGE(servername, "462", client + " :You may not reregister"))
+#define RPL_ERR_KEYSET_467(servername, channel) (RPL_META_MESSAGE(servername, "467", channel + " :Channel key already set"))
 #define RPL_ERR_CHANNELISFULL_471(servername, client, channel) (RPL_META_MESSAGE(servername, "471", client + " " + channel + " :Cannot join channel (+l)"))
+#define RPL_ERR_UNKNOWNMODE_472(servername, client, mode, channel) (RPL_META_MESSAGE(servername, "472", client + " " + mode + " :is unknown mode char to me for " + channel))
 #define RPL_ERR_INVITEONLYCHAN_473(servername, client, channel) (RPL_META_MESSAGE(servername, "473", client + " " + channel + " :Cannot join channel (+i)"))
 #define RPL_ERR_BADCHANNELKEY_475(servername, client, channel) (RPL_META_MESSAGE(servername, "475", client + " " + channel + " :Cannot join channel (+k)"))
-#define RPL_ERR_KEYSET_467(servername, channel) (RPL_META_MESSAGE(servername, "467", channel + " :Channel key already set"))
-#define RPL_ERR_UNKNOWNMODE_472(servername, client, mode, channel) (RPL_META_MESSAGE(servername, "472", client + " " + mode + " :is unknown mode char to me for " + channel))
 #define RPL_ERR_CHANOPRIVSNEEDED_482(servername, client, channel) (RPL_META_MESSAGE(servername, "482", client + " " + channel + " :You're not channel operator"))
 
 #define RPL_ERR_UMODEUNKNOWNFLAG_501(servername, client) (RPL_META_MESSAGE(servername, "501", client + " :Unknown MODE flag"))
