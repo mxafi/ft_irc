@@ -44,8 +44,10 @@
 #define RPL_ERR_CHANNELISFULL_471(servername, channel) (RPL_META_MESSAGE(servername, "471", channel + " :Cannot join channel (+l)"))
 #define RPL_ERR_INVITEONLYCHAN_473(servername, channel) (RPL_META_MESSAGE(servername, "473", channel + " :Cannot join channel (+i)"))
 #define RPL_ERR_BADCHANNELKEY_475(servername, channel) (RPL_META_MESSAGE(servername, "475", channel + " :Cannot join channel (+k)"))
+#define RPL_ERR_ERRONEUSNICKNAME_432(servername, nick) (RPL_META_MESSAGE(servername, "432", nick + " :Erroneous nickname"))
+#define RPL_ERR_NICKNAMEINUSE_433(servername, nick) (RPL_META_MESSAGE(servername, "433", nick + " :Nickname is already in use"))
+#define RPL_ERR_USERNOTINCHANNEL_441(servername, nick, channel) (RPL_META_MESSAGE(servername, "441", nick + " " + channel + " :They aren't on that channel"))
 #define RPL_ERR_CHANOPRIVSNEEDED_482(servername, channel) (RPL_META_MESSAGE(servername, "482", channel + " :You're not channel operator"))
-
 
 //User format
 #define FORMAT_NICK_USER_HOST(nickname, username, hostname) (std::string(":") + nickname + "!" + username + "@" + hostname)
