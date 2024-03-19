@@ -42,7 +42,7 @@ TEST_CASE("Command initialization", "[command]") {
         Command cmd(msg, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
         REQUIRE(msg.getNumeric() == expectedNumeric);
         REQUIRE(fixture.client.getNickname() == nick);
-        REQUIRE(errno == errno_before);  // numeric = 0, all good
+        REQUIRE(errno == errno_before); 
     }
 
     SECTION("Message contains illegal nul character: numeric = 530") {
@@ -70,7 +70,7 @@ TEST_CASE("Command initialization", "[command]") {
         std::string oldNick = fixture.client.getNickname();
         fixture.client.clearSendBuffer();
         Command cmd(msg, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
-        REQUIRE(msg.getNumeric() == expectedNumeric);  // TODO: evaluate the need to keep numeric. It isnt used only as a setter.
+        REQUIRE(msg.getNumeric() == expectedNumeric);  // TODO: evaluate the need to keep numeric. It is used only as a setter.
         REQUIRE(fixture.client.getSendBuffer() == censorTooLongMsg);
         REQUIRE(errno == errno_before);
     }
@@ -84,15 +84,10 @@ TEST_CASE("Command constructor validation tests", "[Command][constructor][valida
     std::map<std::string, Channel> allChannels;
     std::string password = "password";
     time_t serverStartTime = time(NULL);
-
-    // Test with valid inputs
-    Message message("NICK newNick");
+    Message message("NICK newNick"); // Test with valid inputs
     REQUIRE_NOTHROW(Command(message, client, allClients, password, serverStartTime, allChannels));
-
-    // Test with invalid serverStartTime
-    serverStartTime = 0;
+    serverStartTime = 0; // Test with invalid serverStartTime
     REQUIRE_THROWS_AS(Command(message, client, allClients, password, serverStartTime, allChannels), std::invalid_argument);
-
     // Test with empty password
     serverStartTime = time(NULL);  // Reset to valid value
     password = "";
@@ -118,7 +113,6 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         fixture.client.setUserName("UserName");
         fixture.client.setNickname("UserNick");
         std::string oldNick = fixture.client.getNickname();
-
         fixture.client.clearSendBuffer();
         command = "NICK";
         Message message(command + " newNick");
@@ -126,33 +120,33 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         response = ":" + oldNick + "!" + fixture.client.getUserName() + "@" + fixture.client.getHost() + " " + command + " " +
                    fixture.client.getNickname() + "\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
     }
-
 
     SECTION("Partially authenticated client (pass + username) executes a valid command") {
         fixture.client.setPassword(fixture.password);
         fixture.client.setUserName("UserName");
         std::string oldNick = fixture.client.getNickname();
-
         fixture.client.clearSendBuffer();
         command = "PRIVMSG :This is a message";
         Message message(command);
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
         response = ": 451 :You have not registered\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
     }
 
     SECTION("Partially authenticated client (pass + nick) executes a valid command") {
         fixture.client.setPassword(fixture.password);
         fixture.client.setNickname("UserNick");
         std::string oldNick = fixture.client.getNickname();
-
         fixture.client.clearSendBuffer();
         command = "PRIVMSG :This is a message";
         Message message(command);
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
         response = ": 451 :You have not registered\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
     }
 
     /**
@@ -171,7 +165,7 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         REQUIRE(fixture.client.getSendBuffer() == response);
         REQUIRE(fixture.client.getWantDisconnect() == TRUE);  // if unauthenticated a user is disconnected
     }
-    
+
     SECTION("Unauthenticated client executes USER before PASS") {
         fixture.client.clearSendBuffer();
         command = "USER";
@@ -182,15 +176,16 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         REQUIRE(fixture.client.getWantDisconnect() == TRUE);  // if unauthenticated a user is disconnected
     }
 
-
-    SECTION("Unauthenticated client executes a valid command") {
+    SECTION("Unauthenticated client executes a valid command (other than PASS or NICK) before PASS") {
         fixture.client.clearSendBuffer();
         command = "PRIVMSG toto :Hello!";
         Message message(command);
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
         response = ": 451 :You have not registered\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
-        REQUIRE(fixture.client.getWantDisconnect() == FALSE);  // if unauthenticated user is attempting to run a command other than USER or NICK 
+        REQUIRE(fixture.client.getWantDisconnect() ==
+                FALSE);  // if unauthenticated user is attempting to run a command other than USER or NICK
+        // The client remains connected TODO Should that remain like that?
     }
 
     SECTION("Authenticated client executes an empty string \"\" command") {
@@ -204,6 +199,7 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
         response = ": 421  :Unknown command\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
     }
 
     SECTION("Unauthenticated client executes an empty string \"\" command") {
@@ -213,36 +209,92 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
         response = ": 451 :You have not registered\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
-        REQUIRE(fixture.client.getWantDisconnect() == TRUE);
+        REQUIRE(fixture.client.getWantDisconnect() ==
+                FALSE);  // if unauthenticated user is attempting to run a command other than USER or NICK
+        // The client remains connected TODO Should that remain like that?
     }
 
-    // white spaces are not handled as delimiter when message objects are handled. This could lead to have
-    // white spaces as first parameter, i.e. as a command. Should is it acceptable to let it pass, or should
-    // it be rejected / trimmed in the message class?
     SECTION("Authenticated client executes a white spaced command") {
         fixture.client.setPassword(fixture.password);
         fixture.client.setUserName("UserName");
         fixture.client.setNickname("UserNick");
-
         fixture.client.clearSendBuffer();
-        std::string whiteSpacedCommand = "\f\r\v\n\t";
+        std::string whiteSpacedCommand = R"(\f\r\v\n\t)";
         Message message(whiteSpacedCommand);
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
-        response = ": 421  :Unknown command\r\n"; 
+        response = ": 421 " + whiteSpacedCommand + " :Unknown command\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
     }
 
     SECTION("Unauthenticated client executes a white spaced command") {
         fixture.client.clearSendBuffer();
-        std::string whiteSpacedCommand = "\f\r\v\n\t";
+        std::string whiteSpacedCommand = R"(\f\r\v\n\t)";
         Message message(whiteSpacedCommand);
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
         response = ": 451 :You have not registered\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
-        REQUIRE(fixture.client.getWantDisconnect() == TRUE);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
     }
 
-    
+    SECTION("Authenticated client executes a white spaced command") {
+        fixture.client.setPassword(fixture.password);
+        fixture.client.setUserName("UserName");
+        fixture.client.setNickname("UserNick");
+        fixture.client.clearSendBuffer();
+        std::string whiteSpacedCommand = R"(\f\r\v\n\t)";
+        Message message(whiteSpacedCommand);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 421 " + whiteSpacedCommand + " :Unknown command\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
+    }
+
+    SECTION("Authenticated client executes a command including white spaces and normal character") {
+        fixture.client.setPassword(fixture.password);
+        fixture.client.setUserName("UserName");
+        fixture.client.setNickname("UserNick");
+        fixture.client.clearSendBuffer();
+        std::string whiteSpacedCommand = R"(\f\rc\vm\nd\t)";
+        Message message(whiteSpacedCommand);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 421 " + whiteSpacedCommand + " :Unknown command\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
+    }
+
+    SECTION("Unauthenticated client executes a white spaced command") {
+        fixture.client.clearSendBuffer();
+        std::string whiteSpacedCommand = R"(\f\rc\vm\nd\t)";
+        Message message(whiteSpacedCommand);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 451 :You have not registered\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
+    }
+
+    SECTION("Authenticated client executes a command containing special characters") {
+        fixture.client.setPassword(fixture.password);
+        fixture.client.setUserName("UserName");
+        fixture.client.setNickname("UserNick");
+        fixture.client.clearSendBuffer();
+        std::string specialCharCommand = "@?!$:&";
+        Message message(specialCharCommand);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 421 " + specialCharCommand + " :Unknown command\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
+    }
+
+    SECTION("Unauthenticated client executes a command containing special characters") {
+        fixture.client.clearSendBuffer();
+        std::string specialCharCommand = "@?!$:&";
+        Message message(specialCharCommand);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 451 :You have not registered\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
+    }
 
     /**
       * @test Tests that the server correctly handles an invalid command.
@@ -259,6 +311,7 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
         response = ": 421 " + invalidCommand + " :Unknown command\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
     }
 
     /**
@@ -291,5 +344,6 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
         response = ": 421 " + capCommand + " :Unknown command\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);
     }
 }
