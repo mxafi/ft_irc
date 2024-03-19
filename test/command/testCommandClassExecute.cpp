@@ -127,43 +127,169 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
                    fixture.client.getNickname() + "\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
     }
+
+
+    SECTION("Partially authenticated client (pass + username) executes a valid command") {
+        fixture.client.setPassword(fixture.password);
+        fixture.client.setUserName("UserName");
+        std::string oldNick = fixture.client.getNickname();
+
+        fixture.client.clearSendBuffer();
+        command = "PRIVMSG :This is a message";
+        Message message(command);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 451 :You have not registered\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+    }
+
+    SECTION("Partially authenticated client (pass + nick) executes a valid command") {
+        fixture.client.setPassword(fixture.password);
+        fixture.client.setNickname("UserNick");
+        std::string oldNick = fixture.client.getNickname();
+
+        fixture.client.clearSendBuffer();
+        command = "PRIVMSG :This is a message";
+        Message message(command);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 451 :You have not registered\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+    }
+
     /**
       * @test Tests that an unauthenticated client cannot execute a valid command.
       * This test simulates a client that has not yet authenticated by not setting a password.
-      * It then attempts to send a NICK command. The expected behavior is that the command
+      * It attempts to send a NICK command. The expected behavior is that the command
       * is not executed, and an error message is sent to the client indicating that a password
-      * must be sent first.
+      * must be sent first. The client is also disconnected.
       */
-    SECTION("Unauthenticated client executes a valid command") {
+    SECTION("Unauthenticated client executes NICK before PASS") {
         fixture.client.clearSendBuffer();
         command = "NICK";
         Message message(command + " firstNick");
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
-        response = "ERROR :You must send a password first\r\n"; // Custom made error message to handle our custom authentication
+        response = "ERROR :You must send a password first\r\n";  // Custom made error message to handle our custom authentication
         REQUIRE(fixture.client.getSendBuffer() == response);
-        REQUIRE(fixture.client.getWantDisconnect() == TRUE);    // if unauthenticated a user is disconnected
+        REQUIRE(fixture.client.getWantDisconnect() == TRUE);  // if unauthenticated a user is disconnected
+    }
+    
+    SECTION("Unauthenticated client executes USER before PASS") {
+        fixture.client.clearSendBuffer();
+        command = "USER";
+        Message message(command + " username");
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = "ERROR :You must send a password first\r\n";  // Custom made error message to handle our custom authentication
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == TRUE);  // if unauthenticated a user is disconnected
     }
 
+
+    SECTION("Unauthenticated client executes a valid command") {
+        fixture.client.clearSendBuffer();
+        command = "PRIVMSG toto :Hello!";
+        Message message(command);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 451 :You have not registered\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == FALSE);  // if unauthenticated user is attempting to run a command other than USER or NICK 
+    }
+
+    SECTION("Authenticated client executes an empty string \"\" command") {
+        fixture.client.setPassword(fixture.password);
+        fixture.client.setUserName("UserName");
+        fixture.client.setNickname("UserNick");
+
+        fixture.client.clearSendBuffer();
+        std::string emptyCommand = "";
+        Message message(emptyCommand);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 421  :Unknown command\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+    }
+
+    SECTION("Unauthenticated client executes an empty string \"\" command") {
+        fixture.client.clearSendBuffer();
+        std::string emptyCommand = "";
+        Message message(emptyCommand);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 451 :You have not registered\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == TRUE);
+    }
+
+    // white spaces are not handled as delimiter when message objects are handled. This could lead to have
+    // white spaces as first parameter, i.e. as a command. Should is it acceptable to let it pass, or should
+    // it be rejected / trimmed in the message class?
+    SECTION("Authenticated client executes a white spaced command") {
+        fixture.client.setPassword(fixture.password);
+        fixture.client.setUserName("UserName");
+        fixture.client.setNickname("UserNick");
+
+        fixture.client.clearSendBuffer();
+        std::string whiteSpacedCommand = "\f\r\v\n\t";
+        Message message(whiteSpacedCommand);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 421  :Unknown command\r\n"; 
+        REQUIRE(fixture.client.getSendBuffer() == response);
+    }
+
+    SECTION("Unauthenticated client executes a white spaced command") {
+        fixture.client.clearSendBuffer();
+        std::string whiteSpacedCommand = "\f\r\v\n\t";
+        Message message(whiteSpacedCommand);
+        Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
+        response = ": 451 :You have not registered\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() == TRUE);
+    }
+
+    
+
+    /**
+      * @test Tests that the server correctly handles an invalid command.
+      * This test simulates a client sending an invalid command. The expected behavior
+      * is that the server responds with a complient RFC reply 421 <command> :Unknown command. 
+      */
     SECTION("Client executes an invalid command") {
         fixture.client.setPassword(fixture.password);
         fixture.client.setUserName("UserName");
         fixture.client.setNickname("UserNick");
-        Message message("INVALIDCOMMAND");
+        std::string invalidCommand = "INVALIDCOMMAND";
+        fixture.client.clearSendBuffer();
+        Message message(invalidCommand);
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
-        response = ":" ;
+        response = ": 421 " + invalidCommand + " :Unknown command\r\n";
         REQUIRE(fixture.client.getSendBuffer() == response);
-        
     }
 
-    SECTION("Client executes a command before authentication") {
-        Message message("NICK newNick");
+    /**
+      * @test Tests that the server silently ignores the CAP command from an unauthenticated client.
+      * This test simulates a client sending the CAP command before authenticating. The expected behavior
+      * is that the server does not respond to the CAP command, effectively ignoring it.
+      */
+    SECTION("Client executes the CAP command before being authenticated") {
+        std::string capCommand = "CAP";
+        Message message(capCommand);
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
-        cmd.execute(fixture.client);
+        response = "";  // CAP command is silently ignored
+        REQUIRE(fixture.client.getSendBuffer() == response);
+        REQUIRE(fixture.client.getWantDisconnect() ==
+                FALSE);  // if unauthenticated a user may still attempt to use CAP wihtout being disconnected
     }
 
-    SECTION("Client executes the CAP command") {
-        Message message("CAP");
+    /**
+      * @test Tests that the server silently ignores the CAP command from an authenticated client.
+      * This test simulates a client that has already authenticated by setting a password,
+      * username, and nickname. It then sends the CAP command. The expected behavior is that the server
+      * does not respond to the CAP command, effectively ignoring it.
+      */
+    SECTION("Client executes the CAP command after being authenticated") {
+        fixture.client.setPassword(fixture.password);
+        fixture.client.setUserName("UserName");
+        fixture.client.setNickname("UserNick");
+        std::string capCommand = "CAP";
+        Message message(capCommand);
         Command cmd(message, fixture.client, fixture.clients, fixture.password, fixture.serverStartTime, fixture.channels);
-        cmd.execute(fixture.client);
+        response = ": 421 " + capCommand + " :Unknown command\r\n";
+        REQUIRE(fixture.client.getSendBuffer() == response);
     }
 }
