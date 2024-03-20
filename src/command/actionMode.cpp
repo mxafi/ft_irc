@@ -9,7 +9,13 @@ static bool isModeWithParam(char mode) {
 }
 
 static bool isNextParamExist(unsigned int currentParamIndex, unsigned long numberOfParams) {
-    return currentParamIndex < numberOfParams;
+    bool ret;
+    if (numberOfParams > 0) {
+        ret = currentParamIndex < numberOfParams - 1;
+    } else {
+        ret = currentParamIndex < numberOfParams;
+    }
+    return ret;
 }
 
 namespace irc {
@@ -101,10 +107,12 @@ void Command::actionMode(Client& client) {
         std::string& currentParamString = param_.at(currentParamIndex);
         char currentModifier = currentParamString[0];
         if (currentModifier != '+' && currentModifier != '-') {
-            client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));  // TODO: figure out correct reply
+            client.appendToSendBuffer(
+                RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));  // TODO: figure out correct reply
             return;
         }
-        for (char mode : currentParamString.substr(1)) {
+        currentParamString = currentParamString.substr(1);
+        for (char mode : currentParamString) {
             if (isModeSupported(mode) == false) {
                 client.appendToSendBuffer(RPL_ERR_UNKNOWNMODE_472(serverHostname_g, client.getNickname(), mode, channel.getName()));
                 return;
@@ -113,6 +121,7 @@ void Command::actionMode(Client& client) {
             currentMode.mode = mode;
             modeRequests.push_back(currentMode);
         }
+
         if (isNextParamExist(currentParamIndex, numberOfParams) && isModeWithParam(modeRequests.back().mode)) {
             modeChangesWithParam++;
             currentParamIndex++;
@@ -121,7 +130,8 @@ void Command::actionMode(Client& client) {
         currentParamIndex++;
     }
     if (modeChangesWithParam > 3) {
-        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));  // TODO: figure out correct reply
+        client.appendToSendBuffer(
+            RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));  // TODO: figure out correct reply
         return;
     }
 
