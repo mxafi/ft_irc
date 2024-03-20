@@ -6,6 +6,9 @@
 #include "../../src/command/Command.h"
 #include "../../src/message/Message.h"
 
+int errno_before;
+extern std::string serverHostname_g;
+
 using namespace irc;
 
 /**
@@ -14,15 +17,13 @@ using namespace irc;
 * it to prevent execution of a command, will prevent to output the proper RFC error replies.
 * It would though allow to skip executing commands that would be known in advance to fail.
 */
-TEST_CASE("Command initialization", "[command]") {
-    //*******//
-    int dummyFd = 1;                // Dummy file descriptor
-    struct sockaddr dummySockaddr;  // Dummy socket address
+TEST_CASE("Command initialization", "[command][initialization]") {
+    int dummyFd = 1;
+    struct sockaddr dummySockaddr;
     Client client(dummyFd, dummySockaddr);
     std::map<int, Client> clients{{1, client}};
     std::map<std::string, Channel> channels;
     time_t serverStartTime = time(NULL);
-    //*******//
     std::string password = "password";
     int errno_before = errno;
     std::string response;
@@ -74,7 +75,12 @@ TEST_CASE("Command initialization", "[command]") {
     }
 }
 
-TEST_CASE("Command constructor validation tests", "[Command][constructor][validation]") {
+/****
+    * @brief Test cases for validating Command constructor.
+    *
+    * This test case verifies the behavior of the Command constructor with different inputs.
+    */
+TEST_CASE("Command constructor validation tests", "[Command][constructorValidation]") {
     int dummyFd = 1;
     struct sockaddr dummySockaddr;
     Client client(dummyFd, dummySockaddr);
@@ -92,261 +98,129 @@ TEST_CASE("Command constructor validation tests", "[Command][constructor][valida
     REQUIRE_THROWS_AS(Command(message, client, allClients, password, serverStartTime, allChannels), std::invalid_argument);
 }
 
-TEST_CASE("Command::execute tests", "[Command][execute]") {
-    //*******//
-    int dummyFd = 1;                // Dummy file descriptor
-    struct sockaddr dummySockaddr;  // Dummy socket address
-    Client client(dummyFd, dummySockaddr);
-    std::map<int, Client> clients{{1, client}};
-    std::map<std::string, Channel> channels;
+/****
+    * @brief Helper function to execute a command and validate its response.
+    *
+    * This function executes a command, validates its response, and checks whether the client wants to disconnect.
+    * @param client The client object.
+    * @param commandStr The command string to execute.
+    * @param expectedResponse The expected response from the server.
+    * @param expectDisconnect Whether the client expects to disconnect after executing the command.
+    */
+void executeAndValidateCommand(Client& client, const std::string& commandStr, const std::string& expectedResponse, bool expectDisconnect) {
     time_t serverStartTime = time(NULL);
-    //*******//
+    client.clearSendBuffer();
+    Message message(commandStr);
     std::string password = "password";
-    int errno_before = errno;
-    REQUIRE(errno == errno_before);
-    std::string response;
-    std::string command;
+    std::map<int, Client> myClients = {{1, client}};
+    std::map<std::string, Channel> myChannels;
+    Command cmd(message, client, myClients, password, serverStartTime, myChannels);
+    REQUIRE(errno_before == errno);
+    REQUIRE(client.getSendBuffer() == expectedResponse);
+    REQUIRE(client.getWantDisconnect() == expectDisconnect);
+}
 
-    /**
-      * @test Tests that an authenticated client can execute a valid command.
-      * This test simulates a client that has already authenticated by setting a password,
-      * username, and nickname. It then sends a NICK command to change the nickname.
-      * The expected behavior is that the command is executed successfully, and the client's
-      * nickname is updated accordingly.
-      */
+/****
+    * @brief Test cases for executing commands.
+    *
+    * This test case verifies the behavior of executing different commands with various scenarios.
+    */
+TEST_CASE("Command::execute tests", "[Command][execute]") {
+    errno_before = errno;
+    int dummyFd = 1;
+    struct sockaddr dummySockaddr;
+    Client client(dummyFd, dummySockaddr);
+
     SECTION("Authenticated client executes a valid command") {
-        client.setPassword(password);
+        client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
-        std::string oldNick = client.getNickname();
-        client.clearSendBuffer();
-        command = "NICK";
-        Message message(command + " newNick");
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response =
-            ":" + oldNick + "!" + client.getUserName() + "@" + client.getHost() + " " + command + " " + client.getNickname() + "\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, "NICK newNick", ":UserNick!UserName@" + client.getHost() + " NICK newNick\r\n", false);
     }
 
     SECTION("Partially authenticated client (pass + username) executes a valid command") {
-        client.setPassword(password);
+        client.setPassword("password");
         client.setUserName("UserName");
-        std::string oldNick = client.getNickname();
-        client.clearSendBuffer();
-        command = "PRIVMSG :This is a message";
-        Message message(command);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 451 :You have not registered\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, "PRIVMSG :This is a message", ": 451 :You have not registered\r\n", false);
     }
 
     SECTION("Partially authenticated client (pass + nick) executes a valid command") {
-        client.setPassword(password);
+        client.setPassword("password");
         client.setNickname("UserNick");
-        std::string oldNick = client.getNickname();
-        client.clearSendBuffer();
-        command = "PRIVMSG :This is a message";
-        Message message(command);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 451 :You have not registered\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, "PRIVMSG :This is a message", ": 451 :You have not registered\r\n", false);
     }
 
-    /**
-      * @test Tests that an unauthenticated client cannot execute a valid command.
-      * This test simulates a client that has not yet authenticated by not setting a password.
-      * It attempts to send a NICK command. The expected behavior is that the command
-      * is not executed, and an error message is sent to the client indicating that a password
-      * must be sent first. The client is also disconnected.
-      */
     SECTION("Unauthenticated client executes NICK before PASS") {
-        client.clearSendBuffer();
-        command = "NICK";
-        Message message(command + " firstNick");
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = "ERROR :You must send a password first\r\n";  // Custom made error message to handle our custom authentication
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == TRUE);  // if unauthenticated a user is disconnected
+        executeAndValidateCommand(client, "NICK firstNick", "ERROR :You must send a password first\r\n", true);
     }
 
     SECTION("Unauthenticated client executes USER before PASS") {
-        client.clearSendBuffer();
-        command = "USER";
-        Message message(command + " username");
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = "ERROR :You must send a password first\r\n";  // Custom made error message to handle our custom authentication
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == TRUE);  // if unauthenticated a user is disconnected
+        executeAndValidateCommand(client, "USER username", "ERROR :You must send a password first\r\n", true);
     }
 
     SECTION("Unauthenticated client executes a valid command (other than PASS or NICK) before PASS") {
-        client.clearSendBuffer();
-        command = "PRIVMSG toto :Hello!";
-        Message message(command);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 451 :You have not registered\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);  // if unauthenticated user is attempting to run a command other than USER or NICK
-        // The client remains connected TODO Should that remain like that?
+        executeAndValidateCommand(client, "PRIVMSG toto :Hello!", ": 451 :You have not registered\r\n", false);
     }
 
     SECTION("Authenticated client executes an empty string \"\" command") {
-        client.setPassword(password);
+        client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
-
-        client.clearSendBuffer();
-        std::string emptyCommand = "";
-        Message message(emptyCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 421  :Unknown command\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, "", ": 421  :Unknown command\r\n", false);
     }
 
     SECTION("Unauthenticated client executes an empty string \"\" command") {
-        client.clearSendBuffer();
-        std::string emptyCommand = "";
-        Message message(emptyCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 451 :You have not registered\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);  // if unauthenticated user is attempting to run a command other than USER or NICK
-        // The client remains connected TODO Should that remain like that?
+        executeAndValidateCommand(client, "", ": 451 :You have not registered\r\n", false);
     }
 
     SECTION("Authenticated client executes a white spaced command") {
-        client.setPassword(password);
+        client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
-        client.clearSendBuffer();
-        std::string whiteSpacedCommand = R"(\f\r\v\n\t)";
-        Message message(whiteSpacedCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 421 " + whiteSpacedCommand + " :Unknown command\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, R"(\f\r\v\n\t)", ": 421 \\f\\r\\v\\n\\t :Unknown command\r\n", false);
     }
 
     SECTION("Unauthenticated client executes a white spaced command") {
-        client.clearSendBuffer();
-        std::string whiteSpacedCommand = R"(\f\r\v\n\t)";
-        Message message(whiteSpacedCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 451 :You have not registered\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
-    }
-
-    SECTION("Authenticated client executes a white spaced command") {
-        client.setPassword(password);
-        client.setUserName("UserName");
-        client.setNickname("UserNick");
-        client.clearSendBuffer();
-        std::string whiteSpacedCommand = R"(\f\r\v\n\t)";
-        Message message(whiteSpacedCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 421 " + whiteSpacedCommand + " :Unknown command\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, R"(\f\r\v\n\t)", ": 451 :You have not registered\r\n", false);
     }
 
     SECTION("Authenticated client executes a command including white spaces and normal character") {
-        client.setPassword(password);
+        client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
-        client.clearSendBuffer();
-        std::string whiteSpacedCommand = R"(\f\rc\vm\nd\t)";
-        Message message(whiteSpacedCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 421 " + whiteSpacedCommand + " :Unknown command\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, R"(\f\rc\vm\nd\t)", ": 421 \\f\\rc\\vm\\nd\\t :Unknown command\r\n", false);
     }
 
-    SECTION("Unauthenticated client executes a white spaced command") {
-        client.clearSendBuffer();
-        std::string whiteSpacedCommand = R"(\f\rc\vm\nd\t)";
-        Message message(whiteSpacedCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 451 :You have not registered\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+    SECTION("Unauthenticated client executes a command including white spaces and normal character") {
+        executeAndValidateCommand(client, R"(\f\rc\vm\nd\t)", ": 451 :You have not registered\r\n", false);
     }
 
     SECTION("Authenticated client executes a command containing special characters") {
-        client.setPassword(password);
+        client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
-        client.clearSendBuffer();
-        std::string specialCharCommand = "@?!$:&";
-        Message message(specialCharCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 421 " + specialCharCommand + " :Unknown command\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, "@?!$:&", ": 421 @?!$:& :Unknown command\r\n", false);
     }
 
     SECTION("Unauthenticated client executes a command containing special characters") {
-        client.clearSendBuffer();
-        std::string specialCharCommand = "@?!$:&";
-        Message message(specialCharCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 451 :You have not registered\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, "@?!$:&", ": 451 :You have not registered\r\n", false);
     }
 
-    /**
-      * @test Tests that the server correctly handles an invalid command.
-      * This test simulates a client sending an invalid command. The expected behavior
-      * is that the server responds with a complient RFC reply 421 <command> :Unknown command. 
-      */
     SECTION("Client executes an invalid command") {
-        client.setPassword(password);
+        client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
-        std::string invalidCommand = "INVALIDCOMMAND";
-        client.clearSendBuffer();
-        Message message(invalidCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 421 " + invalidCommand + " :Unknown command\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, "INVALIDCOMMAND", ": 421 INVALIDCOMMAND :Unknown command\r\n", false);
     }
 
-    /**
-      * @test Tests that the server silently ignores the CAP command from an unauthenticated client.
-      * This test simulates a client sending the CAP command before authenticating. The expected behavior
-      * is that the server does not respond to the CAP command, effectively ignoring it.
-      */
     SECTION("Client executes the CAP command before being authenticated") {
-        std::string capCommand = "CAP";
-        Message message(capCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = "";  // CAP command is silently ignored
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);  // if unauthenticated a user may still attempt to use CAP wihtout being disconnected
+        executeAndValidateCommand(client, "CAP", "", false);
     }
 
-    /**
-      * @test Tests that the server silently ignores the CAP command from an authenticated client.
-      * This test simulates a client that has already authenticated by setting a password,
-      * username, and nickname. It then sends the CAP command. The expected behavior is that the server
-      * does not respond to the CAP command, effectively ignoring it.
-      */
     SECTION("Client executes the CAP command after being authenticated") {
-        client.setPassword(password);
+        client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
-        std::string capCommand = "CAP";
-        Message message(capCommand);
-        Command cmd(message, client, clients, password, serverStartTime, channels);
-        response = ": 421 " + capCommand + " :Unknown command\r\n";
-        REQUIRE(client.getSendBuffer() == response);
-        REQUIRE(client.getWantDisconnect() == FALSE);
+        executeAndValidateCommand(client, "CAP", ": 421 CAP :Unknown command\r\n", false);
     }
 }
