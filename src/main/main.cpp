@@ -78,6 +78,12 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
     LOG_INFO(GREEN << "Server starting on port " << argv[1]);
+    std::string emptyPassword = argv[2];
+    if (emptyPassword.empty()) {
+        LOG_ERROR("main: invalid empty password");
+        PRINT_USAGE;
+        return EXIT_FAILURE;
+    }
     LOG_DEBUG("with password \"" << argv[2] << "\"");
 
     signal(SIGINT, signalHandler);   // Ctrl+C
