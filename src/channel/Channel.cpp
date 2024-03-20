@@ -350,7 +350,7 @@ int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
                 return SUCCESS;
             }
             if (modeStruct.modifier == '-') {
-                if (!modeStruct.param.empty()) {
+                if (modeStruct.param.empty()) {
                     LOG_DEBUG("Channel::handleModeChange: k: -k with a parameter, not setting");
                     allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
                     return FAILURE;
