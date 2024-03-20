@@ -11,12 +11,12 @@ extern std::string serverHostname_g;
 
 using namespace irc;
 
-/**
-* This test case shows that numeric isnt used and probably should be considered to be removed.
-* The  only place it may make sense to be used is in the command constructor, however, using 
-* it to prevent execution of a command, will prevent to output the proper RFC error replies.
-* It would though allow to skip executing commands that would be known in advance to fail.
-*/
+/****
+    * This test case shows that numeric isnt used and probably should be considered to be removed.
+    * The  only place it may make sense to be used is in the command constructor, however, using 
+    * it to prevent execution of a command, will prevent to output the proper RFC error replies.
+    * It would though allow to skip executing commands that would be known in advance to fail.
+    */
 TEST_CASE("Command initialization", "[command][initialization]") {
     int dummyFd = 1;
     struct sockaddr dummySockaddr;
@@ -99,13 +99,13 @@ TEST_CASE("Command constructor validation tests", "[Command][constructorValidati
 }
 
 /****
-    * @brief Helper function to execute a command and validate its response.
+    * @brief Helper function to execute a command and validate the response made in Command Execute tests
     *
     * This function executes a command, validates its response, and checks whether the client wants to disconnect.
     * @param client The client object.
     * @param commandStr The command string to execute.
     * @param expectedResponse The expected response from the server.
-    * @param expectDisconnect Whether the client expects to disconnect after executing the command.
+    * @param expectDisconnect Whether the client expects to disconnect after executing the command when unregistered.
     */
 void executeAndValidateCommand(Client& client, const std::string& commandStr, const std::string& expectedResponse, bool expectDisconnect) {
     time_t serverStartTime = time(NULL);
@@ -123,7 +123,7 @@ void executeAndValidateCommand(Client& client, const std::string& commandStr, co
 /****
     * @brief Test cases for executing commands.
     *
-    * This test case verifies the behavior of executing different commands with various scenarios.
+    * This test case verifies the behavior of executing different commands with various unauthenticated, partially authenticated and authenticated clients
     */
 TEST_CASE("Command::execute tests", "[Command][execute]") {
     errno_before = errno;
@@ -206,18 +206,18 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         executeAndValidateCommand(client, "@?!$:&", ": 451 :You have not registered\r\n", false);
     }
 
-    SECTION("Client executes an invalid command") {
+    SECTION("Authenticated Client executes an invalid command") {
         client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
         executeAndValidateCommand(client, "INVALIDCOMMAND", ": 421 INVALIDCOMMAND :Unknown command\r\n", false);
     }
 
-    SECTION("Client executes the CAP command before being authenticated") {
+    SECTION("Authenticated Client executes the CAP command before being authenticated") {
         executeAndValidateCommand(client, "CAP", "", false);
     }
 
-    SECTION("Client executes the CAP command after being authenticated") {
+    SECTION("Authenticated Client executes the CAP command after being authenticated") {
         client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
