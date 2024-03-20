@@ -8,13 +8,6 @@
 
 using namespace irc;
 
-int dummyFd = 1;                // Dummy file descriptor
-struct sockaddr dummySockaddr;  // Dummy socket address
-Client client{dummyFd, dummySockaddr};
-std::map<int, Client> clients{{1, client}};
-std::map<std::string, Channel> channels;
-time_t serverStartTime = time(NULL);
-
 /**
 * This test case shows that numeric isnt used and probably should be considered to be removed.
 * The  only place it may make sense to be used is in the command constructor, however, using 
@@ -22,6 +15,14 @@ time_t serverStartTime = time(NULL);
 * It would though allow to skip executing commands that would be known in advance to fail.
 */
 TEST_CASE("Command initialization", "[command]") {
+    //*******//
+    int dummyFd = 1;                // Dummy file descriptor
+    struct sockaddr dummySockaddr;  // Dummy socket address
+    Client client(dummyFd, dummySockaddr);
+    std::map<int, Client> clients{{1, client}};
+    std::map<std::string, Channel> channels;
+    time_t serverStartTime = time(NULL);
+    //*******//
     std::string password = "password";
     int errno_before = errno;
     std::string response;
@@ -92,6 +93,14 @@ TEST_CASE("Command constructor validation tests", "[Command][constructor][valida
 }
 
 TEST_CASE("Command::execute tests", "[Command][execute]") {
+    //*******//
+    int dummyFd = 1;                // Dummy file descriptor
+    struct sockaddr dummySockaddr;  // Dummy socket address
+    Client client(dummyFd, dummySockaddr);
+    std::map<int, Client> clients{{1, client}};
+    std::map<std::string, Channel> channels;
+    time_t serverStartTime = time(NULL);
+    //*******//
     std::string password = "password";
     int errno_before = errno;
     REQUIRE(errno == errno_before);
