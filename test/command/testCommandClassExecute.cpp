@@ -19,7 +19,7 @@ using namespace irc;
     */
 TEST_CASE("Command initialization", "[command][initialization]") {
     int dummyFd = 1;
-    struct sockaddr sockaddr;
+    struct sockaddr sockaddr{};
     Client client(dummyFd, sockaddr);
     std::map<int, Client> clients{{1, client}};
     std::map<std::string, Channel> channels;
@@ -82,7 +82,7 @@ TEST_CASE("Command initialization", "[command][initialization]") {
     */
 TEST_CASE("Command constructor validation tests", "[Command][constructorValidation]") {
     int dummyFd = 1;
-    struct sockaddr sockaddr;
+    struct sockaddr sockaddr{};
     Client client(dummyFd, sockaddr);
     std::map<int, Client> allClients{{1, client}};
     std::map<std::string, Channel> allChannels;
@@ -128,7 +128,7 @@ void executeAndValidateCommand(Client& client, const std::string& commandStr, co
 TEST_CASE("Command::execute tests", "[Command][execute]") {
     errno_before = errno;
     int dummyFd = 1;
-    struct sockaddr sockaddr;
+    struct sockaddr sockaddr{};
     Client client(dummyFd, sockaddr);
 
     SECTION("Authenticated client executes a valid command") {
