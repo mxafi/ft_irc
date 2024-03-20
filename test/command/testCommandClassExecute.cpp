@@ -19,13 +19,15 @@ using namespace irc;
     */
 TEST_CASE("Command initialization", "[command][initialization]") {
     int dummyFd = 1;
-    struct sockaddr sockaddr{};
+
+    struct sockaddr sockaddr {};
+
     Client client(dummyFd, sockaddr);
     std::map<int, Client> clients{{1, client}};
     std::map<std::string, Channel> channels;
     time_t serverStartTime = time(NULL);
     std::string password = "password";
-    int errno_before = errno;
+    errno_before = errno;
     std::string response;
     int expectedNumeric;
     std::string command;
@@ -81,8 +83,11 @@ TEST_CASE("Command initialization", "[command][initialization]") {
     * This test case verifies the behavior of the Command constructor with different inputs.
     */
 TEST_CASE("Command constructor validation tests", "[Command][constructorValidation]") {
+    errno_before = errno;
     int dummyFd = 1;
-    struct sockaddr sockaddr{};
+
+    struct sockaddr sockaddr {};
+
     Client client(dummyFd, sockaddr);
     std::map<int, Client> allClients{{1, client}};
     std::map<std::string, Channel> allChannels;
@@ -96,6 +101,7 @@ TEST_CASE("Command constructor validation tests", "[Command][constructorValidati
     serverStartTime = time(NULL);  // Reset to valid value
     password = "";
     REQUIRE_THROWS_AS(Command(message, client, allClients, password, serverStartTime, allChannels), std::invalid_argument);
+    REQUIRE(errno == errno_before);
 }
 
 /****
@@ -128,7 +134,9 @@ void executeAndValidateCommand(Client& client, const std::string& commandStr, co
 TEST_CASE("Command::execute tests", "[Command][execute]") {
     errno_before = errno;
     int dummyFd = 1;
-    struct sockaddr sockaddr{};
+
+    struct sockaddr sockaddr {};
+
     Client client(dummyFd, sockaddr);
 
     SECTION("Authenticated client executes a valid command") {
