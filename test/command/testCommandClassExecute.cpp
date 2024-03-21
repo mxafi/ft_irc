@@ -232,6 +232,7 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         executeAndValidateCommand(client, "CAP", ": 421 CAP :Unknown command\r\n", false);
     }
 }
+<<<<<<< HEAD
 
 
 void testPasswordCommand(Client& client, const std::string& commandStr, const std::string& expectedResponse, bool expectDisconnect) {
@@ -328,3 +329,5 @@ TEST_CASE("Command::actionUser tests", "[Command][actionUser]") {
         REQUIRE(client.getUserName() == "username");
     }
 }
+=======
+>>>>>>> main
