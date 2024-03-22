@@ -36,6 +36,7 @@ void Command::actionMode(Client& client) {
     unsigned long numberOfParams = param_.size();
 
     if (numberOfParams == 0) {
+        LOG_DEBUG("Command::actionMode: numberOfParams == 0 not allowed");
         client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));
         return;
     }
@@ -45,6 +46,7 @@ void Command::actionMode(Client& client) {
     // Handle actionMode for a user
     if (std::string(CHANNEL_PREFIXES).find(param_.at(0).front()) == std::string::npos) {
         // We know that the first parameter is not a channel
+        LOG_DEBUG("Command::actionMode: first param does not have a channel prefix, so it must be a user, not implemented");
         client.appendToSendBuffer(RPL_ERR_UMODEUNKNOWNFLAG_501(serverHostname_g, client.getNickname()));  // TODO: placeholder
         // TODO: implement user mode changes
         return;
@@ -55,6 +57,7 @@ void Command::actionMode(Client& client) {
         Channel& channel = allChannels_.at(param_.at(0));
         (void)channel;  // suppress unused variable warning
     } catch (const std::out_of_range& e) {
+        LOG_DEBUG("Command::actionMode: channel does not exist");
         client.appendToSendBuffer(RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, param_.at(0)));
         return;
     }
@@ -101,6 +104,7 @@ void Command::actionMode(Client& client) {
 
     // Check if the client is a channel operator, otherwise return
     if (channel.isOperator(client) == false) {
+        LOG_DEBUG("Command::actionMode: client is not a channel operator");
         client.appendToSendBuffer(RPL_ERR_CHANOPRIVSNEEDED_482(serverHostname_g, client.getNickname(), channel.getName()));
         return;
     }
@@ -129,13 +133,15 @@ void Command::actionMode(Client& client) {
         std::string& currentParamString = param_.at(currentParamIndex);
         char currentModifier = currentParamString[0];
         if (currentModifier != '+' && currentModifier != '-') {
+            LOG_DEBUG("Command::actionMode: currentModifier != '+' && currentModifier != '-' not allowed");
             client.appendToSendBuffer(
-                RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));  // TODO: figure out correct reply
+                RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));
             return;
         }
         currentParamString = currentParamString.substr(1);
         for (char mode : currentParamString) {
             if (isModeSupported(mode) == false) {
+                LOG_DEBUG("Command::actionMode: mode not supported: " + mode);
                 client.appendToSendBuffer(RPL_ERR_UNKNOWNMODE_472(serverHostname_g, client.getNickname(), mode, channel.getName()));
                 return;
             }
@@ -152,8 +158,9 @@ void Command::actionMode(Client& client) {
         currentParamIndex++;
     }
     if (modeChangesWithParam > 3) {
+        LOG_DEBUG("Command::actionMode: modeChangesWithParam > 3 not allowed");
         client.appendToSendBuffer(
-            RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));  // TODO: figure out correct reply
+            RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));
         return;
     }
 
