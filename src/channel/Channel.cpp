@@ -112,7 +112,9 @@ int Channel::partMember(Client& client) {
                 LOG_DEBUG("Channel::partMember: client " << client.getNickname() << " was an operator, removing");
                 setOperatorStatus(client, false);
             }
-            uninvite(client);
+            if (isInvited(client)) {
+                uninvite(client);
+            }
             members_.erase(it);
             if (operators_.empty()) {
                 LOG_DEBUG("Channel::partMember: no operators left, a new operator should be assigned: " << name_);
