@@ -76,12 +76,16 @@ int Channel::getUserLimit() const {
 }
 
 void Channel::joinMember(Client& client) {
+    if (isMember(client)) {
+        LOG_WARNING("Channel::joinMember: client is already a member, not joining");
+        return;
+    }
     if (isInviteOnly_ && !isInvited(client)) {
-        LOG_WARNING("Channel::joinMember: client is not invited, not joining")
+        LOG_WARNING("Channel::joinMember: client is not invited, not joining");
         return;
     }
     if (userLimit_ != CHANNEL_USER_LIMIT_DISABLED && static_cast<int>(members_.size()) >= userLimit_) {
-        LOG_WARNING("Channel::joinMember: user limit reached, not joining")
+        LOG_WARNING("Channel::joinMember: user limit reached, not joining");
         return;
     }
     members_.push_back(&client);
