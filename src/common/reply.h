@@ -43,7 +43,7 @@
 #define RPL_ERR_UNKNOWNCOMMAND_421(servername, command) (RPL_META_MESSAGE(servername, "421", command + " :Unknown command"))
 #define RPL_ERR_NONICKNAMEGIVEN_431(servername) (RPL_META_MESSAGE(servername, "431", ":No nickname given"))
 #define RPL_ERR_ERRONEUSNICKNAME_432(servername, nick) (RPL_META_MESSAGE(servername, "432", nick + " :Erroneous nickname"))
-#define RPL_ERR_NICKNAMEINUSE_433(servername, nick) (RPL_META_MESSAGE(servername, "433", nick + " :Nickname is already in use"))
+#define RPL_ERR_NICKNAMEINUSE_433(servername, client, nick) (RPL_META_MESSAGE(servername, "433", client + " " + nick + " :Nickname is already in use"))
 #define RPL_ERR_USERNOTINCHANNEL_441(servername, nick, channel) (RPL_META_MESSAGE(servername, "441", nick + " " + channel + " :They aren't on that channel"))
 #define RPL_ERR_NOTONCHANNEL_442(servername, client, channel) (RPL_META_MESSAGE(servername, "442", client + " " + channel + " :You're not on that channel"))
 #define RPL_ERR_USERONCHANNEL_443(servername, client, nick, channel) (RPL_META_MESSAGE(servername, "443", client + " " + nick + " " + channel + " :is already on channel"))
