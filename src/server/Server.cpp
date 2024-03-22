@@ -267,8 +267,7 @@ int Server::acceptClient_(std::vector<pollfd>& pollfds) {
     client_pollfd.fd = new_client_fd;
     client_pollfd.events = POLLIN | POLLOUT | POLLERR;
     pollfds.push_back(client_pollfd);
-    LOG_INFO("New client connection on fd " << new_client_fd);
-    LOG_INFO("Clients on server now: " << clients_.size());
+    LOG_INFO("Clients on server: " << clients_.size() << " (new client connected on fd " << new_client_fd << ")");
     return new_client_fd;
 }
 
@@ -310,7 +309,7 @@ int Server::disconnectClient_(std::vector<pollfd>& poll_fds, std::vector<pollfd>
 
     // Erase client from poll_fds (the poll loop vector)
     poll_fds.erase(it);
-    LOG_INFO("Clients remaining on server: " << clients_.size());
+    LOG_INFO("Clients on server: " << clients_.size() << " (client disconnected on fd " << client_fd << ")");
     return SUCCESS;
 }
 
@@ -359,7 +358,6 @@ long long Server::recvToBuffer_(Client& client) {
     }
     if (recv_ret == RECV_ORDERLY_SHUTDOWN) {
         LOG_DEBUG("Server::recvToBuffer_: client on fd " << client.getFd() << " disconnected gracefully");
-        LOG_INFO("Client on fd " << client.getFd() << " disconnected gracefully");
         client.setDisconnectReason("Client closed connection");
         client.setWantDisconnect();
         return RECV_ORDERLY_SHUTDOWN;
