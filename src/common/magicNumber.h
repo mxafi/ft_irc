@@ -1,7 +1,7 @@
 #ifndef MAGICNUMBER_H
 #define MAGICNUMBER_H
 
-#define IRC_SERVER_VERSION "ft_irc-v1.0"
+#define IRC_SERVER_VERSION "ft_irc-v1.0.0"
 #define SUPPORTED_USER_MODES "io"
 #define SUPPORTED_CHANNEL_MODES "oitkl"
 #define SUPPORTED_CHANNEL_MODES_PLUS_WITH_PARAM "okl"
