@@ -118,7 +118,8 @@ void Command::actionMode(Client& client) {
     // o: operator (parameter: nickname)
     // l: user-limit (parameter: limit)
 
-    // We will get something like: MODE #mychannel +ik key +tl 10
+    // We will get something like:     MODE #mychannel +ik key +tl 10
+    // We can also get something like: MODE #mychannel +ktl key 10 +i
     // We will parse it into a vector of modestructs like this:
     // vector[0]: {modifier: '+', mode: 'i', param: ""}
     // vector[1]: {modifier: '+', mode: 'k', param: "key"}
@@ -126,6 +127,7 @@ void Command::actionMode(Client& client) {
     // vector[3]: {modifier: '+', mode: 'l', param: "10"}
 
     std::vector<Channel::modestruct> modeRequests;
+    unsigned long oldModeRequestsSize = modeRequests.size();
     int modeChangesWithParam = 0;        // max is 3
     unsigned int currentParamIndex = 1;  // max is numberOfParams - 1
     while (currentParamIndex < numberOfParams) {
@@ -134,8 +136,7 @@ void Command::actionMode(Client& client) {
         char currentModifier = currentParamString[0];
         if (currentModifier != '+' && currentModifier != '-') {
             LOG_DEBUG("Command::actionMode: currentModifier != '+' && currentModifier != '-' not allowed");
-            client.appendToSendBuffer(
-                RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));
+            client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));
             return;
         }
         currentParamString = currentParamString.substr(1);
@@ -150,17 +151,26 @@ void Command::actionMode(Client& client) {
             modeRequests.push_back(currentMode);
         }
 
-        if (isNextParamExist(currentParamIndex, numberOfParams) && isModeWithParam(modeRequests.back())) {
-            modeChangesWithParam++;
-            currentParamIndex++;
-            modeRequests.back().param = param_.at(currentParamIndex);
+        for (unsigned long i = oldModeRequestsSize; i < modeRequests.size(); i++) {
+            if (isModeWithParam(modeRequests.at(i))) {
+                if (isNextParamExist(currentParamIndex, numberOfParams)) {
+                    modeChangesWithParam++;
+                    currentParamIndex++;
+                    modeRequests.at(i).param = param_.at(currentParamIndex);
+                } else {
+                    LOG_DEBUG("Command::actionMode: mode with param but no param provided");
+                    client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));
+                    return;
+                }
+            }
         }
+
+        oldModeRequestsSize = modeRequests.size();
         currentParamIndex++;
     }
     if (modeChangesWithParam > 3) {
         LOG_DEBUG("Command::actionMode: modeChangesWithParam > 3 not allowed");
-        client.appendToSendBuffer(
-            RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));
+        client.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, client.getNickname(), "MODE"));
         return;
     }
 
