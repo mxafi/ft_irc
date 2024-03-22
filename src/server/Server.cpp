@@ -113,12 +113,12 @@ int Server::start() {
     }
     LOG_DEBUG("server socket creation success on fd: " << server_socket_fd_);
 
-    int fcntl_flags = fcntl(server_socket_fd_, F_GETFL);
-    if (fcntl_flags == FCNTL_FAILURE) {
-        LOG_ERROR("Server::start: socket fcntl get flags failed");
-        return FAILURE;
-    }
-    if (fcntl(server_socket_fd_, F_SETFL, fcntl_flags | O_NONBLOCK) == FCNTL_FAILURE) {
+    // int fcntl_flags = fcntl(server_socket_fd_, F_GETFL);
+    // if (fcntl_flags == FCNTL_FAILURE) {
+    //     LOG_ERROR("Server::start: socket fcntl get flags failed");
+    //     return FAILURE;
+    // }
+    if (fcntl(server_socket_fd_, F_SETFL, O_NONBLOCK) == FCNTL_FAILURE) {  //fcntl_flags | O_NONBLOCK
         LOG_ERROR("Server::start: socket fcntl set nonblock failed");
         return FAILURE;
     }
