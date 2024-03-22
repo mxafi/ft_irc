@@ -145,6 +145,7 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
     }
 
     SECTION("numeric replies 431-433") {
+        std::string desiredNickname = "tata";
         const std::string actual_rpl_err_nonicknamegiven_431 = RPL_ERR_NONICKNAMEGIVEN_431(server_name);
         const std::string expected_rpl_err_nonicknamegiven_431 = ":irc.example.com 431 :No nickname given\r\n";
         REQUIRE(actual_rpl_err_nonicknamegiven_431 == expected_rpl_err_nonicknamegiven_431);
@@ -153,8 +154,8 @@ TEST_CASE("Replies are known valid strings", "[reply]") {
         const std::string expected_rpl_err_erroneousnickname_432 = ":irc.example.com 432 xuffy :Erroneous nickname\r\n";
         REQUIRE(actual_rpl_err_erroneousnickname_432 == expected_rpl_err_erroneousnickname_432);
 
-        const std::string actual_rpl_err_nicknameinuse_433 = RPL_ERR_NICKNAMEINUSE_433(server_name, "xuffy");
-        const std::string expected_rpl_err_nicknameinuse_433 = ":irc.example.com 433 xuffy :Nickname is already in use\r\n";
+        const std::string actual_rpl_err_nicknameinuse_433 = RPL_ERR_NICKNAMEINUSE_433(server_name, client_nick, desiredNickname);
+        const std::string expected_rpl_err_nicknameinuse_433 = ":irc.example.com 433 xuffy tata :Nickname is already in use\r\n";
         REQUIRE(actual_rpl_err_nicknameinuse_433 == expected_rpl_err_nicknameinuse_433);
     }
 

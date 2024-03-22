@@ -2,7 +2,7 @@
 
 namespace irc {
 
-Client::Client(int fd, const struct sockaddr& sockaddr) : fd_(fd), sockaddr_(sockaddr) {
+Client::Client(int fd, const struct sockaddr& sockaddr) : fd_(fd), sockaddr_(sockaddr), nickname_("*") {
     status_.gotUser = false;
     status_.gotNick = false;
     status_.gotPassword = false;

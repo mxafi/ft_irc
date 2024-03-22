@@ -149,20 +149,22 @@ void Command::actionNick(Client& client) {
         return;
     }
 
-    if (!(isValidNickname(param_.at(0)))) {
-        client.appendToSendBuffer(RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, param_.at(0)));
-        RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, param_.at(0));
+    std::string desiredNickname = param_.at(0);
+
+    if (!(isValidNickname(desiredNickname))) {
+        client.appendToSendBuffer(RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, desiredNickname));
+        RPL_ERR_ERRONEUSNICKNAME_432(serverHostname_g, desiredNickname);
         return;
     }
 
     try {
-        (void)findClientByNicknameOrThrow(param_.at(0));
-        client.appendToSendBuffer(RPL_ERR_NICKNAMEINUSE_433(serverHostname_g, param_.at(0)));
+        (void)findClientByNicknameOrThrow(desiredNickname);
+        client.appendToSendBuffer(RPL_ERR_NICKNAMEINUSE_433(serverHostname_g, client.getNickname(), desiredNickname));
         return;
     } catch (std::out_of_range& e) {
         ;  // The nickname is not in use
     }
-    client.setNickname(param_.at(0));
+    client.setNickname(desiredNickname);
     if (isAlreadyAuthenticated == false && client.isAuthenticated()) {
         sendAuthReplies_(client);
         return;  // Early return to avoid sending the NICK message for a just authenticated client IRCv3

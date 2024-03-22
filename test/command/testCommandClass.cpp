@@ -149,7 +149,7 @@ TEST_CASE("Nick", "[command][nick]") {
             std::string originalNick = client1.getNickname();
             std::string existingNick = client2.getNickname();
             std::string msg = "NICK " + existingNick;
-            response = ": 433 " + existingNick + " :Nickname is already in use\r\n";
+            response = ": 433 " + originalNick + " " + existingNick + " :Nickname is already in use\r\n";
             Command cmd(msg, client1, myClients, password, serverStartTime, myChannels);
             REQUIRE(client1.getSendBuffer() == response);
             REQUIRE(client1.getNickname() == originalNick);
