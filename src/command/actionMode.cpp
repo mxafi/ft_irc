@@ -62,22 +62,38 @@ void Command::actionMode(Client& client) {
     // We know that the channel exists
     Channel& channel = allChannels_.at(param_.at(0));
 
+    // Save info about if the client is a member of the channel
+    std::vector<std::string> clientChannels = client.getMyChannels();
+    bool isMember = false;
+    for (std::string clientChannel : clientChannels) {
+        if (clientChannel == param_.at(0)) {
+            isMember = true;
+            break;
+        }
+    }
+
     // Get the modes and return if the channel is the only parameter
-    std::string enabledModes;
+    std::string enabledModesString;
+    std::string enabledParamsString;
     if (numberOfParams == 1) {
         if (channel.isInviteOnly() == true) {
-            enabledModes += "i";
+            enabledModesString += "i";
         }
         if (channel.isTopicProtected() == true) {
-            enabledModes += "t";
+            enabledModesString += "t";
         }
         if (channel.getKey().empty() == false) {
-            enabledModes += "k";
+            enabledModesString += "k";
+            enabledParamsString += " " + channel.getKey();
         }
         if (channel.getUserLimit() != CHANNEL_USER_LIMIT_DISABLED) {
-            enabledModes += "l";
+            enabledModesString += "l";
+            enabledParamsString += " " + std::to_string(channel.getUserLimit());
         }
-        client.appendToSendBuffer(RPL_CHANNELMODEIS_324(serverHostname_g, client.getNickname(), channel.getName(), enabledModes));
+        if (isMember == true) {
+            enabledModesString += enabledParamsString;
+        }
+        client.appendToSendBuffer(RPL_CHANNELMODEIS_324(serverHostname_g, client.getNickname(), channel.getName(), enabledModesString));
         return;
     }
 
