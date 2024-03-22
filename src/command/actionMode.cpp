@@ -141,7 +141,7 @@ void Command::actionMode(Client& client) {
         currentParamString = currentParamString.substr(1);
         for (char mode : currentParamString) {
             if (isModeSupported(mode) == false) {
-                LOG_DEBUG("Command::actionMode: mode not supported: " + mode);
+                LOG_DEBUG("Command::actionMode: mode not supported: " << mode);
                 client.appendToSendBuffer(RPL_ERR_UNKNOWNMODE_472(serverHostname_g, client.getNickname(), mode, channel.getName()));
                 return;
             }
