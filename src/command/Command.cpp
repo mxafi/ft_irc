@@ -287,6 +287,7 @@ void Command::actionPart(Client& client) {
         currentChannel.sendMessageToMembers(COM_MESSAGE(client.getNickname(), client.getUserName(), client.getHost(), "PART",
                                                         currentChannel.getName() + " :" + partMessage));
         currentChannel.partMember(client);
+        currentChannel.uninvite(client);
     }
 }
 
