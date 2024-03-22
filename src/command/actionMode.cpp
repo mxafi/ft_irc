@@ -4,8 +4,14 @@ static bool isModeSupported(char mode) {
     return std::string(SUPPORTED_CHANNEL_MODES).find(mode) != std::string::npos;
 }
 
-static bool isModeWithParam(char mode) {
-    return std::string(SUPPORTED_CHANNEL_MODES_WITH_PARAM).find(mode) != std::string::npos;
+static bool isModeWithParam(irc::Channel::modestruct mode) {
+    if (mode.modifier == '+') {
+        return std::string(SUPPORTED_CHANNEL_MODES_PLUS_WITH_PARAM).find(mode.mode) != std::string::npos;
+    }
+    if (mode.modifier == '-') {
+        return std::string(SUPPORTED_CHANNEL_MODES_MINUS_WITH_PARAM).find(mode.mode) != std::string::npos;
+    }
+    return false;
 }
 
 static bool isNextParamExist(unsigned int currentParamIndex, unsigned long numberOfParams) {
@@ -122,7 +128,7 @@ void Command::actionMode(Client& client) {
             modeRequests.push_back(currentMode);
         }
 
-        if (isNextParamExist(currentParamIndex, numberOfParams) && isModeWithParam(modeRequests.back().mode)) {
+        if (isNextParamExist(currentParamIndex, numberOfParams) && isModeWithParam(modeRequests.back())) {
             modeChangesWithParam++;
             currentParamIndex++;
             modeRequests.back().param = param_.at(currentParamIndex);
