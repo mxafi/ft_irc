@@ -346,20 +346,27 @@ int Channel::handleModeChange(Client& allowedClient, modestruct& modeStruct) {
                     return FAILURE;
                 }
                 setKey(modeStruct.param);
-                sendMessageToMembers(
-                    COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE", name_ + " +k"));
+                sendMessageToMembers(COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE",
+                                                 name_ + " +k " + modeStruct.param));
                 return SUCCESS;
             }
             if (modeStruct.modifier == '-') {
                 if (modeStruct.param.empty()) {
-                    LOG_DEBUG("Channel::handleModeChange: k: -k with a parameter, not setting");
-                    allowedClient.appendToSendBuffer(RPL_ERR_NEEDMOREPARAMS_461(serverHostname_g, allowedClient.getNickname(), "MODE"));
+                    LOG_DEBUG("Channel::handleModeChange: k: -k without a parameter, not setting, not returning anything");
                     return FAILURE;
                 }
-                // key mode is being unset even if it's already unset
+                if (getKey().empty() == true) {
+                    LOG_DEBUG(
+                        "Channel::handleModeChange: k: -k with a parameter, but key is already unset, not setting, not returning anything");
+                    return FAILURE;
+                }
+                if (modeStruct.param != getKey()) {
+                    LOG_DEBUG("Channel::handleModeChange: k: -k with a parameter that doesn't match the key, not returning anything");
+                    return FAILURE;
+                }
                 setKey("");
-                sendMessageToMembers(
-                    COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE", name_ + " -k"));
+                sendMessageToMembers(COM_MESSAGE(allowedClient.getNickname(), allowedClient.getUserName(), allowedClient.getHost(), "MODE",
+                                                 name_ + " -k " + modeStruct.param));
                 return SUCCESS;
             }
             return FAILURE;
