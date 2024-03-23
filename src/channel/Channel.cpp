@@ -250,11 +250,8 @@ bool Channel::isChannelNameValid(const std::string& name) {
 }
 
 bool Channel::isChannelNameFree(const std::string& name, std::map<std::string, Channel>& allChannels) {
-    std::string lowercaseName = name;
-    std::transform(lowercaseName.begin(), lowercaseName.end(), lowercaseName.begin(), ::tolower);
-
     for (auto it = allChannels.begin(); it != allChannels.end(); it++) {
-        if (it->second.getName() == lowercaseName) {
+        if (it->second.getName() == name) {
             return false;
         }
     }
