@@ -39,16 +39,16 @@ void Command::actionJoin(Client& client) {
     // Get the channel names
     std::stringstream ssChan(param_.at(0));
     std::string rChannel;
-    std::unordered_map<std::string, std::string> rChannelKeyPairs;
+    std::vector<std::pair<std::string, std::string>> rChannelKeyPairs;
     while (std::getline(ssChan, rChannel, ',')) {
-        rChannelKeyPairs[rChannel] = "";
+        rChannelKeyPairs.push_back(std::make_pair(rChannel, ""));
     }
 
     // Get the channel keys
     if (param_.size() > 1) {
         std::stringstream ssKey(param_.at(1));
         std::string rKey;
-        std::unordered_map<std::string, std::string>::iterator itForKeys;
+        std::vector<std::pair<std::string, std::string>>::iterator itForKeys;
         for (itForKeys = rChannelKeyPairs.begin(); itForKeys != rChannelKeyPairs.end(); itForKeys++) {
             if (std::getline(ssKey, rKey, ',')) {
                 itForKeys->second = rKey;
@@ -57,7 +57,7 @@ void Command::actionJoin(Client& client) {
     }
 
     // Join the channels one by one
-    std::unordered_map<std::string, std::string>::iterator rit;
+    std::vector<std::pair<std::string, std::string>>::iterator rit;
     for (rit = rChannelKeyPairs.begin(); rit != rChannelKeyPairs.end(); rit++) {
         std::string channelName = rit->first;
         std::string channelKey = rit->second;
