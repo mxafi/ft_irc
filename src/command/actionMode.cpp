@@ -47,7 +47,6 @@ void Command::actionMode(Client& client) {
     if (std::string(CHANNEL_PREFIXES).find(param_.at(0).front()) == std::string::npos) {
         // We know that the first parameter is not a channel
         LOG_DEBUG("Command::actionMode: first param does not have a channel prefix, so it must be a user, not implemented");
-        client.appendToSendBuffer(RPL_ERR_UMODEUNKNOWNFLAG_501(serverHostname_g, client.getNickname()));  // TODO: placeholder
         // TODO: implement user mode changes
         return;
     }
