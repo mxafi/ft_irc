@@ -61,12 +61,11 @@ Command::Command(const Message& commandString, Client& client, std::map<int, Cli
     prefix_ = commandString.getPrefix();
     param_ = commandString.getParameters();
     numeric_ = commandString.getNumeric();
-    //TODO the two below test need to be tried/caught from the caller or edited away if those tests, particularly the serverStartTime which may never be changed after the server as started
     if (serverStartTime <= 0) {
-        throw std::invalid_argument("Invalid server start time");
+        throw std::invalid_argument("Command::Command: Invalid server start time");
     }
     if (password.empty()) {
-        throw std::invalid_argument("Password cannot be empty");
+        throw std::invalid_argument("Command::Command: Password cannot be empty");
     }
     execute(client);
 }

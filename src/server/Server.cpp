@@ -208,7 +208,11 @@ void Server::loop() {
                                 continue;
                             }
                             LOG_DEBUG("Server::loop: received message from client on fd " << client.getFd() << ": " << messageString);
-                            Command command(message, client, clients_, password_, start_time_, channels_);
+                            try {
+                                Command command(message, client, clients_, password_, start_time_, channels_);
+                            } catch (std::invalid_argument& e) {
+                                LOG_ERROR("Server::loop: invalid argument exception for fd " << it->fd << ": " << e.what());
+                            }
                             client.processErrorMessage();
                         }
                     } catch (std::out_of_range& e) {
