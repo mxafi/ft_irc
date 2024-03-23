@@ -316,28 +316,16 @@ void Command::actionTopic(Client& client) {
         }
     }
 
-    // validate client and channel for getting the topic
-    std::vector<std::string> clientChannels = client.getMyChannels();
-    bool isMember = false;
-    for (std::string clientChannel : clientChannels) {
-        if (clientChannel == param_.at(0)) {
-            isMember = true;
-            break;
-        }
-    }
-    if (isMember == false) {
-        try {
-            Channel& channel = allChannels_.at(param_.at(0));
-            (void)channel;  // suppress warning about unused variable
-            client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, client.getNickname(), param_.at(0)));
-            return;
-        } catch (std::out_of_range& e) {
-            client.appendToSendBuffer(RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, param_.at(0)));
-            return;
-        }
+    // validate client
+    bool isMember = client.isMemberOfChannel(param_.at(0));
+
+    // validate channel if client is not a member (if client is a member, channel is already validated)
+    if (!isMember && (allChannels_.find(param_.at(0)) == allChannels_.end())) {
+        client.appendToSendBuffer(RPL_ERR_NOSUCHCHANNEL_403(serverHostname_g, param_.at(0)));
+        return;
     }
 
-    // at this point, the client is a member of the channel and it exists
+    // at this point, the channel exists
     Channel& channel = allChannels_.at(param_.at(0));
 
     // get the topic
@@ -350,7 +338,11 @@ void Command::actionTopic(Client& client) {
         return;
     }
 
-    // at this point, the client wants to set the topic
+    // at this point, the client wants to set the topic, for which they need to be a member of the channel
+    if (!isMember) {
+        client.appendToSendBuffer(RPL_ERR_NOTONCHANNEL_442(serverHostname_g, client.getNickname(), param_.at(0)));
+        return;
+    }
 
     // check if the client has the right to set the topic
     if (channel.isTopicProtected() && !channel.isOperator(client)) {
