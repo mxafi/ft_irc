@@ -61,6 +61,11 @@ void Command::actionJoin(Client& client) {
     for (rit = rChannelKeyPairs.begin(); rit != rChannelKeyPairs.end(); rit++) {
         std::string channelName = rit->first;
         std::string channelKey = rit->second;
+
+        if (client.isMemberOfChannel(channelName)) {
+            continue;
+        }
+
         if (client.getMyChannels().size() >= MAX_JOIN_CHANNELS) {
             client.appendToSendBuffer(RPL_ERR_TOOMANYCHANNELS_405(serverHostname_g, channelName));
             break;
