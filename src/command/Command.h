@@ -8,7 +8,6 @@
 #include <regex>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "../channel/Channel.h"
