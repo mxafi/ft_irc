@@ -51,6 +51,7 @@ class Client {
     std::vector<std::string>& getMyChannels();
     std::string& getHost();
     void processErrorMessage();
+    bool isMemberOfChannel(const std::string& channelName);
 
    private:
     void setOldNickname_(const std::string& oldNickname);

@@ -193,4 +193,13 @@ void Client::processErrorMessage() {
     }
 }
 
+bool Client::isMemberOfChannel(const std::string& channelName) {
+    for (std::string& myChannel : myChannelsByName_) {
+        if (channelName == myChannel) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace irc
