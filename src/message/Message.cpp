@@ -86,6 +86,7 @@ void Message::setPrefix_(std::istringstream& serializedStream) {
     */
 void Message::setCommand_(std::istringstream& serializedMessage) {
     serializedMessage >> command_;
+    std::transform(command_.begin(), command_.end(), command_.begin(), ::toupper);
 }
 
 /****

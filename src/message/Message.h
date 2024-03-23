@@ -1,6 +1,7 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 #include <vector>

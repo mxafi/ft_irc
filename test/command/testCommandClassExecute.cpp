@@ -185,7 +185,7 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
-        executeAndValidateCommand(client, R"(\f\r\v\n\t)", ": 421 \\f\\r\\v\\n\\t :Unknown command\r\n", false);
+        executeAndValidateCommand(client, R"(\f\r\v\n\t)", ": 421 \\F\\R\\V\\N\\T :Unknown command\r\n", false);
     }
 
     SECTION("Unauthenticated client executes a white spaced command") {
@@ -196,7 +196,7 @@ TEST_CASE("Command::execute tests", "[Command][execute]") {
         client.setPassword("password");
         client.setUserName("UserName");
         client.setNickname("UserNick");
-        executeAndValidateCommand(client, R"(\f\rc\vm\nd\t)", ": 421 \\f\\rc\\vm\\nd\\t :Unknown command\r\n", false);
+        executeAndValidateCommand(client, R"(\f\rc\vm\nd\t)", ": 421 \\F\\RC\\VM\\ND\\T :Unknown command\r\n", false);
     }
 
     SECTION("Unauthenticated client executes a command including white spaces and normal character") {

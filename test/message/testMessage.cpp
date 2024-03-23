@@ -55,7 +55,7 @@ TEST_CASE("Message deserialization", "[message]") {
             "nunc donec.";
         Message msg(message);
         REQUIRE(msg.getPrefix() == ":Lorem");
-        REQUIRE(msg.getCommand() == "ipsum");
+        REQUIRE(msg.getCommand() == "IPSUM");
         REQUIRE(msg.getNumeric() == ERR_INPUTTOOLONG);
         REQUIRE(errno == errno_before);
     }
