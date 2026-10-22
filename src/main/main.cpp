@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
     }
 
     try {
-        std::stoi(argv[1]);
+        (void)std::stoi(argv[1]);
     } catch (std::exception& e) {
         LOG_ERROR("main: invalid port");
         PRINT_USAGE;
